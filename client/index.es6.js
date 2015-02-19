@@ -80,10 +80,10 @@ class SyncProcess {
 
 class SyncClient {
   constructor(params = {}) {
-    this.iterations = params.iterations || 5;
-    this.period = params.period || 0.500;
-    this.minInterval = this.minInterval || 10;
-    this.maxInterval = this.maxInterval || 20;
+    this.iterations = params.iterations || 5; // number of ping-pongs per iteration
+    this.period = params.period || 0.500; // period of pings
+    this.minInterval = this.minInterval || 10; // interval of ping-pongs minimum
+    this.maxInterval = this.maxInterval || 20; // interval of ping-pongs maximum
 
     if(this.minInterval > this.maxInterval)
       this.minInterval = this.maxInterval;
