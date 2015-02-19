@@ -14,5 +14,10 @@
     "audio-context": "Ircam-RnD/audio-context.git"
   },
   "devDependencies": {
+    "gulp": "^3.8.11",
+    "gulp-browserify": "^0.5.1",
+    "gulp-es6-transpiler": "^1.0.1",
+    "gulp-rename": "^1.2.0",
+    "gulp-watch": "^4.1.1"
   }
 }
