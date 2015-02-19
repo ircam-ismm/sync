@@ -9,10 +9,20 @@ class SyncServer {
 
   }
 
+  
+  /** 
+   * Monotonic function.
+   * 
+   * @return {Number} local time in seconds
+   */
+  getLocalTime() {
+    const time = process.hrtime();
+    return time[0] + time[1] * 1e-9;
+  }
+
   start(socket, statsCallback) {
     socket.on('sync_ping', (id, clientPingTime) => {
-      var serverPongTime = Date.now() / 1000;
-      socket.emit('sync_pong', id, clientPingTime, serverPongTime);
+      socket.emit('sync_pong', id, clientPingTime, this.getLocalTime() );
     });
 
     socket.on('sync_stats', (stats) => {

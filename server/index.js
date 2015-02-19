@@ -9,10 +9,20 @@ var SyncServer = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
 
   }DP$0(SyncServer,"prototype",{"configurable":false,"enumerable":false,"writable":false});
 
-  proto$0.start = function(socket, statsCallback) {
+  
+  /** 
+   * Monotonic function.
+   * 
+   * @return {Number} local time in seconds
+   */
+  proto$0.getLocalTime = function() {
+    var time = process.hrtime();
+    return time[0] + time[1] * 1e-9;
+  };
+
+  proto$0.start = function(socket, statsCallback) {var this$0 = this;
     socket.on('sync_ping', function(id, clientPingTime)  {
-      var serverPongTime = Date.now() / 1000;
-      socket.emit('sync_pong', id, clientPingTime, serverPongTime);
+      socket.emit('sync_pong', id, clientPingTime, this$0.getLocalTime() );
     });
 
     socket.on('sync_stats', function(stats)  {
@@ -22,4 +32,5 @@ var SyncServer = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
 MIXIN$0(SyncServer.prototype,proto$0);proto$0=void 0;return SyncServer;})();
 
 module.exports = SyncServer;
+
 //# sourceMappingURL=../server/index.js.map
