@@ -22,3 +22,4 @@ var SyncServer = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
 MIXIN$0(SyncServer.prototype,proto$0);proto$0=void 0;return SyncServer;})();
 
 module.exports = SyncServer;
+//# sourceMappingURL=../server/index.js.map

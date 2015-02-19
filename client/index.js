@@ -135,3 +135,4 @@ var SyncClient = (function(){var proto$0={};
 MIXIN$0(SyncClient.prototype,proto$0);proto$0=void 0;return SyncClient;})();
 
 module.exports = SyncClient;
+//# sourceMappingURL=../client/index.js.map
