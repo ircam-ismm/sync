@@ -41,7 +41,7 @@ class SyncProcess {
     // Repeat as many times as needed (__iterations).
     this.socket.on('sync_pong', (id, clientPingTime, serverPongTime) => {
       if (id === this.id) {
-        var now = this.getLocalTime();
+        var now = audioContext.currentTime;
         var travelTime = now - clientPingTime;
         var timeOffset = serverPongTime - (now - travelTime / 2);
 

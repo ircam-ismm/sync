@@ -41,7 +41,7 @@ var SyncProcess = (function(){var proto$0={};
     // Repeat as many times as needed (__iterations).
     this.socket.on('sync_pong', function(id, clientPingTime, serverPongTime)  {
       if (id === this$0.id) {
-        var now = this$0.getLocalTime();
+        var now = audioContext.currentTime;
         var travelTime = now - clientPingTime;
         var timeOffset = serverPongTime - (now - travelTime / 2);
 
@@ -80,10 +80,10 @@ MIXIN$0(SyncProcess.prototype,proto$0);proto$0=void 0;return SyncProcess;})();
 
 var SyncClient = (function(){var proto$0={};
   function SyncClient() {var params = arguments[0];if(params === void 0)params = {};
-    this.iterations = params.iterations || 5;
-    this.period = params.period || 0.500;
-    this.minInterval = this.minInterval || 10;
-    this.maxInterval = this.maxInterval || 20;
+    this.iterations = params.iterations || 5; // number of ping-pongs per iteration
+    this.period = params.period || 0.500; // period of pings
+    this.minInterval = this.minInterval || 10; // interval of ping-pongs minimum
+    this.maxInterval = this.maxInterval || 20; // interval of ping-pongs maximum
 
     if(this.minInterval > this.maxInterval)
       this.minInterval = this.maxInterval;
@@ -135,5 +135,3 @@ var SyncClient = (function(){var proto$0={};
 MIXIN$0(SyncClient.prototype,proto$0);proto$0=void 0;return SyncClient;})();
 
 module.exports = SyncClient;
-
-//# sourceMappingURL=../client/index.js.map
