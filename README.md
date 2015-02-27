@@ -1,6 +1,6 @@
 # sync
 
-This module synchronizes the server and clients clocks. On the client side, `SyncClient` uses the `audioContext` clock. On the server side, `SyncServer` uses the `process.hrtime()` clock. All times are in seconds (method arguments and returned values).
+This module synchronizes the server and clients clocks. On the client side, `SyncClient` uses the `audioContext` clock. On the server side, `SyncServer` uses the `process.hrtime()` clock. All times are in seconds (method arguments and returned values). **All time calculations and exchanges should be expressed in the server clock time.** The client clock time should be used only at the very end on the client, with the `audioContext`.
 
 ## Usage
 
