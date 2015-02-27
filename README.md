@@ -41,4 +41,4 @@ io.on('connection', (socket) => {
 ### Server side
 
 - **`getLocalTime() : Number`**  
-  Returns the current time in the server clock (*i.e.* a conversion of `process.hrtime()` in seconds). The returned time is a `Number`, in seconds.
+  The `getLocalTime` method returns the current time in the server clock (*i.e.* a conversion of `process.hrtime()` in seconds). The returned time is a `Number`, in seconds.
