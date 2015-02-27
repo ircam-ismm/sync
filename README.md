@@ -1,6 +1,6 @@
 # sync
 
-This module synchronizes the server and clients clocks.
+This module synchronizes the server and clients clocks. On the client side, `SyncClient` uses the `audioContext` clock. On the server side, `SyncServer` uses the `hrprocess` clock. All times are in seconds (method arguments and returned values).
 
 ## Usage
 
@@ -33,12 +33,12 @@ io.on('connection', (socket) => {
 ### Client side
 
 - **`getLocalTime(serverTime:Number) : Number`**  
-  Returns the time in the client clock when the server clock reaches `serverTime`. If no argument is provided, returns the current time in the client clock (`audioContext.currentTime`).
+  The `getLocalTime` method returns the time in the client clock when the server clock reaches `serverTime`. If no arguments are provided, the method returns the time is is when the method is called, in the client clock (*i.e.* `audioContext.currentTime`). The returned time is a `Number`, in seconds.
 
 - **`getServerTime(clientTime:Number = audioContext.currentTime) : Number`**  
-  Returns the time in the server clock when the client clock reaches `clientTime`. If no argument is provided, returns the current time in the server clock.
+  The `getServerTime` method returns the time in the server clock when the client clock reaches `clientTime`. If no arguments are provided, the method returns the time is is when the method is called, in the server clock. The returned time is a `Number`, in seconds.
 
 ### Server side
 
 - **`getLocalTime() : Number`**  
-  Returns the current time in the server clock.
+  Returns the current time in the server clock (*i.e.* a conversion of `process.()` in seconds). The returned time is a `Number`, in seconds.
