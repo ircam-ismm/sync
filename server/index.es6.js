@@ -14,9 +14,20 @@ class SyncServer {
    * 
    * @return {Number} local time in seconds
    */
-  getLocalTime() {
-    const time = process.hrtime();
-    return time[0] + time[1] * 1e-9;
+  getLocalTime(masterTime) {
+    if(typeof masterTime !== 'undefined') {
+      // Master time is local: no conversion
+      return masterTime;
+    } else {
+      // Read local clock
+      const time = process.hrtime();
+      return time[0] + time[1] * 1e-9;
+    }
+  }
+
+  getMasterTime(localTime) {
+    // Master time is local, here
+    return this.getLocalTime(localTime);
   }
 
   start(socket, statsCallback) {

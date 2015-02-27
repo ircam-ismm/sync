@@ -14,9 +14,20 @@ var SyncServer = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
    * 
    * @return {Number} local time in seconds
    */
-  proto$0.getLocalTime = function() {
-    var time = process.hrtime();
-    return time[0] + time[1] * 1e-9;
+  proto$0.getLocalTime = function(masterTime) {
+    if(typeof masterTime !== 'undefined') {
+      // Master time is local: no conversion
+      return masterTime;
+    } else {
+      // Read local clock
+      var time = process.hrtime();
+      return time[0] + time[1] * 1e-9;
+    }
+  };
+
+  proto$0.getMasterTime = function(localTime) {
+    // Master time is local, here
+    return this.getLocalTime(localTime);
   };
 
   proto$0.start = function(socket, statsCallback) {var this$0 = this;

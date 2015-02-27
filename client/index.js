@@ -122,14 +122,18 @@ var SyncClient = (function(){var proto$0={};
     }, 1000 * interval);
   };
 
-  proto$0.getLocalTime = function(serverTime) {
-    if (serverTime)
-      return serverTime - this.timeOffset;
-
-    return audioContext.currentTime;
+  proto$0.getLocalTime = function(masterTime) {
+    if(typeof masterTime !== 'undefined') {
+      // conversion
+      return masterTime - this.timeOffset;
+    } else {
+      // Read local clock
+      return audioContext.currentTime;
+    }
   };
 
-  proto$0.getServerTime = function() {var localTime = arguments[0];if(localTime === void 0)localTime = audioContext.currentTime;
+  proto$0.getMasterTime = function() {var localTime = arguments[0];if(localTime === void 0)localTime = audioContext.currentTime;
+    // always convert
     return localTime + this.timeOffset;
   };
 MIXIN$0(SyncClient.prototype,proto$0);proto$0=void 0;return SyncClient;})();

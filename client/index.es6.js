@@ -122,14 +122,18 @@ class SyncClient {
     }, 1000 * interval);
   }
 
-  getLocalTime(serverTime) {
-    if (serverTime)
-      return serverTime - this.timeOffset;
-
-    return audioContext.currentTime;
+  getLocalTime(masterTime) {
+    if(typeof masterTime !== 'undefined') {
+      // conversion
+      return masterTime - this.timeOffset;
+    } else {
+      // Read local clock
+      return audioContext.currentTime;
+    }
   }
 
-  getServerTime(localTime = audioContext.currentTime) {
+  getMasterTime(localTime = audioContext.currentTime) {
+    // always convert
     return localTime + this.timeOffset;
   }
 }
