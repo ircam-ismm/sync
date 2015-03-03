@@ -11,7 +11,8 @@
     "url": "https://github.com/collective-soundworks/sync"
   },
   "dependencies": {
-    "audio-context": "Ircam-RnD/audio-context.git"
+    "audio-context": "Ircam-RnD/audio-context.git",
+    "debug": "^2.1.1"
   },
   "devDependencies": {
     "gulp": "^3.8.11",

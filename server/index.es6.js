@@ -4,6 +4,8 @@
  */
 'use strict';
 
+const debug = require('debug')('soundworks:sync');
+
 class SyncServer {
   constructor() {
 
@@ -14,20 +16,30 @@ class SyncServer {
    * 
    * @return {Number} local time in seconds
    */
-  getLocalTime() {
-    const time = process.hrtime();
-    return time[0] + time[1] * 1e-9;
+  getLocalTime(masterTime) {
+    if(typeof masterTime !== 'undefined') {
+      // Master time is local: no conversion
+      return masterTime;
+    } else {
+      // Read local clock
+      const time = process.hrtime();
+      return time[0] + time[1] * 1e-9;
+    }
   }
 
-  start(socket, statsCallback) {
+  getMasterTime(localTime) {
+    // Master time is local, here
+    return this.getLocalTime(localTime);
+  }
+
+  start(socket) {
     socket.on('sync_ping', (id, clientPingTime) => {
+      debug('sync_ping');
       socket.emit('sync_pong', id, clientPingTime, this.getLocalTime() );
-    });
-
-    socket.on('sync_stats', (stats) => {
-      statsCallback(stats);
+      debug('sync_pong');
     });
   }
+
 }
 
 module.exports = SyncServer;
