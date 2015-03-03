@@ -4,14 +4,14 @@
   "description": "Client/Server time synchronization module",
   "authors": [
     "Sebastien.Robaszkiewicz@ircam.fr",
-    "Norbert.Schnell@ircam.fr"
+    "Norbert.Schnell@ircam.fr",
+    "Jean-Philippe.Lambert@ircam.fr"
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/collective-soundworks/sync"
   },
   "dependencies": {
-    "audio-context": "Ircam-RnD/audio-context.git",
     "debug": "^2.1.1"
   },
   "devDependencies": {

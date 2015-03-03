@@ -4,10 +4,6 @@
  */
 'use strict';
 
-const debug = require('debug')('soundworks:sync');
-
-var audioContext = require('audio-context');
-
 function getMinOfArray(numArray) {
   return Math.min.apply(null, numArray);
 }
@@ -17,17 +13,17 @@ function getMaxOfArray(numArray) {
 }
 
 class SyncProcess {
-  constructor(socket, iterations, period, callback) {
+  constructor(getLocalTimeFunction, emitFunction, listenFunction, iterations, period, callback) {
     this.id = Math.floor(Math.random() * 1000000);
 
-    this.socket = socket;
+    this.getLocalTimeFunction = getLocalTimeFunction;
 
     this.iterations = iterations;
     this.period = period;
     this.count = 0;
 
     this.timeOffset = 0;
-    
+
     this.timeOffsets = [];
     this.travelTimes = [];
     this.avgTimeOffset = 0;
@@ -39,18 +35,16 @@ class SyncProcess {
     this.__sendPing();
 
     this.callback = callback;
-    
+
     // When the client receives a 'pong' from the
     // server, calculate the travel time and the
     // time offset.
     // Repeat as many times as needed (__iterations).
-    this.socket.on('sync_pong', (id, clientPingTime, serverPongTime) => {
-      debug('sync_pong', id);
+    listenFunction('sync_pong', (id, clientPingTime, serverPongTime) => {
       if (id === this.id) {
-        var now = audioContext.currentTime;
+        var now = this.getLocalTimeFunction();
         var travelTime = now - clientPingTime;
         const timeOffset = serverPongTime - (now - travelTime / 2);
-        debug("timeOffset = %s", timeOffset);
 
         this.travelTimes.push(travelTime);
         this.timeOffsets.push(timeOffset);
@@ -65,11 +59,9 @@ class SyncProcess {
           this.minTravelTime = getMinOfArray(this.travelTimes);
           this.maxTravelTime = getMaxOfArray(this.travelTimes);
 
-          debug("timeOffset - avgTimeOffset = %s",
-                timeOffset - this.avgTimeOffset);
+            timeOffset - this.avgTimeOffset);
           this.timeOffset = this.avgTimeOffset;
 
-          debug("this.timeOffset = %s", this.avgTimeOffset);
           this.callback(this.timeOffset);
           // this.socket.emit('sync_stats', stats);
         }
@@ -79,54 +71,55 @@ class SyncProcess {
 
   __sendPing() {
     this.count++;
-    debug('sync_ping');
-    this.socket.emit('sync_ping', this.id, audioContext.currentTime);
+    this.emitFunction('sync_ping', this.id, this.getLocalTimeFunction());
   }
 }
 
 class SyncClient {
-  constructor(params = {}) {
-    this.iterations = params.iterations || 5; // number of ping-pongs per iteration
-    this.period = params.period || 0.500; // period of pings
+  constructor(getLocalTimeFunction, emitFunction, listenFunction, options = {}) {
+    this.iterations = options.iterations || 5; // number of ping-pongs per iteration
+    this.period = options.period || 0.500; // period of pings
     this.minInterval = this.minInterval || 10; // interval of ping-pongs minimum
     this.maxInterval = this.maxInterval || 20; // interval of ping-pongs maximum
 
-    if(this.minInterval > this.maxInterval) {
+    if (this.minInterval > this.maxInterval) {
       this.minInterval = this.maxInterval;
     }
+
+    this.getLocalTimeFunction = getLocalTimeFunction;
+    this.emitFunction = emitFunction;
+    this.listenFunction = listenFunction;
 
     this.timeOffset = 0;
   }
 
-    start(socket) {
-    this.socket = socket;
+  start() {
     this.__syncLoop();
   }
 
   __syncLoop() {
     var interval = this.minInterval + Math.random() * (this.maxInterval - this.minInterval);
 
-    var sync = new SyncProcess(this.socket, this.iterations, this.period,
-                               (offset) => {
-                                 this.timeOffset = offset;  
-                               });
+    var sync = new SyncProcess(this.getLocalTimeFunction, this.emitFunction, this.listenFunction, this.iterations, this.period, (offset) => {
+      this.timeOffset = offset;
+    });
 
     setTimeout(() => {
       this.__syncLoop();
     }, 1000 * interval);
   }
 
-  getLocalTime(masterTime) {
-    if(typeof masterTime !== 'undefined') {
+  getLocalTime(syncTime) {
+    if (typeof syncTime !== 'undefined') {
       // conversion
-      return masterTime - this.timeOffset;
+      return syncTime - this.timeOffset;
     } else {
       // Read local clock
-      return audioContext.currentTime;
+      return this.getLocalTimeFunction();
     }
   }
 
-  getMasterTime(localTime = audioContext.currentTime) {
+  getSyncTime(localTime = this.getLocalTimeFunction()) {
     // always convert
     return localTime + this.timeOffset;
   }
