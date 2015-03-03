@@ -4,6 +4,8 @@
  */
 'use strict';var PRS$0 = (function(o,t){o["__proto__"]={"a":t};return o["a"]===t})({},{});var DP$0 = Object.defineProperty;var GOPD$0 = Object.getOwnPropertyDescriptor;var MIXIN$0 = function(t,s){for(var p in s){if(s.hasOwnProperty(p)){DP$0(t,p,GOPD$0(s,p));}}return t};
 
+var debug = require('debug')('soundworks:sync');
+
 var audioContext = require('audio-context');
 
 function getMinOfArray(numArray) {
@@ -15,16 +17,17 @@ function getMaxOfArray(numArray) {
 }
 
 var SyncProcess = (function(){var proto$0={};
-  function SyncProcess(socket, iterations, period, statsCallback) {var this$0 = this;
+  function SyncProcess(socket, iterations, period, callback) {var this$0 = this;
     this.id = Math.floor(Math.random() * 1000000);
 
     this.socket = socket;
-    this.statsCallback = statsCallback;
 
     this.iterations = iterations;
     this.period = period;
     this.count = 0;
 
+    this.timeOffset = 0;
+    
     this.timeOffsets = [];
     this.travelTimes = [];
     this.avgTimeOffset = 0;
@@ -35,15 +38,19 @@ var SyncProcess = (function(){var proto$0={};
     // Send first ping
     this.__sendPing();
 
+    this.callback = callback;
+    
     // When the client receives a 'pong' from the
     // server, calculate the travel time and the
     // time offset.
     // Repeat as many times as needed (__iterations).
     this.socket.on('sync_pong', function(id, clientPingTime, serverPongTime)  {
+      debug('sync_pong', id);
       if (id === this$0.id) {
         var now = audioContext.currentTime;
         var travelTime = now - clientPingTime;
         var timeOffset = serverPongTime - (now - travelTime / 2);
+        debug("timeOffset = %s", timeOffset);
 
         this$0.travelTimes.push(travelTime);
         this$0.timeOffsets.push(timeOffset);
@@ -58,15 +65,13 @@ var SyncProcess = (function(){var proto$0={};
           this$0.minTravelTime = getMinOfArray(this$0.travelTimes);
           this$0.maxTravelTime = getMaxOfArray(this$0.travelTimes);
 
-          var stats = {
-            minTravelTime: this$0.minTravelTime,
-            maxTravelTime: this$0.maxTravelTime,
-            avgTravelTime: this$0.avgTravelTime,
-            avgTimeOffset: this$0.avgTimeOffset
-          };
+          debug("timeOffset - avgTimeOffset = %s",
+                timeOffset - this$0.avgTimeOffset);
+          this$0.timeOffset = this$0.avgTimeOffset;
 
-          this$0.socket.emit('sync_stats', stats);
-          statsCallback(stats);
+          debug("this.timeOffset = %s", this$0.avgTimeOffset);
+          this$0.callback(this$0.timeOffset);
+          // this.socket.emit('sync_stats', stats);
         }
       }
     });
@@ -74,6 +79,7 @@ var SyncProcess = (function(){var proto$0={};
 
   proto$0.__sendPing = function() {
     this.count++;
+    debug('sync_ping');
     this.socket.emit('sync_ping', this.id, audioContext.currentTime);
   };
 MIXIN$0(SyncProcess.prototype,proto$0);proto$0=void 0;return SyncProcess;})();
@@ -85,37 +91,25 @@ var SyncClient = (function(){var proto$0={};
     this.minInterval = this.minInterval || 10; // interval of ping-pongs minimum
     this.maxInterval = this.maxInterval || 20; // interval of ping-pongs maximum
 
-    if(this.minInterval > this.maxInterval)
+    if(this.minInterval > this.maxInterval) {
       this.minInterval = this.maxInterval;
-
-    // stats
-    this.minTravelTimes = [];
-    this.maxTravelTimes = [];
-    this.avgTravelTimes = [];
-    this.avgTimeOffsets = [];
+    }
 
     this.timeOffset = 0;
   }DP$0(SyncClient,"prototype",{"configurable":false,"enumerable":false,"writable":false});
 
-  proto$0.start = function(socket, statsCallback) {
+    proto$0.start = function(socket) {
     this.socket = socket;
-    this.statsCallback = statsCallback;
     this.__syncLoop();
   };
 
   proto$0.__syncLoop = function() {var this$0 = this;
     var interval = this.minInterval + Math.random() * (this.maxInterval - this.minInterval);
 
-    var sync = new SyncProcess(this.socket, this.iterations, this.period, function(stats)  {
-      this$0.timeOffset = stats.avgTimeOffset;
-
-      this$0.minTravelTimes.push(stats.minTravelTime);
-      this$0.maxTravelTimes.push(stats.maxTravelTime);
-      this$0.avgTimeOffsets.push(stats.avgTimeOffset);
-      this$0.avgTravelTimes.push(stats.avgTravelTime);
-
-      this$0.statsCallback(stats);
-    });
+    var sync = new SyncProcess(this.socket, this.iterations, this.period,
+                               function(offset)  {
+                                 this$0.timeOffset = offset;  
+                               });
 
     setTimeout(function()  {
       this$0.__syncLoop();

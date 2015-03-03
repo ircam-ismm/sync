@@ -4,6 +4,8 @@
  */
 'use strict';
 
+const debug = require('debug')('soundworks:sync');
+
 class SyncServer {
   constructor() {
 
@@ -30,15 +32,14 @@ class SyncServer {
     return this.getLocalTime(localTime);
   }
 
-  start(socket, statsCallback) {
+  start(socket) {
     socket.on('sync_ping', (id, clientPingTime) => {
+      debug('sync_ping');
       socket.emit('sync_pong', id, clientPingTime, this.getLocalTime() );
-    });
-
-    socket.on('sync_stats', (stats) => {
-      statsCallback(stats);
+      debug('sync_pong');
     });
   }
+
 }
 
 module.exports = SyncServer;
