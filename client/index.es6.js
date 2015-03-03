@@ -13,10 +13,12 @@ function getMaxOfArray(numArray) {
 }
 
 class SyncProcess {
-  constructor(getLocalTimeFunction, emitFunction, listenFunction, iterations, period, callback) {
+  constructor(getTimeFunction, emitFunction, listenFunction, iterations, period, callback) {
     this.id = Math.floor(Math.random() * 1000000);
 
-    this.getLocalTimeFunction = getLocalTimeFunction;
+    this.getTimeFunction = getTimeFunction;
+    this.emitFunction = emitFunction;
+    this.listenFunction = listenFunction;
 
     this.iterations = iterations;
     this.period = period;
@@ -42,7 +44,7 @@ class SyncProcess {
     // Repeat as many times as needed (__iterations).
     listenFunction('sync_pong', (id, clientPingTime, serverPongTime) => {
       if (id === this.id) {
-        var now = this.getLocalTimeFunction();
+        var now = this.getTimeFunction();
         var travelTime = now - clientPingTime;
         const timeOffset = serverPongTime - (now - travelTime / 2);
 
@@ -70,12 +72,12 @@ class SyncProcess {
 
   __sendPing() {
     this.count++;
-    this.emitFunction('sync_ping', this.id, this.getLocalTimeFunction());
+    this.emitFunction('sync_ping', this.id, this.getTimeFunction());
   }
 }
 
 class SyncClient {
-  constructor(getLocalTimeFunction, emitFunction, listenFunction, options = {}) {
+  constructor(getTimeFunction, emitFunction, listenFunction, options = {}) {
     this.iterations = options.iterations || 5; // number of ping-pongs per iteration
     this.period = options.period || 0.500; // period of pings
     this.minInterval = this.minInterval || 10; // interval of ping-pongs minimum
@@ -85,7 +87,7 @@ class SyncClient {
       this.minInterval = this.maxInterval;
     }
 
-    this.getLocalTimeFunction = getLocalTimeFunction;
+    this.getTimeFunction = getTimeFunction;
     this.emitFunction = emitFunction;
     this.listenFunction = listenFunction;
 
@@ -99,7 +101,7 @@ class SyncClient {
   __syncLoop() {
     var interval = this.minInterval + Math.random() * (this.maxInterval - this.minInterval);
 
-    var sync = new SyncProcess(this.getLocalTimeFunction, this.emitFunction, this.listenFunction, this.iterations, this.period, (offset) => {
+    var sync = new SyncProcess(this.getTimeFunction, this.emitFunction, this.listenFunction, this.iterations, this.period, (offset) => {
       this.timeOffset = offset;
     });
 
@@ -114,11 +116,11 @@ class SyncClient {
       return syncTime - this.timeOffset;
     } else {
       // Read local clock
-      return this.getLocalTimeFunction();
+      return this.getTimeFunction();
     }
   }
 
-  getSyncTime(localTime = this.getLocalTimeFunction()) {
+  getSyncTime(localTime = this.getTimeFunction()) {
     // always convert
     return localTime + this.timeOffset;
   }

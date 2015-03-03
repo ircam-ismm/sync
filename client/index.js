@@ -4,10 +4,6 @@
  */
 'use strict';var PRS$0 = (function(o,t){o["__proto__"]={"a":t};return o["a"]===t})({},{});var DP$0 = Object.defineProperty;var GOPD$0 = Object.getOwnPropertyDescriptor;var MIXIN$0 = function(t,s){for(var p in s){if(s.hasOwnProperty(p)){DP$0(t,p,GOPD$0(s,p));}}return t};
 
-var debug = require('debug')('soundworks:sync');
-
-var audioContext = require('audio-context');
-
 function getMinOfArray(numArray) {
   return Math.min.apply(null, numArray);
 }
@@ -17,17 +13,19 @@ function getMaxOfArray(numArray) {
 }
 
 var SyncProcess = (function(){var proto$0={};
-  function SyncProcess(socket, iterations, period, callback) {var this$0 = this;
+  function SyncProcess(getTimeFunction, emitFunction, listenFunction, iterations, period, callback) {var this$0 = this;
     this.id = Math.floor(Math.random() * 1000000);
 
-    this.socket = socket;
+    this.getTimeFunction = getTimeFunction;
+    this.emitFunction = emitFunction;
+    this.listenFunction = listenFunction;
 
     this.iterations = iterations;
     this.period = period;
     this.count = 0;
 
     this.timeOffset = 0;
-    
+
     this.timeOffsets = [];
     this.travelTimes = [];
     this.avgTimeOffset = 0;
@@ -39,18 +37,16 @@ var SyncProcess = (function(){var proto$0={};
     this.__sendPing();
 
     this.callback = callback;
-    
+
     // When the client receives a 'pong' from the
     // server, calculate the travel time and the
     // time offset.
     // Repeat as many times as needed (__iterations).
-    this.socket.on('sync_pong', function(id, clientPingTime, serverPongTime)  {
-      debug('sync_pong', id);
+    listenFunction('sync_pong', function(id, clientPingTime, serverPongTime)  {
       if (id === this$0.id) {
-        var now = audioContext.currentTime;
+        var now = this$0.getTimeFunction();
         var travelTime = now - clientPingTime;
         var timeOffset = serverPongTime - (now - travelTime / 2);
-        debug("timeOffset = %s", timeOffset);
 
         this$0.travelTimes.push(travelTime);
         this$0.timeOffsets.push(timeOffset);
@@ -65,11 +61,8 @@ var SyncProcess = (function(){var proto$0={};
           this$0.minTravelTime = getMinOfArray(this$0.travelTimes);
           this$0.maxTravelTime = getMaxOfArray(this$0.travelTimes);
 
-          debug("timeOffset - avgTimeOffset = %s",
-                timeOffset - this$0.avgTimeOffset);
           this$0.timeOffset = this$0.avgTimeOffset;
 
-          debug("this.timeOffset = %s", this$0.avgTimeOffset);
           this$0.callback(this$0.timeOffset);
           // this.socket.emit('sync_stats', stats);
         }
@@ -79,54 +72,55 @@ var SyncProcess = (function(){var proto$0={};
 
   proto$0.__sendPing = function() {
     this.count++;
-    debug('sync_ping');
-    this.socket.emit('sync_ping', this.id, audioContext.currentTime);
+    this.emitFunction('sync_ping', this.id, this.getTimeFunction());
   };
 MIXIN$0(SyncProcess.prototype,proto$0);proto$0=void 0;return SyncProcess;})();
 
 var SyncClient = (function(){var proto$0={};
-  function SyncClient() {var params = arguments[0];if(params === void 0)params = {};
-    this.iterations = params.iterations || 5; // number of ping-pongs per iteration
-    this.period = params.period || 0.500; // period of pings
+  function SyncClient(getTimeFunction, emitFunction, listenFunction) {var options = arguments[3];if(options === void 0)options = {};
+    this.iterations = options.iterations || 5; // number of ping-pongs per iteration
+    this.period = options.period || 0.500; // period of pings
     this.minInterval = this.minInterval || 10; // interval of ping-pongs minimum
     this.maxInterval = this.maxInterval || 20; // interval of ping-pongs maximum
 
-    if(this.minInterval > this.maxInterval) {
+    if (this.minInterval > this.maxInterval) {
       this.minInterval = this.maxInterval;
     }
+
+    this.getTimeFunction = getTimeFunction;
+    this.emitFunction = emitFunction;
+    this.listenFunction = listenFunction;
 
     this.timeOffset = 0;
   }DP$0(SyncClient,"prototype",{"configurable":false,"enumerable":false,"writable":false});
 
-    proto$0.start = function(socket) {
-    this.socket = socket;
+  proto$0.start = function() {
     this.__syncLoop();
   };
 
   proto$0.__syncLoop = function() {var this$0 = this;
     var interval = this.minInterval + Math.random() * (this.maxInterval - this.minInterval);
 
-    var sync = new SyncProcess(this.socket, this.iterations, this.period,
-                               function(offset)  {
-                                 this$0.timeOffset = offset;  
-                               });
+    var sync = new SyncProcess(this.getTimeFunction, this.emitFunction, this.listenFunction, this.iterations, this.period, function(offset)  {
+      this$0.timeOffset = offset;
+    });
 
     setTimeout(function()  {
       this$0.__syncLoop();
     }, 1000 * interval);
   };
 
-  proto$0.getLocalTime = function(masterTime) {
-    if(typeof masterTime !== 'undefined') {
+  proto$0.getLocalTime = function(syncTime) {
+    if (typeof syncTime !== 'undefined') {
       // conversion
-      return masterTime - this.timeOffset;
+      return syncTime - this.timeOffset;
     } else {
       // Read local clock
-      return audioContext.currentTime;
+      return this.getTimeFunction();
     }
   };
 
-  proto$0.getMasterTime = function() {var localTime = arguments[0];if(localTime === void 0)localTime = audioContext.currentTime;
+  proto$0.getSyncTime = function() {var localTime = arguments[0];if(localTime === void 0)localTime = this.getTimeFunction();
     // always convert
     return localTime + this.timeOffset;
   };
