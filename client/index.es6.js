@@ -59,7 +59,6 @@ class SyncProcess {
           this.minTravelTime = getMinOfArray(this.travelTimes);
           this.maxTravelTime = getMaxOfArray(this.travelTimes);
 
-            timeOffset - this.avgTimeOffset);
           this.timeOffset = this.avgTimeOffset;
 
           this.callback(this.timeOffset);
