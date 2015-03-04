@@ -13,12 +13,12 @@ function getMaxOfArray(numArray) {
 }
 
 class SyncProcess {
-  constructor(getTimeFunction, emitFunction, listenFunction, iterations, period, callback) {
+  constructor(getTimeFunction, sendFunction, receiveFunction, iterations, period, callback) {
     this.id = Math.floor(Math.random() * 1000000);
 
     this.getTimeFunction = getTimeFunction;
-    this.emitFunction = emitFunction;
-    this.listenFunction = listenFunction;
+    this.sendFunction = sendFunction;
+    this.receiveFunction = receiveFunction;
 
     this.iterations = iterations;
     this.period = period;
@@ -42,7 +42,7 @@ class SyncProcess {
     // server, calculate the travel time and the
     // time offset.
     // Repeat as many times as needed (__iterations).
-    listenFunction('sync_pong', (id, clientPingTime, serverPongTime) => {
+    receiveFunction('sync_pong', (id, clientPingTime, serverPongTime) => {
       if (id === this.id) {
         var now = this.getTimeFunction();
         var travelTime = now - clientPingTime;
@@ -72,12 +72,12 @@ class SyncProcess {
 
   __sendPing() {
     this.count++;
-    this.emitFunction('sync_ping', this.id, this.getTimeFunction());
+    this.sendFunction('sync_ping', this.id, this.getTimeFunction());
   }
 }
 
 class SyncClient {
-  constructor(getTimeFunction, emitFunction, listenFunction, options = {}) {
+  constructor(getTimeFunction, options = {}) {
     this.iterations = options.iterations || 5; // number of ping-pongs per iteration
     this.period = options.period || 0.500; // period of pings
     this.minInterval = this.minInterval || 10; // interval of ping-pongs minimum
@@ -88,41 +88,34 @@ class SyncClient {
     }
 
     this.getTimeFunction = getTimeFunction;
-    this.emitFunction = emitFunction;
-    this.listenFunction = listenFunction;
-
     this.timeOffset = 0;
   }
 
-  start() {
-    this.__syncLoop();
+  start(sendFunction, receiveFunction) {
+    this.__syncLoop(sendFunction, receiveFunction);
   }
 
-  __syncLoop() {
+  __syncLoop(sendFunction, receiveFunction) {
     var interval = this.minInterval + Math.random() * (this.maxInterval - this.minInterval);
 
-    var sync = new SyncProcess(this.getTimeFunction, this.emitFunction, this.listenFunction, this.iterations, this.period, (offset) => {
+    var sync = new SyncProcess(this.getTimeFunction, sendFunction, receiveFunction, this.iterations, this.period, (offset) => {
       this.timeOffset = offset;
     });
 
     setTimeout(() => {
-      this.__syncLoop();
+      this.__syncLoop(sendFunction, receiveFunction);
     }, 1000 * interval);
   }
 
   getLocalTime(syncTime) {
-    if (typeof syncTime !== 'undefined') {
-      // conversion
-      return syncTime - this.timeOffset;
-    } else {
-      // Read local clock
-      return this.getTimeFunction();
-    }
+    if (syncTime)      
+      return syncTime - this.timeOffset; // conversion
+    else
+      return this.getTimeFunction(); // read local clock
   }
 
   getSyncTime(localTime = this.getTimeFunction()) {
-    // always convert
-    return localTime + this.timeOffset;
+    return localTime + this.timeOffset; // always convert
   }
 }
 

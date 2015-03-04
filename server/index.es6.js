@@ -5,10 +5,8 @@
 'use strict';
 
 class SyncServer {
-  constructor(getTimeFunction, emitFunction, listenFunction) {
+  constructor(getTimeFunction) {
     this.getTimeFunction = getTimeFunction;
-    this.emitFunction = emitFunction;
-    this.listenFunction = listenFunction;
   }
 
   /** 
@@ -27,9 +25,9 @@ class SyncServer {
     return this.getLocalTime(localTime); // sync time is local, here
   }
 
-  start(socket) {
-    socket.on('sync_ping', (id, clientPingTime) => {
-      socket.emit('sync_pong', id, clientPingTime, this.getLocalTime());
+  start(sendFunction, receiveFunction) {
+    receiveFunction('sync_ping', (id, clientPingTime) => {
+      sendFunction('sync_pong', id, clientPingTime, this.getLocalTime());
     });
   }
 }

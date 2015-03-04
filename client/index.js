@@ -13,12 +13,12 @@ function getMaxOfArray(numArray) {
 }
 
 var SyncProcess = (function(){var proto$0={};
-  function SyncProcess(getTimeFunction, emitFunction, listenFunction, iterations, period, callback) {var this$0 = this;
+  function SyncProcess(getTimeFunction, sendFunction, receiveFunction, iterations, period, callback) {var this$0 = this;
     this.id = Math.floor(Math.random() * 1000000);
 
     this.getTimeFunction = getTimeFunction;
-    this.emitFunction = emitFunction;
-    this.listenFunction = listenFunction;
+    this.sendFunction = sendFunction;
+    this.receiveFunction = receiveFunction;
 
     this.iterations = iterations;
     this.period = period;
@@ -42,7 +42,7 @@ var SyncProcess = (function(){var proto$0={};
     // server, calculate the travel time and the
     // time offset.
     // Repeat as many times as needed (__iterations).
-    listenFunction('sync_pong', function(id, clientPingTime, serverPongTime)  {
+    receiveFunction('sync_pong', function(id, clientPingTime, serverPongTime)  {
       if (id === this$0.id) {
         var now = this$0.getTimeFunction();
         var travelTime = now - clientPingTime;
@@ -72,12 +72,12 @@ var SyncProcess = (function(){var proto$0={};
 
   proto$0.__sendPing = function() {
     this.count++;
-    this.emitFunction('sync_ping', this.id, this.getTimeFunction());
+    this.sendFunction('sync_ping', this.id, this.getTimeFunction());
   };
 MIXIN$0(SyncProcess.prototype,proto$0);proto$0=void 0;return SyncProcess;})();
 
 var SyncClient = (function(){var proto$0={};
-  function SyncClient(getTimeFunction, emitFunction, listenFunction) {var options = arguments[3];if(options === void 0)options = {};
+  function SyncClient(getTimeFunction) {var options = arguments[1];if(options === void 0)options = {};
     this.iterations = options.iterations || 5; // number of ping-pongs per iteration
     this.period = options.period || 0.500; // period of pings
     this.minInterval = this.minInterval || 10; // interval of ping-pongs minimum
@@ -88,41 +88,34 @@ var SyncClient = (function(){var proto$0={};
     }
 
     this.getTimeFunction = getTimeFunction;
-    this.emitFunction = emitFunction;
-    this.listenFunction = listenFunction;
-
     this.timeOffset = 0;
   }DP$0(SyncClient,"prototype",{"configurable":false,"enumerable":false,"writable":false});
 
-  proto$0.start = function() {
-    this.__syncLoop();
+  proto$0.start = function(sendFunction, receiveFunction) {
+    this.__syncLoop(sendFunction, receiveFunction);
   };
 
-  proto$0.__syncLoop = function() {var this$0 = this;
+  proto$0.__syncLoop = function(sendFunction, receiveFunction) {var this$0 = this;
     var interval = this.minInterval + Math.random() * (this.maxInterval - this.minInterval);
 
-    var sync = new SyncProcess(this.getTimeFunction, this.emitFunction, this.listenFunction, this.iterations, this.period, function(offset)  {
+    var sync = new SyncProcess(this.getTimeFunction, sendFunction, receiveFunction, this.iterations, this.period, function(offset)  {
       this$0.timeOffset = offset;
     });
 
     setTimeout(function()  {
-      this$0.__syncLoop();
+      this$0.__syncLoop(sendFunction, receiveFunction);
     }, 1000 * interval);
   };
 
   proto$0.getLocalTime = function(syncTime) {
-    if (typeof syncTime !== 'undefined') {
-      // conversion
-      return syncTime - this.timeOffset;
-    } else {
-      // Read local clock
-      return this.getTimeFunction();
-    }
+    if (syncTime)      
+      return syncTime - this.timeOffset; // conversion
+    else
+      return this.getTimeFunction(); // read local clock
   };
 
   proto$0.getSyncTime = function() {var localTime = arguments[0];if(localTime === void 0)localTime = this.getTimeFunction();
-    // always convert
-    return localTime + this.timeOffset;
+    return localTime + this.timeOffset; // always convert
   };
 MIXIN$0(SyncClient.prototype,proto$0);proto$0=void 0;return SyncClient;})();
 
