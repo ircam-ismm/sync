@@ -1,6 +1,8 @@
 'use strict';
 
-class SyncClient {
+var EventEmitter = require('events').EventEmitter;
+
+class SyncClient extends EventEmitter {
   constructor(getTimeFunction, options = {}) {
     this.pingIterations = options.pingIterations || 10; // number of ping-pongs in a streak
     this.pingInterval = options.pingInterval || 0.250; // interval between pings in a streak (in seconds)
@@ -26,7 +28,7 @@ class SyncClient {
   __syncLoop(sendFunction) {
     let interval;
 
-    if (this.pingCount < this.pingIterations - 1) { // if we are in a streak, use the pingInterval value
+    if (this.pingCount < this.pingIterations) { // if we are in a streak, use the pingInterval value
       interval = this.pingInterval;
       ++this.pingCount;
     } else { // if we reached the end of a streak, plan for the begining of the next streak
@@ -38,11 +40,11 @@ class SyncClient {
     sendFunction('sync_ping', this.pingId, this.getTimeFunction());
 
     setTimeout(() => {
-      this.__syncLoop();
+      this.__syncLoop(sendFunction);
     }, 1000 * interval);
   }
 
-  start(sendFunction, receiveFunction, callback) {
+  start(sendFunction, receiveFunction) {
     receiveFunction('sync_pong', (pingId, clientPingTime, serverPingTime, serverPongTime) => {
       if (pingId === this.pingId) {
         var clientPongTime = this.getTimeFunction();
@@ -57,7 +59,8 @@ class SyncClient {
           let quickest = this.data.slice(0).sort().slice(0, this.dataBest);
           this.travelTime = quickest.reduce((p, q) => p + q[0], 0) / quickest.length;
           this.timeOffset = quickest.reduce((p, q) => p + q[1], 0) / quickest.length;
-          callback(this.timeOffset);
+          
+          this.emit('sync:stats', { timeOffset: this.timeOffset, travelTime: this.travelTime });
         }
       }
     });
