@@ -27,7 +27,8 @@ class SyncServer {
 
   start(sendFunction, receiveFunction) {
     receiveFunction('sync_ping', (id, clientPingTime) => {
-      sendFunction('sync_pong', id, clientPingTime, this.getLocalTime());
+      const serverPingTime = this.getLocalTime();
+      sendFunction('sync_pong', id, clientPingTime, serverPingTime, this.getLocalTime());
     });
   }
 }

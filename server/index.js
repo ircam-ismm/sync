@@ -27,7 +27,8 @@ var SyncServer = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
 
   proto$0.start = function(sendFunction, receiveFunction) {var this$0 = this;
     receiveFunction('sync_ping', function(id, clientPingTime)  {
-      sendFunction('sync_pong', id, clientPingTime, this$0.getLocalTime());
+      var serverPingTime = this$0.getLocalTime();
+      sendFunction('sync_pong', id, clientPingTime, serverPingTime, this$0.getLocalTime());
     });
   };
 MIXIN$0(SyncServer.prototype,proto$0);proto$0=void 0;return SyncServer;})();

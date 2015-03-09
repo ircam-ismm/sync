@@ -1,114 +1,76 @@
-/**
- * @fileoverview Client side syncronization module
- * @author Sebastien.Robaszkiewicz@ircam.fr, Norbert.Schnell@ircam.fr
- */
 'use strict';
 
-function getMinOfArray(numArray) {
-  return Math.min.apply(null, numArray);
-}
+class SyncClient {
+  constructor(getTimeFunction, sendFunction, receiveFunction, callback, options = {}) {
+    this.pingIterations = options.pingIterations || 10; // number of ping-pongs in a streak
+    this.pingInterval = options.pingInterval || 0.250; // interval between pings in a streak (in seconds)
+    this.pingSleepInterval = this.pingSleepInterval || [10, 20]; // range of interval between ping-pong streaks (in seconds)
+    this.pingCount = 0; // elapsed pings
+    this.pingId = 0; // ping ID
 
-function getMaxOfArray(numArray) {
-  return Math.max.apply(null, numArray);
-}
+    this.data = []; // circular buffer
+    this.dataNextIndex = 0; // next index in circular buffer
+    this.dataLength = this.pingIterations; // size of circular buffer
+    this.dataBest = Math.min(4, this.dataLength); // number of quickest roundtrip times used to compute mean offset
 
-class SyncProcess {
-  constructor(getTimeFunction, sendFunction, receiveFunction, iterations, period, callback) {
-    this.id = Math.floor(Math.random() * 1000000);
+    this.timeOffset = 0;
+    this.travelTime = 0;
+
+    if (this.pingSleepInterval[0] > this.pingSleepInterval[1]) {
+      this.pingSleepInterval[0] = this.pingSleepInterval[1];
+    }
 
     this.getTimeFunction = getTimeFunction;
     this.sendFunction = sendFunction;
     this.receiveFunction = receiveFunction;
-
-    this.iterations = iterations;
-    this.period = period;
-    this.count = 0;
-
-    this.timeOffset = 0;
-
-    this.timeOffsets = [];
-    this.travelTimes = [];
-    this.avgTimeOffset = 0;
-    this.avgTravelTime = 0;
-    this.minTravelTime = 0;
-    this.maxTravelTime = 0;
-
-    // Send first ping
-    this.__sendPing();
-
     this.callback = callback;
 
-    // When the client receives a 'pong' from the
-    // server, calculate the travel time and the
-    // time offset.
-    // Repeat as many times as needed (__iterations).
-    receiveFunction('sync_pong', (id, clientPingTime, serverPongTime) => {
-      if (id === this.id) {
-        var now = this.getTimeFunction();
-        var travelTime = now - clientPingTime;
-        const timeOffset = serverPongTime - (now - travelTime / 2);
+    this.receiveFunction('sync_pong', (pingId, clientPingTime, serverPingTime, serverPongTime) => {
+      if (pingId === this.pingId) {
+        var clientPongTime = this.getTimeFunction();
+        var travelTime = Math.max(0, (clientPongTime - clientPingTime) - (serverPongTime - serverPingTime));
+        const timeOffset = ((serverPingTime - clientPingTime) + (serverPongTime - clientPongTime)) * 0.5;
 
-        this.travelTimes.push(travelTime);
-        this.timeOffsets.push(timeOffset);
+        this.data[this.dataNextIndex] = [travelTime, timeOffset];
+        this.dataNextIndex = (++this.dataNextIndex) % this.dataLength;
 
-        if (this.count < this.iterations) {
-          setTimeout(() => {
-            this.__sendPing();
-          }, 1000 * this.period);
-        } else {
-          this.avgTravelTime = this.travelTimes.reduce((p, q) => p + q) / this.travelTimes.length;
-          this.avgTimeOffset = this.timeOffsets.reduce((p, q) => p + q) / this.timeOffsets.length;
-          this.minTravelTime = getMinOfArray(this.travelTimes);
-          this.maxTravelTime = getMaxOfArray(this.travelTimes);
-
-          this.timeOffset = this.avgTimeOffset;
-
+        if (this.data.length >= this.dataLength) {
+          // keep only the quickest travel times
+          let quickest = this.data.slice(0).sort().slice(0, this.dataBest);
+          this.travelTime = quickest.reduce((p, q) => p + q[0], 0) / quickest.length;
+          this.timeOffset = quickest.reduce((p, q) => p + q[1], 0) / quickest.length;
           this.callback(this.timeOffset);
-          // this.socket.emit('sync_stats', stats);
         }
       }
     });
+
   }
 
-  __sendPing() {
-    this.count++;
-    this.sendFunction('sync_ping', this.id, this.getTimeFunction());
-  }
-}
+  __syncLoop() {
+    let interval;
 
-class SyncClient {
-  constructor(getTimeFunction, options = {}) {
-    this.iterations = options.iterations || 5; // number of ping-pongs per iteration
-    this.period = options.period || 0.500; // period of pings
-    this.minInterval = this.minInterval || 10; // interval of ping-pongs minimum
-    this.maxInterval = this.maxInterval || 20; // interval of ping-pongs maximum
-
-    if (this.minInterval > this.maxInterval) {
-      this.minInterval = this.maxInterval;
+    if (this.pingCount < this.pingIterations - 1) { // if we are in a streak, use the pingInterval value
+      interval = this.pingInterval;
+      ++this.pingCount;
+    } else { // if we reached the end of a streak, plan for the begining of the next streak
+      interval = this.pingSleepInterval[0] + Math.random() * (this.pingSleepInterval[1] - this.pingSleepInterval[0]);
+      this.pingCount = 0;
     }
-
-    this.getTimeFunction = getTimeFunction;
-    this.timeOffset = 0;
-  }
-
-  start(sendFunction, receiveFunction) {
-    this.__syncLoop(sendFunction, receiveFunction);
-  }
-
-  __syncLoop(sendFunction, receiveFunction) {
-    var interval = this.minInterval + Math.random() * (this.maxInterval - this.minInterval);
-
-    var sync = new SyncProcess(this.getTimeFunction, sendFunction, receiveFunction, this.iterations, this.period, (offset) => {
-      this.timeOffset = offset;
-    });
+    
+    ++this.pingId;
+    this.sendFunction('sync_ping', this.pingId, this.getTimeFunction());
 
     setTimeout(() => {
-      this.__syncLoop(sendFunction, receiveFunction);
+      this.__syncLoop();
     }, 1000 * interval);
   }
 
+  start() {
+    this.__syncLoop();
+  }
+
   getLocalTime(syncTime) {
-    if (syncTime)      
+    if (syncTime)
       return syncTime - this.timeOffset; // conversion
     else
       return this.getTimeFunction(); // read local clock
