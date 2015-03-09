@@ -1,5 +1,6 @@
 'use strict';
 
+var debug = require('debug')('soundworks:sync');
 var EventEmitter = require('events').EventEmitter;
 
 class SyncClient extends EventEmitter {
@@ -17,6 +18,7 @@ class SyncClient extends EventEmitter {
 
     this.timeOffset = 0;
     this.travelTime = 0;
+    this.travelTimeMax = 0;
 
     if (this.pingSleepInterval[0] > this.pingSleepInterval[1]) {
       this.pingSleepInterval[0] = this.pingSleepInterval[1];
@@ -54,13 +56,24 @@ class SyncClient extends EventEmitter {
         this.data[this.dataNextIndex] = [travelTime, timeOffset];
         this.dataNextIndex = (++this.dataNextIndex) % this.dataLength;
 
-        if (this.data.length >= this.dataLength) {
-          // keep only the quickest travel times
-          let quickest = this.data.slice(0).sort().slice(0, this.dataBest);
-          this.travelTime = quickest.reduce((p, q) => p + q[0], 0) / quickest.length;
-          this.timeOffset = quickest.reduce((p, q) => p + q[1], 0) / quickest.length;
+        if (this.pingCount === this.pingIterations
+            && this.data.length >= this.dataLength) {
+          // mean travel time over the last iterations
+          const sorted = this.data.slice(0).sort();
+          this.travelTime = sorted.reduce((p, q) => p + q[0], 0) / sorted.length;
+          this.travelTimeMax = sorted[sorted.length - 1][0];
           
-          this.emit('sync:stats', { timeOffset: this.timeOffset, travelTime: this.travelTime });
+          // keep only the quickest travel times for time offset
+          const quickest = sorted.slice(0, this.dataBest);
+          const timeOffsetAvg = quickest.reduce((p, q) => p + q[1], 0) / quickest.length;
+          debug("timeOffsetAvg = %s, delta = %s",
+                timeOffsetAvg, timeOffsetAvg - this.timeOffset);
+          this.timeOffset = timeOffsetAvg;
+
+          this.emit('sync:stats', {
+            timeOffset: this.timeOffset,
+            travelTime: this.travelTime,
+            travelTimeMax: this.travelTimeMax});
         }
       }
     });
