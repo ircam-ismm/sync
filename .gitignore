@@ -1,1 +1,4 @@
+**/*.js
+!**/*.es6.js
+!**/gulpfile.js
 node_modules
