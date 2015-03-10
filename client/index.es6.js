@@ -8,7 +8,7 @@ class SyncClient extends EventEmitter {
     this.pingIterations = options.pingIterations || 10; // number of ping-pongs in a streak
     this.pingInterval = options.pingInterval || 0.250; // interval between pings in a streak (in seconds)
     this.pingStreakInterval = this.pingStreakInterval || [10, 20]; // range of interval between ping-pong streaks (in seconds)
-    this.pingCount = 0; // elapsed pings
+    this.pingCount = 0; // elapsed pings in a streak
     this.pingId = 0; // ping ID
 
     this.data = []; // circular buffer
