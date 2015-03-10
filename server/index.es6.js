@@ -9,6 +9,13 @@ class SyncServer {
     this.getTimeFunction = getTimeFunction;
   }
 
+  start(sendFunction, receiveFunction) {
+    receiveFunction('sync_ping', (id, clientPingTime) => {
+      const serverPingTime = this.getLocalTime();
+      sendFunction('sync_pong', id, clientPingTime, serverPingTime, this.getLocalTime());
+    });
+  }
+
   /** 
    * Monotonic function.
    *
@@ -25,12 +32,6 @@ class SyncServer {
     return this.getLocalTime(localTime); // sync time is local, here
   }
 
-  start(sendFunction, receiveFunction) {
-    receiveFunction('sync_ping', (id, clientPingTime) => {
-      const serverPingTime = this.getLocalTime();
-      sendFunction('sync_pong', id, clientPingTime, serverPingTime, this.getLocalTime());
-    });
-  }
 }
 
 module.exports = SyncServer;

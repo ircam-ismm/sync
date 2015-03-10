@@ -7,7 +7,7 @@ class SyncClient extends EventEmitter {
   constructor(getTimeFunction, options = {}) {
     this.pingIterations = options.pingIterations || 10; // number of ping-pongs in a streak
     this.pingInterval = options.pingInterval || 0.250; // interval between pings in a streak (in seconds)
-    this.pingSleepInterval = this.pingSleepInterval || [10, 20]; // range of interval between ping-pong streaks (in seconds)
+    this.pingStreakInterval = this.pingStreakInterval || [10, 20]; // range of interval between ping-pong streaks (in seconds)
     this.pingCount = 0; // elapsed pings
     this.pingId = 0; // ping ID
 
@@ -20,8 +20,8 @@ class SyncClient extends EventEmitter {
     this.travelTime = 0;
     this.travelTimeMax = 0;
 
-    if (this.pingSleepInterval[0] > this.pingSleepInterval[1]) {
-      this.pingSleepInterval[0] = this.pingSleepInterval[1];
+    if (this.pingStreakInterval[0] > this.pingStreakInterval[1]) {
+      this.pingStreakInterval[0] = this.pingStreakInterval[1];
     }
 
     this.getTimeFunction = getTimeFunction;
@@ -34,7 +34,7 @@ class SyncClient extends EventEmitter {
       interval = this.pingInterval;
       ++this.pingCount;
     } else { // if we reached the end of a streak, plan for the begining of the next streak
-      interval = this.pingSleepInterval[0] + Math.random() * (this.pingSleepInterval[1] - this.pingSleepInterval[0]);
+      interval = this.pingStreakInterval[0] + Math.random() * (this.pingStreakInterval[1] - this.pingStreakInterval[0]);
       this.pingCount = 0;
     }
     
@@ -73,7 +73,8 @@ class SyncClient extends EventEmitter {
           this.emit('sync:stats', {
             timeOffset: this.timeOffset,
             travelTime: this.travelTime,
-            travelTimeMax: this.travelTimeMax});
+            travelTimeMax: this.travelTimeMax
+          });
         }
       }
     });
