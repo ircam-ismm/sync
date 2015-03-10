@@ -17,17 +17,16 @@ For instance, with the [`socket.io`](https://github.com/Automattic/socket.io) li
 ```javascript
 /* Client side */
 
-// 
 var audioContext = new AudioContext() || new webkitAudioContext();
 var socket = io();
 var Sync = require('sync/client');
 
-// Define functions
+// Define the helper functions
 var getTimeFunction = audioContext.currentTime; // function to get the local time
 var sendFunction = socket.emit; // function to send WebSocket messages to the server
 var receiveFunction = socket.on; // function to receive WebSocket messages from the server
 
-// Start the synchronization process
+// Initialize the sync module and start the synchronization process
 var sync = new SyncClient(audioContext.currentTime);
 sync.start(sendFunction, receiveFunction);
 
@@ -53,7 +52,7 @@ var io = require('socket.io');
 var Sync = require('sync/server');
 
 // Initialize sync module
-var getTimeFunction = () => {
+var getTimeFunction = () => { // function to get the local time
   let time = process.hrtime();
   return time[0] + time[1] * 1e-9;
 };
@@ -62,8 +61,8 @@ var sync = new Sync(getTimeFunction);
 // Set up a WebSocket communication channel with the client
 // and start to listen for the messages from that client
 io.on('connection', (socket) => {
-  let sendFunction = (msg, ...args) => socket.emit(msg, ...args);
-  let receiveFunction = (msg, callback) => socket.on(msg, callback);
+  let sendFunction = (msg, ...args) => socket.emit(msg, ...args); // function to send a WebSocket message to the client
+  let receiveFunction = (msg, callback) => socket.on(msg, callback); // function to receive a WebSocket message from the client
 
   sync.start(sendFunction, receiveFunction);
   
