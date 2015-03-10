@@ -105,7 +105,7 @@ io.on('connection', (socket) => {
 #### Events
 
 - `'sync:stats' : stats:Object`  
-  The `SyncClient` module emits the `sync:stats` event each time it resynchronizes the local clock on the sync clock. In particular, the first time this event is fired indicates that the clock is now in sync with the sync clock. The `'sync:stats'` event is associated with the `stats` object, whose properties are:
+  The `SyncClient` module emits the `'sync:stats'` event each time it resynchronizes the local clock on the sync clock. In particular, the first time this event is fired indicates that the clock is now in sync with the sync clock. The `'sync:stats'` event is associated with the `stats` object, whose properties are:
   - `timeOffset`  
     The `timeOffset` property contains the average time offset between the client clock and the sync clock, based on the latest ping-pong exchanges.
   - `travelTime`  
