@@ -134,3 +134,5 @@ io.on('connection', (socket) => {
 
 - `getSyncTime(localTime:Number = this.getTimeFunction()) : Number`  
   The `getSyncTime` method returns the time in the sync clock when the server clock reaches `localTime`. If no arguments are provided, the method returns the time it is when the method is called, in the sync clock. The returned time is a `Number`, in seconds.
+
+*Note: in practice, the sync clock used by the `sync` module is the `process.hrtime()` server clock.*
