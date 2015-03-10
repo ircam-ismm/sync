@@ -12,7 +12,7 @@ On the client side, you have to launch an instance of `SyncClient` and call the 
 - send a WebSocket message to the server;
 - receive a WebSocket message from the server.
 
-For instance, with the `socket.io` library:
+For instance, with the [`socket.io`](https://github.com/Automattic/socket.io) library:
 
 ```javascript
 /* Client side */
@@ -93,9 +93,9 @@ io.on('connection', (socket) => {
 - `start(sendFunction:Function, receiveFunction:Function)`  
   The `start` method starts the synchronization process. It takes two arguments:
   - `sendFunction:Function`  
-    The `sendFunction` argument indicates what function to use to send a WebSocket message to the server. For instance, if you use the [`socket.io`](https://github.com/Automattic/socket.io) library, it would be `socket.emit`.
+    The `sendFunction` argument indicates what function to use to send a WebSocket message to the server. For instance, if you use the `socket.io` library, it would be `socket.emit`.
   - `receiveFunction:Function`  
-    The `receiveFunction` argument indicates what function to use to receive a WebSocket message from the server. For instance, if you use the [`socket.io`](https://github.com/Automattic/socket.io) library, it would be `socket.on`.
+    The `receiveFunction` argument indicates what function to use to receive a WebSocket message from the server. For instance, if you use the `socket.io` library, it would be `socket.on`.
 
 - `getLocalTime(syncTime:Number) : Number`  
   The `getLocalTime` method returns the time in the client clock when the sync clock reaches `syncTime`. If no arguments are provided, the method returns the time it is when the method is called, in the client clock (*i.e.* `this.getTimeFunction()`). The returned time is a `Number`, in seconds.
@@ -120,9 +120,9 @@ io.on('connection', (socket) => {
 - `start(sendFunction:Function, receiveFunction:Function)`  
   The `start` method listens for a client's WebSocket messages on the server. It takes two arguments:
   - `sendFunction:Function`  
-    The `sendFunction` argument indicates what function to use to send a WebSocket message to the client. For instance, if you use the [`socket.io`](https://github.com/Automattic/socket.io) library, it would be `socket.emit`.
+    The `sendFunction` argument indicates what function to use to send a WebSocket message to the client. For instance, if you use the `socket.io` library, it would be `socket.emit`.
   - `receiveFunction:Function`  
-    The `receiveFunction` argument indicates what function to use to receive a WebSocket message from a client. For instance, if you use the [`socket.io`](https://github.com/Automattic/socket.io) library, it would be `socket.on`.
+    The `receiveFunction` argument indicates what function to use to receive a WebSocket message from a client. For instance, if you use the `socket.io` library, it would be `socket.on`.
 
 - `getLocalTime(syncTime:Number) : Number`  
   The `getLocalTime` method returns the time in the server clock when the sync clock reaches `syncTime`. If no arguments are provided, the method returns the time it is when the method is called, in the server clock (*i.e.* `this.getTimeFunction()`). The returned time is a `Number`, in seconds.
