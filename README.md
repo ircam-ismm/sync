@@ -78,16 +78,16 @@ io.on('connection', (socket) => {
 
 - `constructor(getTimeFunction:Function, options:Object = {})`  
   The `constructor`  method instantiates the `SyncClient` module on the client side. It takes up to two arguments:
-  - `getTimeFunction:Function`  
-     The `getTimeFunction` argument what function to use to get the local time on the client side. For instance, it can be `AudioContext.currentTime`.
-  - `options:Object = {}`  
+  - `getTimeFunction:Function`
+     What function to use to get the local time on the client side. For instance, it can be `AudioContext.currentTime`.
+  - `options:Object = {}`
     The optional `options` argument customizes the configuration of the module. Its optional properties are:
-    - `pingInterval:Number = 0.25`  
-      The `pingInterval` property indicates the interval (in seconds) between each ping in a streak.
-    - `pingIterations:Number = 10`  
-      The `pingIterations` property indicates the number of pings sent in a streak.
-    - `pingStreakInterval:Array = [10, 20]`  
-      The `pingStreakInterval` property indicates the range of intervals between each ping-pong streak (in seconds). When a streak finishes, the next one will start *x* seconds later, where *x* is a random number between `pingStreakInterval[0]` and `pingStreakInterval[1]`. `pingStreakInterval` must be an array of two `Number`s.
+    - `pingStreakPeriod:Number = 0.25`
+      Indicates the interval (in seconds) between each ping in a streak.
+    - `pingStreakIterations:Number = 10`
+      Indicates the number of pings sent in a streak.
+    - `pingStreakDelay:Array = [10, 20]`
+      Indicates the range of intervals between each ping-pong streak (in seconds). When a streak finishes, the next one will start *x* seconds later, where *x* is a random number between `pingStreakDelay[0]` and `pingStreakDelay[1]`. `pingStreakDelay` must be an array of two `Number`s.
 
 - `start(sendFunction:Function, receiveFunction:Function)`  
   The `start` method starts the synchronization process. It takes two arguments:
