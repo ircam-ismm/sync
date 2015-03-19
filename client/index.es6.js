@@ -36,22 +36,22 @@ class SyncClient extends EventEmitter {
   __syncLoop(sendFunction) {
     clearTimeout(this.timeoutId);
     ++ this.pingId;
-    sendFunction('sync_ping', this.pingId, this.getTimeFunction());
+    sendFunction('sync:ping', this.pingId, this.getTimeFunction());
 
     this.timeoutId = setTimeout(() => {
-      debug('sync_ping timeout > %s', this.pingTimeoutDelay);
+      debug('sync:ping timeout > %s', this.pingTimeoutDelay);
       this.__syncLoop(sendFunction); // retry (yes, always increment pingId)
     }, 1000 * this.pingTimeoutDelay);
   }
 
   start(sendFunction, receiveFunction) {
-    receiveFunction('sync_pong', (pingId, clientPingTime, serverPingTime, serverPongTime) => {
+    receiveFunction('sync:pong', (pingId, clientPingTime, serverPingTime, serverPongTime) => {
       if (pingId === this.pingId) {
         ++ this.pingCount;
         clearTimeout(this.timeoutId);
 
-        var clientPongTime = this.getTimeFunction();
-        var travelTime = Math.max(0, (clientPongTime - clientPingTime) - (serverPongTime - serverPingTime));
+        let clientPongTime = this.getTimeFunction();
+        let travelTime = Math.max(0, (clientPongTime - clientPingTime) - (serverPongTime - serverPingTime));
         const timeOffset = ((serverPingTime - clientPingTime) + (serverPongTime - clientPongTime)) * 0.5;
 
         this.data[this.dataNextIndex] = [travelTime, timeOffset];
