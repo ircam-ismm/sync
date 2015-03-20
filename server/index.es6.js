@@ -10,9 +10,9 @@ class SyncServer {
   }
 
   start(sendFunction, receiveFunction) {
-    receiveFunction('sync_ping', (id, clientPingTime) => {
+    receiveFunction('sync:ping', (id, clientPingTime) => {
       const serverPingTime = this.getLocalTime();
-      sendFunction('sync_pong', id, clientPingTime, serverPingTime, this.getLocalTime());
+      sendFunction('sync:pong', id, clientPingTime, serverPingTime, this.getLocalTime());
     });
   }
 

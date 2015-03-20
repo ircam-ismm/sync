@@ -42,19 +42,19 @@ class SyncClient extends EventEmitter {
   __syncLoop(sendFunction) {
     clearTimeout(this.timeoutId);
     ++ this.pingId;
-    sendFunction('sync_ping', this.pingId, this.getTimeFunction());
+    sendFunction('sync:ping', this.pingId, this.getTimeFunction());
 
     this.timeoutId = setTimeout(() => {
       // increase timeout duration on timeout, to avoid overflow
       this.pingTimeoutDelay.current = Math.min(this.pingTimeoutDelay.current * 2,
                                                this.pingTimeoutDelay.max);
-      debug('sync_ping timeout > %s', this.pingTimeoutDelay.current);
+      debug('sync:ping timeout > %s', this.pingTimeoutDelay.current);
       this.__syncLoop(sendFunction); // retry (yes, always increment pingId)
     }, 1000 * this.pingTimeoutDelay.current);
   }
 
   start(sendFunction, receiveFunction) {
-    receiveFunction('sync_pong', (pingId, clientPingTime, serverPingTime, serverPongTime) => {
+    receiveFunction('sync:pong', (pingId, clientPingTime, serverPingTime, serverPongTime) => {
       // accept only the pong that corresponds to the last ping
       // or accepts anything when lost
       if (pingId === this.pingId
