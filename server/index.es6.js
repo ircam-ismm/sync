@@ -16,16 +16,17 @@ class SyncServer {
     });
   }
 
-  /** 
-   * Monotonic function.
+  /**
+   * Monotonic function, ever increasing
    *
    * @return {Number} local time in seconds
    */
   getLocalTime(syncTime) {
-    if (typeof syncTime !== 'undefined')
+    if (typeof syncTime !== 'undefined') {
       return syncTime; // sync time is local: no conversion
-    else 
+    } else {
       return this.getTimeFunction();
+    }
   }
 
   getSyncTime(localTime) {

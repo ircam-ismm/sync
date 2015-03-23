@@ -3,6 +3,22 @@
 var debug = require('debug')('soundworks:sync');
 var EventEmitter = require('events').EventEmitter;
 
+// helpers
+
+/**
+ * Order min and max attributes.
+ * @param {Object} that with min and max attributes
+ * @returns {Object} with min and man attributes, swapped if that.min > that.max
+ */
+function orderMinMax(that) {
+  if(that && that.min && that.max && that.min > that.max) {
+    const tmp = that.min;
+    that.min = that.max;
+    that.max = tmp;
+  }
+  return that;
+}
+
 class SyncClient extends EventEmitter {
   constructor(getTimeFunction, options = {}) {
     // timeout to consider a ping was not ponged back
@@ -41,7 +57,7 @@ class SyncClient extends EventEmitter {
 
   __syncLoop(sendFunction) {
     clearTimeout(this.timeoutId);
-    ++ this.pingId;
+    ++this.pingId;
     sendFunction('sync:ping', this.pingId, this.getTimeFunction());
 
     this.timeoutId = setTimeout(() => {
@@ -59,7 +75,7 @@ class SyncClient extends EventEmitter {
       // or accepts anything when lost
       if (pingId === this.pingId
           || this.pingTimeoutDelay.current === this.pingTimeoutDelay.max) {
-        ++ this.pingCount;
+        ++this.pingCount;
         debug('pingCount = %s', this.pingCount);
         clearTimeout(this.timeoutId);
         // reduce timeout duration on pong, for better reactivity
@@ -89,7 +105,7 @@ class SyncClient extends EventEmitter {
           // keep only the quickest travel times for time offset
           const quickest = sorted.slice(0, this.dataBest);
           const timeOffsetAvg = quickest.reduce((p, q) => p + q[1], 0) / quickest.length;
-          debug("timeOffsetAvg = %s, delta = %s",
+          debug('timeOffsetAvg = %s, delta = %s',
                 timeOffsetAvg, timeOffsetAvg - this.timeOffset);
           this.timeOffset = timeOffsetAvg;
 
@@ -106,13 +122,7 @@ class SyncClient extends EventEmitter {
         setTimeout(() => {
           this.__syncLoop(sendFunction);
         }, 1000 * this.pingDelay);
-        // ping and pong ID match
-      } else {
-        debug('ping-pong mismatch: %s ≠ %s, pingCount = %s, travelTime = %s, timeOffset = %s',
-              pingId, this.pingId, this.pingCount,
-              Math.max(0, (clientPongTime - clientPingTime) - (serverPongTime - serverPingTime)),
-              ((serverPingTime - clientPingTime) + (serverPongTime - clientPongTime)) * 0.5);
-      }
+      }  // ping and pong ID match
     }); // receive function
 
     this.__syncLoop(sendFunction);
@@ -129,15 +139,6 @@ class SyncClient extends EventEmitter {
   getSyncTime(localTime = this.getTimeFunction()) {
     return localTime + this.timeOffset; // always convert
   }
-}
-
-function orderMinMax(that) {
-  if(that && that.min && that.max && that.min > that.max) {
-    const tmp = that.min;
-    that.min = that.max;
-    that.max = tmp;
-  }
-  return that;
 }
 
 module.exports = SyncClient;
