@@ -1,6 +1,7 @@
 /**
- * @fileoverview Server side syncronization module
- * @author Sebastien.Robaszkiewicz@ircam.fr, Norbert.Schnell@ircam.fr
+ * @fileoverview Server-side syncronization component
+ * @author Jean-Philippe.Lambert@ircam.fr, Sebastien.Robaszkiewicz@ircam.fr,
+ *         Norbert.Schnell@ircam.fr
  */
 'use strict';
 
