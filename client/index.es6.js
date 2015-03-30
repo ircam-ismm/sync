@@ -1,7 +1,7 @@
 /**
  * @fileOverview Client-side syncronization component
- * @name index.es6.js
- * @author Jean-Philippe.Lambert@ircam.fr, Sebastien.Robaszkiewicz@ircam.fr, Norbert.Schnell@ircam.fr
+ * @author Jean-Philippe.Lambert@ircam.fr, Sebastien.Robaszkiewicz@ircam.fr,
+ *         Norbert.Schnell@ircam.fr
  */
 
 'use strict';
@@ -36,6 +36,14 @@ function mean(array, dimension = 0) {
 }
 
 class SyncClient extends EventEmitter {
+  /**
+   * This is the constructor. @see {@linkcode start} method to
+   * actually start a synchronization process.
+   *
+   * @param {Function} getTimeFunction called to get the local
+   * time. It must return a time in seconds, monotonic, ever
+   * increasing.
+   */
   constructor(getTimeFunction, options = {}) {
     // timeout to consider a ping was not ponged back
     this.pingTimeoutDelay = options.pingTimeoutDelay
@@ -102,6 +110,14 @@ class SyncClient extends EventEmitter {
     }, 1000 * this.pingTimeoutDelay.current);
   }
 
+  /**
+   * Start a synchronization process by registering the receive
+   * function passed as second parameter. Then, send regular messages
+   * to the server, using the send function passed as first parameter.
+   *
+   * @param {Function} sendFunction
+   * @param {Function} receiveFunction
+   */
   start(sendFunction, receiveFunction) {
     this.status = 'startup';
 
@@ -222,6 +238,12 @@ class SyncClient extends EventEmitter {
     this.__syncLoop(sendFunction);
   }
 
+  /**
+   * Get local time, or convert a synchronized time to a local time.
+   *
+   * @param {Number} syncTime undefined to get local time
+   * @returns {Number} local time, in seconds
+   */
   getLocalTime(syncTime) {
     if (typeof syncTime !== 'undefined') {
       // conversion: t(T) = t0 + (T - T0) / R
@@ -233,6 +255,12 @@ class SyncClient extends EventEmitter {
     }
   }
 
+  /**
+   * Get Synchronized time, or convert a local time to a synchronized time.
+   *
+   * @param {Number} localTime undefined to get synchronized time
+   * @returns {Number} synchronized time, in seconds.
+   */
   getSyncTime(localTime = this.getLocalTime()) {
     // always convert: T(t) = T0 + R * (t - t0)
     return this.serverTimeReference

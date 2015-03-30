@@ -1,7 +1,7 @@
 /**
  * @fileOverview Client-side syncronization component
- * @name index.es6.js
- * @author Jean-Philippe.Lambert@ircam.fr, Sebastien.Robaszkiewicz@ircam.fr, Norbert.Schnell@ircam.fr
+ * @author Jean-Philippe.Lambert@ircam.fr, Sebastien.Robaszkiewicz@ircam.fr,
+ *         Norbert.Schnell@ircam.fr
  */
 
 'use strict';
@@ -36,6 +36,14 @@ function mean(array) {var dimension = arguments[1];if(dimension === void 0)dimen
 }
 
 var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};return o["a"]===t})({},{});var DP$0 = Object.defineProperty;var GOPD$0 = Object.getOwnPropertyDescriptor;var MIXIN$0 = function(t,s){for(var p in s){if(s.hasOwnProperty(p)){DP$0(t,p,GOPD$0(s,p));}}return t};var SP$0 = Object.setPrototypeOf||function(o,p){if(PRS$0){o["__proto__"]=p;}else {DP$0(o,"__proto__",{"value":p,"configurable":true,"enumerable":false,"writable":true});}return o};var OC$0 = Object.create;if(!PRS$0)MIXIN$0(SyncClient, super$0);var proto$0={};
+  /**
+   * This is the constructor. @see {@linkcode start} method to
+   * actually start a synchronization process.
+   *
+   * @param {Function} getTimeFunction called to get the local
+   * time. It must return a time in seconds, monotonic, ever
+   * increasing.
+   */
   function SyncClient(getTimeFunction) {var options = arguments[1];if(options === void 0)options = {};
     // timeout to consider a ping was not ponged back
     this.pingTimeoutDelay = options.pingTimeoutDelay
@@ -102,6 +110,14 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
     }, 1000 * this.pingTimeoutDelay.current);
   };
 
+  /**
+   * Start a synchronization process by registering the receive
+   * function passed as second parameter. Then, send regular messages
+   * to the server, using the send function passed as first parameter.
+   *
+   * @param {Function} sendFunction
+   * @param {Function} receiveFunction
+   */
   proto$0.start = function(sendFunction, receiveFunction) {var this$0 = this;
     this.status = 'startup';
 
@@ -222,6 +238,12 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
     this.__syncLoop(sendFunction);
   };
 
+  /**
+   * Get local time, or convert a synchronized time to a local time.
+   *
+   * @param {Number} syncTime undefined to get local time
+   * @returns {Number} local time, in seconds
+   */
   proto$0.getLocalTime = function(syncTime) {
     if (typeof syncTime !== 'undefined') {
       // conversion: t(T) = t0 + (T - T0) / R
@@ -233,6 +255,12 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
     }
   };
 
+  /**
+   * Get Synchronized time, or convert a local time to a synchronized time.
+   *
+   * @param {Number} localTime undefined to get synchronized time
+   * @returns {Number} synchronized time, in seconds.
+   */
   proto$0.getSyncTime = function() {var localTime = arguments[0];if(localTime === void 0)localTime = this.getLocalTime();
     // always convert: T(t) = T0 + R * (t - t0)
     return this.serverTimeReference
