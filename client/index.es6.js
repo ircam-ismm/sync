@@ -74,11 +74,22 @@ class SyncClient extends EventEmitter {
     this.streakDataLength = this.pingStreakIterations; // size of circular buffer
     this.streakDataQuickestN = Math.min(this.streakDataQuickestN, this.streakDataLength);
 
+    // duration of training, before using estimate of synchronisation
+    this.longTermDataTrainingDuration = 120; // in seconds, approximately
+    this.longTermDataTrainingLength = Math.max(
+      2,
+      this.longTermDataTrainingDuration
+        / (0.5 * (this.pingStreakDelay.min + this.pingStreakDelay.max) ) );
+
+    // estimate synchronisation over this duration
+    this.longTermDataDuration = 300; // in seconds, approximately
+    this.longTermDataLength = Math.max(
+      2,
+      this.longTermDataDuration /
+        (0.5 * (this.pingStreakDelay.min + this.pingStreakDelay.max) ) );
+
     this.longTermData = []; // circular buffer
     this.longTermDataNextIndex = 0; // next index to write in circular buffer
-    // around 300 seconds, depending on random streak delay
-    this.longTermDataLength = 300 /
-      (0.5 * (this.pingStreakDelay.min + this.pingStreakDelay.max) );
 
     this.timeOffset = 0; // mean of (serverTime - clientTime) in the last streak
     this.travelTime = 0;
@@ -175,7 +186,9 @@ class SyncClient extends EventEmitter {
                streakClientSquaredTime, streakClientServerTime];
           this.longTermDataNextIndex = (++this.longTermDataNextIndex) % this.longTermDataLength;
 
-          if(this.status === 'startup') {
+          if(this.status === 'startup'
+             || (this.status === 'training'
+                 && this.longTermData.length < this.longTermDataTrainingLength) ) {
             this.status = 'training';
             // set only the phase offset, not the frequency
             this.serverTimeReference = this.timeOffset;
@@ -188,7 +201,7 @@ class SyncClient extends EventEmitter {
           }
 
           if((this.status === 'training' || this.status === 'sync')
-             && this.longTermData.length > 1) {
+             && this.longTermData.length >= this.longTermDataTrainingLength) {
             // linear regression, R = covariance(t,T) / variance(t)
             const regClientTime = mean(this.longTermData, 1);
             const regServerTime = mean(this.longTermData, 2);
@@ -207,12 +220,6 @@ class SyncClient extends EventEmitter {
                     this.serverTimeReference, this.frequencyRatio,
                     streakClientTime, this.clientTimeReference,
                     this.getSyncTime(streakClientTime) );
-
-              // // check against offset: sync offset should be within +/- tick duration
-              // debug('sync offset = %s, phase offset = %s, diff = %s',
-              //       streakSyncTime - streakClientTime,
-              //       this.timeOffset,
-              //       this.getSyncTime(streakClientTime) - streakClientTime - this.timeOffset);
 
               this.status = 'sync';
             }

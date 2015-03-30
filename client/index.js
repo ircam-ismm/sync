@@ -74,11 +74,22 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
     this.streakDataLength = this.pingStreakIterations; // size of circular buffer
     this.streakDataQuickestN = Math.min(this.streakDataQuickestN, this.streakDataLength);
 
+    // duration of training, before using estimate of synchronisation
+    this.longTermDataTrainingDuration = 120; // in seconds, approximately
+    this.longTermDataTrainingLength = Math.max(
+      2,
+      this.longTermDataTrainingDuration
+        / (0.5 * (this.pingStreakDelay.min + this.pingStreakDelay.max) ) );
+
+    // estimate synchronisation over this duration
+    this.longTermDataDuration = 300; // in seconds, approximately
+    this.longTermDataLength = Math.max(
+      2,
+      this.longTermDataDuration /
+        (0.5 * (this.pingStreakDelay.min + this.pingStreakDelay.max) ) );
+
     this.longTermData = []; // circular buffer
     this.longTermDataNextIndex = 0; // next index to write in circular buffer
-    // around 300 seconds, depending on random streak delay
-    this.longTermDataLength = 300 /
-      (0.5 * (this.pingStreakDelay.min + this.pingStreakDelay.max) );
 
     this.timeOffset = 0; // mean of (serverTime - clientTime) in the last streak
     this.travelTime = 0;
@@ -175,7 +186,9 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
                streakClientSquaredTime, streakClientServerTime];
           this$0.longTermDataNextIndex = (++this$0.longTermDataNextIndex) % this$0.longTermDataLength;
 
-          if(this$0.status === 'startup') {
+          if(this$0.status === 'startup'
+             || (this$0.status === 'training'
+                 && this$0.longTermData.length < this$0.longTermDataTrainingLength) ) {
             this$0.status = 'training';
             // set only the phase offset, not the frequency
             this$0.serverTimeReference = this$0.timeOffset;
@@ -188,7 +201,7 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
           }
 
           if((this$0.status === 'training' || this$0.status === 'sync')
-             && this$0.longTermData.length > 1) {
+             && this$0.longTermData.length >= this$0.longTermDataTrainingLength) {
             // linear regression, R = covariance(t,T) / variance(t)
             var regClientTime = mean(this$0.longTermData, 1);
             var regServerTime = mean(this$0.longTermData, 2);
@@ -207,12 +220,6 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
                     this$0.serverTimeReference, this$0.frequencyRatio,
                     streakClientTime, this$0.clientTimeReference,
                     this$0.getSyncTime(streakClientTime) );
-
-              // // check against offset: sync offset should be within +/- tick duration
-              // debug('sync offset = %s, phase offset = %s, diff = %s',
-              //       streakSyncTime - streakClientTime,
-              //       this.timeOffset,
-              //       this.getSyncTime(streakClientTime) - streakClientTime - this.timeOffset);
 
               this$0.status = 'sync';
             }
