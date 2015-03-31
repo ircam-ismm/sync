@@ -216,14 +216,29 @@ class SyncClient extends EventEmitter {
               this.clientTimeReference = regClientTime;
               this.serverTimeReference = regServerTime;
 
-              debug('T = %s + %s * (%s - %s) = %s',
-                    this.serverTimeReference, this.frequencyRatio,
-                    streakClientTime, this.clientTimeReference,
-                    this.getSyncTime(streakClientTime) );
+              if(this.frequencyRatio > 0.999 && this.frequencyRatio < 1.001) {
+                this.status = 'sync';
+              } else {
+                debug('clock frequency ratio out of sync: %s, training again',
+                      this.frequencyRatio);
+                // start the training again from the last streak
+                this.status = 'training';
+                this.serverTimeReference = this.timeOffset; // offset only
+                this.clientTimeReference = 0;
+                this.frequencyRatio = 1;
 
-              this.status = 'sync';
+                this.longTermData[0]
+                  = [streakTravelTime, streakClientTime, streakServerTime,
+                     streakClientSquaredTime, streakClientServerTime];
+                this.longTermData.length = 1;
+                this.longTermDataNextIndex = 1;
+              }
             }
 
+            debug('T = %s + %s * (%s - %s) = %s',
+                  this.serverTimeReference, this.frequencyRatio,
+                  streakClientTime, this.clientTimeReference,
+                  this.getSyncTime(streakClientTime) );
           }
 
           this.emit('sync:stats', {
