@@ -216,14 +216,30 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
               this$0.clientTimeReference = regClientTime;
               this$0.serverTimeReference = regServerTime;
 
-              debug('T = %s + %s * (%s - %s) = %s',
-                    this$0.serverTimeReference, this$0.frequencyRatio,
-                    streakClientTime, this$0.clientTimeReference,
-                    this$0.getSyncTime(streakClientTime) );
+              if(this$0.frequencyRatio > 0.999 && this$0.frequencyRatio < 1.001) {
+                this$0.status = 'sync';
+              } else {
+                debug('clock frequency ration out of sync: %s, training again',
+                      this$0.frequencyRatio);
 
-              this$0.status = 'sync';
+                // start the training again from the last streak
+                this$0.status = 'training';
+                this$0.serverTimeReference = this$0.timeOffset;
+                this$0.clientTimeReference = 0;
+                this$0.frequencyRatio = 1;
+
+                this$0.longTermData[0]
+                  = [streakTravelTime, streakClientTime, streakServerTime,
+                     streakClientSquaredTime, streakClientServerTime];
+                this$0.longTermData.length = 1;
+                this$0.longTermDataNextIndex = 1;
+              }
             }
 
+            debug('T = %s + %s * (%s - %s) = %s',
+                  this$0.serverTimeReference, this$0.frequencyRatio,
+                  streakClientTime, this$0.clientTimeReference,
+                  this$0.getSyncTime(streakClientTime) );
           }
 
           this$0.emit('sync:stats', {
