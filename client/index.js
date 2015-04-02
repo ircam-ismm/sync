@@ -61,9 +61,6 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
       || { min: 10, max: 20 };
     orderMinMax(this.pingStreakDelay);
 
-    // number of quickest roundtrip times used to compute mean offset in a streak
-    this.streakDataQuickestN = options.keepQuickestN || 4;
-
     this.pingDelay = 0; // current delay before next ping
     this.pingTimeoutId = 0; // to cancel timeout on sync_pinc
     this.pingId = 0; // absolute ID to mach pong against
@@ -72,7 +69,6 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
     this.streakData = []; // circular buffer
     this.streakDataNextIndex = 0; // next index to write in circular buffer
     this.streakDataLength = this.pingStreakIterations; // size of circular buffer
-    this.streakDataQuickestN = Math.min(this.streakDataQuickestN, this.streakDataLength);
 
     // duration of training, before using estimate of synchronisation
     this.longTermDataTrainingDuration = 120; // in seconds, approximately
@@ -82,7 +78,7 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
         / (0.5 * (this.pingStreakDelay.min + this.pingStreakDelay.max) ) );
 
     // estimate synchronisation over this duration
-    this.longTermDataDuration = 300; // in seconds, approximately
+    this.longTermDataDuration = 900; // in seconds, approximately
     this.longTermDataLength = Math.max(
       2,
       this.longTermDataDuration /
@@ -92,8 +88,8 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
     this.longTermDataNextIndex = 0; // next index to write in circular buffer
 
     this.timeOffset = 0; // mean of (serverTime - clientTime) in the last streak
-    this.travelTime = 0;
-    this.travelTimeMax = 0;
+    this.travelDuration = 0;
+    this.travelDurationMax = 0;
 
     // T(t) = T0 + R * (t - t0)
     this.serverTimeReference = 0; // T0
@@ -149,12 +145,17 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
         var clientPongTime = this$0.getLocalTime();
         var clientTime = 0.5 * (clientPongTime + clientPingTime);
         var serverTime = 0.5 * (serverPongTime + serverPingTime);
-        var travelTime = Math.max(0, (clientPongTime - clientPingTime)
-                                    - (serverPongTime - serverPingTime));
+        var travelDuration = Math.max(0, (clientPongTime - clientPingTime)
+                                        - (serverPongTime - serverPingTime));
+        var offsetTime = serverTime - clientTime;
 
+        // order is important for sorting, later.
         this$0.streakData[this$0.streakDataNextIndex]
-          = [travelTime, clientTime, serverTime];
+          = [travelDuration, offsetTime, clientTime, serverTime];
         this$0.streakDataNextIndex = (++this$0.streakDataNextIndex) % this$0.streakDataLength;
+
+        // debug('ping %s, travel = %s, offset = %s, client = %s, server = %s',
+        //       pingId, travelDuration, offsetTime, clientTime, serverTime);
 
         // end of a streak
         if (this$0.pingStreakCount >= this$0.pingStreakIterations
@@ -164,27 +165,36 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
             + Math.random() * (this$0.pingStreakDelay.max - this$0.pingStreakDelay.min);
           this$0.pingStreakCount = 0;
 
-          // mean travel time over the last iterations
+          // sort by travel time first, then offset time.
           var sorted = this$0.streakData.slice(0).sort();
-          this$0.travelTime = mean(sorted, 0);
-          this$0.travelTimeMax = sorted[sorted.length - 1][0];
 
-          // time offset is the mean of (serverTime - clientTime)
-          // over the N quickest travel times
-          var quickest = sorted.slice(0, this$0.streakDataQuickestN);
-          this$0.timeOffset = mean(quickest, 2) - mean(quickest, 1);
+          var streakTravelDuration = sorted[0][0];
 
-          // keep the quickest of the streak for the long-term data
-          var streakTravelTime = sorted[0][0];
-          var streakClientTime = sorted[0][1];
-          var streakServerTime = sorted[0][2];
+          // When the clock tick is long enough,
+          // some travel times (dimension 0) might be identical.
+          // Then, use the offset median (dimension 1 is the second sort key)
+          var s = 0;
+          while(s < sorted.length && sorted[s][0] <= streakTravelDuration * 1.01) {
+            ++s;
+          }
+          s = Math.max(0, s - 1);
+          var median = Math.floor(s / 2);
+
+          var streakClientTime = sorted[median][2];
+          var streakServerTime = sorted[median][3];
           var streakClientSquaredTime = streakClientTime * streakClientTime;
           var streakClientServerTime = streakClientTime * streakServerTime;
 
           this$0.longTermData[this$0.longTermDataNextIndex]
-            = [streakTravelTime, streakClientTime, streakServerTime,
+            = [streakTravelDuration, streakClientTime, streakServerTime,
                streakClientSquaredTime, streakClientServerTime];
           this$0.longTermDataNextIndex = (++this$0.longTermDataNextIndex) % this$0.longTermDataLength;
+
+          // mean of the time offset over 3 samples around median
+          // (it might use a longer travel duration)
+          var aroundMedian = sorted.slice(Math.max(0, median - 1),
+                                            Math.min(sorted.length, median + 1) );
+          this$0.timeOffset = mean(aroundMedian, 3) - mean(aroundMedian, 2);
 
           if(this$0.status === 'startup'
              || (this$0.status === 'training'
@@ -216,20 +226,20 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
               this$0.clientTimeReference = regClientTime;
               this$0.serverTimeReference = regServerTime;
 
-              if(this$0.frequencyRatio > 0.999 && this$0.frequencyRatio < 1.001) {
+              // 10% is a lot
+              if(this$0.frequencyRatio > 0.99 && this$0.frequencyRatio < 1.01) {
                 this$0.status = 'sync';
               } else {
-                debug('clock frequency ration out of sync: %s, training again',
+                debug('clock frequency ratio out of sync: %s, training again',
                       this$0.frequencyRatio);
-
                 // start the training again from the last streak
                 this$0.status = 'training';
-                this$0.serverTimeReference = this$0.timeOffset;
+                this$0.serverTimeReference = this$0.timeOffset; // offset only
                 this$0.clientTimeReference = 0;
                 this$0.frequencyRatio = 1;
 
                 this$0.longTermData[0]
-                  = [streakTravelTime, streakClientTime, streakServerTime,
+                  = [streakTravelDuration, streakClientTime, streakServerTime,
                      streakClientSquaredTime, streakClientServerTime];
                 this$0.longTermData.length = 1;
                 this$0.longTermDataNextIndex = 1;
@@ -242,10 +252,13 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
                   this$0.getSyncTime(streakClientTime) );
           }
 
+          this$0.travelDuration = mean(sorted, 0);
+          this$0.travelDurationMax = sorted[sorted.length - 1][0];
+
           this$0.emit('sync:stats', {
             timeOffset: this$0.timeOffset,
-            travelTime: this$0.travelTime,
-            travelTimeMax: this$0.travelTimeMax
+            travelDuration: this$0.travelDuration,
+            travelDurationMax: this$0.travelDurationMax
           });
         } else {
           // we are in a streak, use the pingInterval value

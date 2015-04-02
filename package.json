@@ -1,10 +1,10 @@
 {
   "name": "sync",
-  "version": "0.3.4",
+  "version": "0.4.0",
   "description": "Client/Server time synchronization component",
   "authors": [
-    "Sebastien.Robaszkiewicz@ircam.fr",
     "Jean-Philippe.Lambert@ircam.fr",
+    "Sebastien.Robaszkiewicz@ircam.fr",
     "Norbert.Schnell@ircam.fr"
   ],
   "repository": {

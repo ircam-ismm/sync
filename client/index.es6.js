@@ -61,9 +61,6 @@ class SyncClient extends EventEmitter {
       || { min: 10, max: 20 };
     orderMinMax(this.pingStreakDelay);
 
-    // number of quickest roundtrip times used to compute mean offset in a streak
-    this.streakDataQuickestN = options.keepQuickestN || 4;
-
     this.pingDelay = 0; // current delay before next ping
     this.pingTimeoutId = 0; // to cancel timeout on sync_pinc
     this.pingId = 0; // absolute ID to mach pong against
@@ -72,7 +69,6 @@ class SyncClient extends EventEmitter {
     this.streakData = []; // circular buffer
     this.streakDataNextIndex = 0; // next index to write in circular buffer
     this.streakDataLength = this.pingStreakIterations; // size of circular buffer
-    this.streakDataQuickestN = Math.min(this.streakDataQuickestN, this.streakDataLength);
 
     // duration of training, before using estimate of synchronisation
     this.longTermDataTrainingDuration = 120; // in seconds, approximately
@@ -82,7 +78,7 @@ class SyncClient extends EventEmitter {
         / (0.5 * (this.pingStreakDelay.min + this.pingStreakDelay.max) ) );
 
     // estimate synchronisation over this duration
-    this.longTermDataDuration = 300; // in seconds, approximately
+    this.longTermDataDuration = 900; // in seconds, approximately
     this.longTermDataLength = Math.max(
       2,
       this.longTermDataDuration /
@@ -92,8 +88,8 @@ class SyncClient extends EventEmitter {
     this.longTermDataNextIndex = 0; // next index to write in circular buffer
 
     this.timeOffset = 0; // mean of (serverTime - clientTime) in the last streak
-    this.travelTime = 0;
-    this.travelTimeMax = 0;
+    this.travelDuration = 0;
+    this.travelDurationMax = 0;
 
     // T(t) = T0 + R * (t - t0)
     this.serverTimeReference = 0; // T0
@@ -149,12 +145,17 @@ class SyncClient extends EventEmitter {
         const clientPongTime = this.getLocalTime();
         const clientTime = 0.5 * (clientPongTime + clientPingTime);
         const serverTime = 0.5 * (serverPongTime + serverPingTime);
-        const travelTime = Math.max(0, (clientPongTime - clientPingTime)
-                                    - (serverPongTime - serverPingTime));
+        const travelDuration = Math.max(0, (clientPongTime - clientPingTime)
+                                        - (serverPongTime - serverPingTime));
+        const offsetTime = serverTime - clientTime;
 
+        // order is important for sorting, later.
         this.streakData[this.streakDataNextIndex]
-          = [travelTime, clientTime, serverTime];
+          = [travelDuration, offsetTime, clientTime, serverTime];
         this.streakDataNextIndex = (++this.streakDataNextIndex) % this.streakDataLength;
+
+        // debug('ping %s, travel = %s, offset = %s, client = %s, server = %s',
+        //       pingId, travelDuration, offsetTime, clientTime, serverTime);
 
         // end of a streak
         if (this.pingStreakCount >= this.pingStreakIterations
@@ -164,27 +165,36 @@ class SyncClient extends EventEmitter {
             + Math.random() * (this.pingStreakDelay.max - this.pingStreakDelay.min);
           this.pingStreakCount = 0;
 
-          // mean travel time over the last iterations
+          // sort by travel time first, then offset time.
           const sorted = this.streakData.slice(0).sort();
-          this.travelTime = mean(sorted, 0);
-          this.travelTimeMax = sorted[sorted.length - 1][0];
 
-          // time offset is the mean of (serverTime - clientTime)
-          // over the N quickest travel times
-          const quickest = sorted.slice(0, this.streakDataQuickestN);
-          this.timeOffset = mean(quickest, 2) - mean(quickest, 1);
+          const streakTravelDuration = sorted[0][0];
 
-          // keep the quickest of the streak for the long-term data
-          const streakTravelTime = sorted[0][0];
-          const streakClientTime = sorted[0][1];
-          const streakServerTime = sorted[0][2];
+          // When the clock tick is long enough,
+          // some travel times (dimension 0) might be identical.
+          // Then, use the offset median (dimension 1 is the second sort key)
+          let s = 0;
+          while(s < sorted.length && sorted[s][0] <= streakTravelDuration * 1.01) {
+            ++s;
+          }
+          s = Math.max(0, s - 1);
+          let median = Math.floor(s / 2);
+
+          const streakClientTime = sorted[median][2];
+          const streakServerTime = sorted[median][3];
           const streakClientSquaredTime = streakClientTime * streakClientTime;
           const streakClientServerTime = streakClientTime * streakServerTime;
 
           this.longTermData[this.longTermDataNextIndex]
-            = [streakTravelTime, streakClientTime, streakServerTime,
+            = [streakTravelDuration, streakClientTime, streakServerTime,
                streakClientSquaredTime, streakClientServerTime];
           this.longTermDataNextIndex = (++this.longTermDataNextIndex) % this.longTermDataLength;
+
+          // mean of the time offset over 3 samples around median
+          // (it might use a longer travel duration)
+          const aroundMedian = sorted.slice(Math.max(0, median - 1),
+                                            Math.min(sorted.length, median + 1) );
+          this.timeOffset = mean(aroundMedian, 3) - mean(aroundMedian, 2);
 
           if(this.status === 'startup'
              || (this.status === 'training'
@@ -216,7 +226,8 @@ class SyncClient extends EventEmitter {
               this.clientTimeReference = regClientTime;
               this.serverTimeReference = regServerTime;
 
-              if(this.frequencyRatio > 0.999 && this.frequencyRatio < 1.001) {
+              // 10% is a lot
+              if(this.frequencyRatio > 0.99 && this.frequencyRatio < 1.01) {
                 this.status = 'sync';
               } else {
                 debug('clock frequency ratio out of sync: %s, training again',
@@ -228,7 +239,7 @@ class SyncClient extends EventEmitter {
                 this.frequencyRatio = 1;
 
                 this.longTermData[0]
-                  = [streakTravelTime, streakClientTime, streakServerTime,
+                  = [streakTravelDuration, streakClientTime, streakServerTime,
                      streakClientSquaredTime, streakClientServerTime];
                 this.longTermData.length = 1;
                 this.longTermDataNextIndex = 1;
@@ -241,10 +252,13 @@ class SyncClient extends EventEmitter {
                   this.getSyncTime(streakClientTime) );
           }
 
+          this.travelDuration = mean(sorted, 0);
+          this.travelDurationMax = sorted[sorted.length - 1][0];
+
           this.emit('sync:stats', {
             timeOffset: this.timeOffset,
-            travelTime: this.travelTime,
-            travelTimeMax: this.travelTimeMax
+            travelDuration: this.travelDuration,
+            travelDurationMax: this.travelDurationMax
           });
         } else {
           // we are in a streak, use the pingInterval value
