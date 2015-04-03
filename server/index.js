@@ -8,10 +8,39 @@
 
 var SyncServer = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};return o["a"]===t})({},{});var DP$0 = Object.defineProperty;var GOPD$0 = Object.getOwnPropertyDescriptor;var MIXIN$0 = function(t,s){for(var p in s){if(s.hasOwnProperty(p)){DP$0(t,p,GOPD$0(s,p));}}return t};var proto$0={};
   /**
+   * @callback SyncServer~getTimeFunction
+   * @return {Number} monotonic, ever increasing, time in second.
+   **/
+
+  /**
+   * @callback SyncServer~sendFunction
+   * @see {@linkcode SyncServer~sendFunction}
+   * @param {String} messageType identification of pong message type
+   * @param {Number} pingId unique identifier
+   * @param {Number} clientPingTime time-stamp of ping emission
+   * @param {Number} serverPingTime time-stamp of ping reception
+   * @param {Number} serverPongTime time-stamp of pong emission
+   **/
+
+  /**
+   * @callback SyncServer~receiveFunction
+   * @see {@linkcode SyncServer~receiveFunction}
+   * @param {String} messageType identification of ping message type
+   * @param {SyncServer~receiveCallback} receiveCallback called on
+   * each message matching messageType.
+   **/
+
+  /**
+   * @callback SyncServer~receiveCallback
+   * @param {Number} pingId unique identifier
+   * @param {Number} clientPingTime time-stamp of ping emission
+   **/
+
+  /**
    * This is the constructor. @see {@linkcode start} method to
    * actually start a synchronization process.
    *
-   * @param {Function} getTimeFunction called to get the local
+   * @param {SyncServer~getTimeFunction} getTimeFunction called to get the local
    * time. It must return a time in seconds, monotonic, ever
    * increasing.
    */
@@ -24,8 +53,8 @@ var SyncServer = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
    * function passed as second parameter. On each received message,
    * send a reply using the function passed as first parameter.
    *
-   * @param {Function} sendFunction
-   * @param {Function} receiveFunction
+   * @param {SyncServer~sendFunction} sendFunction
+   * @param {SyncServer~receiveFunction} receiveFunction
    */
   proto$0.start = function(sendFunction, receiveFunction) {var this$0 = this;
     receiveFunction('sync:ping', function(id, clientPingTime)  {

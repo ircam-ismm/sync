@@ -8,10 +8,39 @@
 
 class SyncServer {
   /**
+   * @callback SyncServer~getTimeFunction
+   * @return {Number} monotonic, ever increasing, time in second.
+   **/
+
+  /**
+   * @callback SyncServer~sendFunction
+   * @see {@linkcode SyncServer~sendFunction}
+   * @param {String} messageType identification of pong message type
+   * @param {Number} pingId unique identifier
+   * @param {Number} clientPingTime time-stamp of ping emission
+   * @param {Number} serverPingTime time-stamp of ping reception
+   * @param {Number} serverPongTime time-stamp of pong emission
+   **/
+
+  /**
+   * @callback SyncServer~receiveFunction
+   * @see {@linkcode SyncServer~receiveFunction}
+   * @param {String} messageType identification of ping message type
+   * @param {SyncServer~receiveCallback} receiveCallback called on
+   * each message matching messageType.
+   **/
+
+  /**
+   * @callback SyncServer~receiveCallback
+   * @param {Number} pingId unique identifier
+   * @param {Number} clientPingTime time-stamp of ping emission
+   **/
+
+  /**
    * This is the constructor. @see {@linkcode start} method to
    * actually start a synchronization process.
    *
-   * @param {Function} getTimeFunction called to get the local
+   * @param {SyncServer~getTimeFunction} getTimeFunction called to get the local
    * time. It must return a time in seconds, monotonic, ever
    * increasing.
    */
@@ -24,8 +53,8 @@ class SyncServer {
    * function passed as second parameter. On each received message,
    * send a reply using the function passed as first parameter.
    *
-   * @param {Function} sendFunction
-   * @param {Function} receiveFunction
+   * @param {SyncServer~sendFunction} sendFunction
+   * @param {SyncServer~receiveFunction} receiveFunction
    */
   start(sendFunction, receiveFunction) {
     receiveFunction('sync:ping', (id, clientPingTime) => {

@@ -37,26 +37,66 @@ function mean(array) {var dimension = arguments[1];if(dimension === void 0)dimen
 
 var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};return o["a"]===t})({},{});var DP$0 = Object.defineProperty;var GOPD$0 = Object.getOwnPropertyDescriptor;var MIXIN$0 = function(t,s){for(var p in s){if(s.hasOwnProperty(p)){DP$0(t,p,GOPD$0(s,p));}}return t};var SP$0 = Object.setPrototypeOf||function(o,p){if(PRS$0){o["__proto__"]=p;}else {DP$0(o,"__proto__",{"value":p,"configurable":true,"enumerable":false,"writable":true});}return o};var OC$0 = Object.create;if(!PRS$0)MIXIN$0(SyncClient, super$0);var proto$0={};
   /**
+   * @callback SyncClient~getTimeFunction
+   * @return {Number} monotonic, ever increasing, time in second.
+   **/
+
+  /**
+   * @callback SyncClient~sendFunction
+   * @see {@linkcode SyncServer~sendFunction}
+   * @param {String} messageType identification of ping message type
+   * @param {Number} pingId unique identifier
+   * @param {Number} clientPingTime time-stamp of ping emission
+   **/
+
+  /**
+   * @callback SyncClient~receiveFunction
+   * @see {@linkcode SyncServer~receiveFunction}
+   * @param {String} messageType identification of pong message type
+   * @param {SyncClient~receiveCallback} receiveCallback called on
+   * each message matching messageType.
+   **/
+
+  /**
+   * @callback SyncClient~receiveCallback
+   * @param {Number} pingId unique identifier
+   * @param {Number} clientPingTime time-stamp of ping emission
+   * @param {Number} serverPingTime time-stamp of ping reception
+   * @param {Number} serverPongTime time-stamp of pong emission
+   * @param {Number} clientPongTime time-stamp of pong reception
+   **/
+
+  /**
    * This is the constructor. @see {@linkcode start} method to
    * actually start a synchronization process.
    *
-   * @param {Function} getTimeFunction called to get the local
-   * time. It must return a time in seconds, monotonic, ever
-   * increasing.
+   * @param {SyncClient~getTimeFunction} getTimeFunction
+   * @param {Object} options
+   * @param {Object} options.pingTimeOutDelay range of duration (in seconds) to
+   * consider a ping was not ponged back
+   * @param {Number} options.pingTimeOutDelay.min
+   * @param {Number} options.pingTimeOutDelay.max
+   * @param {Number} options.pingStreakIterations ping-pongs in a
+   * streak
+   * @param {Number} options.pingStreakPeriod interval (in seconds) between pings
+   * in a streak
+   * @param {Number} options.pingStreakDelay range of interval (in
+   * seconds) between ping-pong streaks in a streak
+   * @param {Number} options.pingStreakDelay.min
+   * @param {Number} options.pingStreakDelay.max
+   * @param {Number} options.longTermDataTrainingDuration duration of
+   * training, in seconds, approximately, before using the estimate of
+   * clock frequency
+   * @param {Number} options.longTermDataDuration estimate synchronisation over
+   *  this duration, in seconds, approximately
    */
   function SyncClient(getTimeFunction) {var options = arguments[1];if(options === void 0)options = {};
-    // timeout to consider a ping was not ponged back
     this.pingTimeoutDelay = options.pingTimeoutDelay
       || { min: 1, max: 30 };
     orderMinMax(this.pingTimeoutDelay);
 
-    // number of ping-pongs in a streak
     this.pingStreakIterations = options.pingStreakIterations || 10;
-
-    // interval between pings in a streak (in seconds)
     this.pingStreakPeriod = options.pingStreakPeriod || 0.250;
-
-    // range of interval between ping-pong streaks (in seconds)
     this.pingStreakDelay = options.pingStreakDelay
       || { min: 10, max: 20 };
     orderMinMax(this.pingStreakDelay);
@@ -70,15 +110,14 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
     this.streakDataNextIndex = 0; // next index to write in circular buffer
     this.streakDataLength = this.pingStreakIterations; // size of circular buffer
 
-    // duration of training, before using estimate of synchronisation
-    this.longTermDataTrainingDuration = 120; // in seconds, approximately
+    this.longTermDataTrainingDuration
+      = options.longTermDataTrainingDuration || 120;
     this.longTermDataTrainingLength = Math.max(
       2,
       this.longTermDataTrainingDuration
         / (0.5 * (this.pingStreakDelay.min + this.pingStreakDelay.max) ) );
 
-    // estimate synchronisation over this duration
-    this.longTermDataDuration = 900; // in seconds, approximately
+    this.longTermDataDuration = options.longTermDataDuration || 900;
     this.longTermDataLength = Math.max(
       2,
       this.longTermDataDuration /
@@ -103,6 +142,10 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
     this.status = 'new';
   }if(super$0!==null)SP$0(SyncClient,super$0);SyncClient.prototype = OC$0(super$0!==null?super$0.prototype:null,{"constructor":{"value":SyncClient,"configurable":true,"writable":true}});DP$0(SyncClient,"prototype",{"configurable":false,"enumerable":false,"writable":false});
 
+  /**
+   * Private. Process to send ping messages.
+   * @param {SyncClient~sendFunction} sendFunction
+   */
   proto$0.__syncLoop = function(sendFunction) {var this$0 = this;
     clearTimeout(this.timeoutId);
     ++this.pingId;
@@ -122,8 +165,8 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
    * function passed as second parameter. Then, send regular messages
    * to the server, using the send function passed as first parameter.
    *
-   * @param {Function} sendFunction
-   * @param {Function} receiveFunction
+   * @param {SyncClient~sendFunction} sendFunction
+   * @param {SyncClient~receiveFunction} receiveFunction to register
    */
   proto$0.start = function(sendFunction, receiveFunction) {var this$0 = this;
     this.status = 'startup';
