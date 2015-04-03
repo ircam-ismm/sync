@@ -1,6 +1,6 @@
 {
   "name": "sync",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Client/Server time synchronization component",
   "authors": [
     "Jean-Philippe.Lambert@ircam.fr",

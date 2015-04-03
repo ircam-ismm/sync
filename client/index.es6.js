@@ -7,7 +7,6 @@
 'use strict';
 
 var debug = require('debug')('soundworks:client:sync');
-var EventEmitter = require('events').EventEmitter;
 
 ////// helpers
 
@@ -35,7 +34,7 @@ function mean(array, dimension = 0) {
   return array.reduce((p, q) => p + q[dimension], 0) / array.length;
 }
 
-class SyncClient extends EventEmitter {
+class SyncClient {
   /**
    * @callback SyncClient~getTimeFunction
    * @return {Number} monotonic, ever increasing, time in second.
@@ -64,6 +63,24 @@ class SyncClient extends EventEmitter {
    * @param {Number} serverPingTime time-stamp of ping reception
    * @param {Number} serverPongTime time-stamp of pong emission
    * @param {Number} clientPongTime time-stamp of pong reception
+   **/
+
+  /**
+   * @callback SyncClient~reportFunction
+   * @param {String} messageType identification of status message type
+   * @param {Object} report
+   * @param {String} report.status
+   * @param {Number} report.timeOffset time difference between local
+   * time and sync time, in seconds. Measured as the median of the
+   * shortest round-trip times over the last ping-pong streak.
+   * @param {Number} report.travelDuration half-duration of a
+   * ping-pong round-trip, in seconds, mean over the the last
+   * ping-pong streak.
+   * @param {Number} report.travelDurationMax half-duration of a
+   * ping-pong round-trip, in seconds, maximum over the the last
+   * ping-pong streak.
+   *
+   *
    **/
 
   /**
@@ -167,8 +184,9 @@ class SyncClient extends EventEmitter {
    *
    * @param {SyncClient~sendFunction} sendFunction
    * @param {SyncClient~receiveFunction} receiveFunction to register
+   * @param {SyncClient~reportFunction} reportFunction if defined, call to report the status
    */
-  start(sendFunction, receiveFunction) {
+  start(sendFunction, receiveFunction, reportFunction) {
     this.status = 'startup';
 
     this.streakData = [];
@@ -298,8 +316,10 @@ class SyncClient extends EventEmitter {
           this.travelDuration = mean(sorted, 0);
           this.travelDurationMax = sorted[sorted.length - 1][0];
 
-          this.emit('sync:stats', {
+          reportFunction('sync:status', {
+            status: this.status,
             timeOffset: this.timeOffset,
+            frequencyRatio: this.frequencyRatio,
             travelDuration: this.travelDuration,
             travelDurationMax: this.travelDurationMax
           });

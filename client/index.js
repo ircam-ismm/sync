@@ -7,7 +7,6 @@
 'use strict';
 
 var debug = require('debug')('soundworks:client:sync');
-var EventEmitter = require('events').EventEmitter;
 
 ////// helpers
 
@@ -35,7 +34,7 @@ function mean(array) {var dimension = arguments[1];if(dimension === void 0)dimen
   return array.reduce(function(p, q)  {return p + q[dimension]}, 0) / array.length;
 }
 
-var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};return o["a"]===t})({},{});var DP$0 = Object.defineProperty;var GOPD$0 = Object.getOwnPropertyDescriptor;var MIXIN$0 = function(t,s){for(var p in s){if(s.hasOwnProperty(p)){DP$0(t,p,GOPD$0(s,p));}}return t};var SP$0 = Object.setPrototypeOf||function(o,p){if(PRS$0){o["__proto__"]=p;}else {DP$0(o,"__proto__",{"value":p,"configurable":true,"enumerable":false,"writable":true});}return o};var OC$0 = Object.create;if(!PRS$0)MIXIN$0(SyncClient, super$0);var proto$0={};
+var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};return o["a"]===t})({},{});var DP$0 = Object.defineProperty;var GOPD$0 = Object.getOwnPropertyDescriptor;var MIXIN$0 = function(t,s){for(var p in s){if(s.hasOwnProperty(p)){DP$0(t,p,GOPD$0(s,p));}}return t};var proto$0={};
   /**
    * @callback SyncClient~getTimeFunction
    * @return {Number} monotonic, ever increasing, time in second.
@@ -64,6 +63,24 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
    * @param {Number} serverPingTime time-stamp of ping reception
    * @param {Number} serverPongTime time-stamp of pong emission
    * @param {Number} clientPongTime time-stamp of pong reception
+   **/
+
+  /**
+   * @callback SyncClient~reportFunction
+   * @param {String} messageType identification of status message type
+   * @param {Object} report
+   * @param {String} report.status
+   * @param {Number} report.timeOffset time difference between local
+   * time and sync time, in seconds. Measured as the median of the
+   * shortest round-trip times over the last ping-pong streak.
+   * @param {Number} report.travelDuration half-duration of a
+   * ping-pong round-trip, in seconds, mean over the the last
+   * ping-pong streak.
+   * @param {Number} report.travelDurationMax half-duration of a
+   * ping-pong round-trip, in seconds, maximum over the the last
+   * ping-pong streak.
+   *
+   *
    **/
 
   /**
@@ -140,7 +157,7 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
     this.getTimeFunction = getTimeFunction;
 
     this.status = 'new';
-  }if(super$0!==null)SP$0(SyncClient,super$0);SyncClient.prototype = OC$0(super$0!==null?super$0.prototype:null,{"constructor":{"value":SyncClient,"configurable":true,"writable":true}});DP$0(SyncClient,"prototype",{"configurable":false,"enumerable":false,"writable":false});
+  }DP$0(SyncClient,"prototype",{"configurable":false,"enumerable":false,"writable":false});
 
   /**
    * Private. Process to send ping messages.
@@ -167,8 +184,9 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
    *
    * @param {SyncClient~sendFunction} sendFunction
    * @param {SyncClient~receiveFunction} receiveFunction to register
+   * @param {SyncClient~reportFunction} reportFunction if defined, call to report the status
    */
-  proto$0.start = function(sendFunction, receiveFunction) {var this$0 = this;
+  proto$0.start = function(sendFunction, receiveFunction, reportFunction) {var this$0 = this;
     this.status = 'startup';
 
     this.streakData = [];
@@ -298,8 +316,10 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
           this$0.travelDuration = mean(sorted, 0);
           this$0.travelDurationMax = sorted[sorted.length - 1][0];
 
-          this$0.emit('sync:stats', {
+          reportFunction('sync:status', {
+            status: this$0.status,
             timeOffset: this$0.timeOffset,
+            frequencyRatio: this$0.frequencyRatio,
             travelDuration: this$0.travelDuration,
             travelDurationMax: this$0.travelDurationMax
           });
@@ -345,6 +365,6 @@ var SyncClient = (function(super$0){var PRS$0 = (function(o,t){o["__proto__"]={"
     return this.serverTimeReference
       + this.frequencyRatio * (localTime - this.clientTimeReference);
   };
-MIXIN$0(SyncClient.prototype,proto$0);proto$0=void 0;return SyncClient;})(EventEmitter);
+MIXIN$0(SyncClient.prototype,proto$0);proto$0=void 0;return SyncClient;})();
 
 module.exports = SyncClient;
