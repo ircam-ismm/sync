@@ -7,7 +7,6 @@
 'use strict';
 
 var debug = require('debug')('soundworks:client:sync');
-var EventEmitter = require('events').EventEmitter;
 
 ////// helpers
 
@@ -35,34 +34,89 @@ function mean(array, dimension = 0) {
   return array.reduce((p, q) => p + q[dimension], 0) / array.length;
 }
 
-class SyncClient extends EventEmitter {
+class SyncClient {
+  /**
+   * @callback SyncClient~getTimeFunction
+   * @return {Number} monotonic, ever increasing, time in second.
+   **/
+
+  /**
+   * @callback SyncClient~sendFunction
+   * @see {@linkcode SyncServer~sendFunction}
+   * @param {String} messageType identification of ping message type
+   * @param {Number} pingId unique identifier
+   * @param {Number} clientPingTime time-stamp of ping emission
+   **/
+
+  /**
+   * @callback SyncClient~receiveFunction
+   * @see {@linkcode SyncServer~receiveFunction}
+   * @param {String} messageType identification of pong message type
+   * @param {SyncClient~receiveCallback} receiveCallback called on
+   * each message matching messageType.
+   **/
+
+  /**
+   * @callback SyncClient~receiveCallback
+   * @param {Number} pingId unique identifier
+   * @param {Number} clientPingTime time-stamp of ping emission
+   * @param {Number} serverPingTime time-stamp of ping reception
+   * @param {Number} serverPongTime time-stamp of pong emission
+   * @param {Number} clientPongTime time-stamp of pong reception
+   **/
+
+  /**
+   * @callback SyncClient~reportFunction
+   * @param {String} messageType identification of status message type
+   * @param {Object} report
+   * @param {String} report.status
+   * @param {Number} report.timeOffset time difference between local
+   * time and sync time, in seconds. Measured as the median of the
+   * shortest round-trip times over the last ping-pong streak.
+   * @param {Number} report.travelDuration half-duration of a
+   * ping-pong round-trip, in seconds, mean over the the last
+   * ping-pong streak.
+   * @param {Number} report.travelDurationMax half-duration of a
+   * ping-pong round-trip, in seconds, maximum over the the last
+   * ping-pong streak.
+   *
+   *
+   **/
+
   /**
    * This is the constructor. @see {@linkcode start} method to
    * actually start a synchronization process.
    *
-   * @param {Function} getTimeFunction called to get the local
-   * time. It must return a time in seconds, monotonic, ever
-   * increasing.
+   * @param {SyncClient~getTimeFunction} getTimeFunction
+   * @param {Object} options
+   * @param {Object} options.pingTimeOutDelay range of duration (in seconds) to
+   * consider a ping was not ponged back
+   * @param {Number} options.pingTimeOutDelay.min
+   * @param {Number} options.pingTimeOutDelay.max
+   * @param {Number} options.pingStreakIterations ping-pongs in a
+   * streak
+   * @param {Number} options.pingStreakPeriod interval (in seconds) between pings
+   * in a streak
+   * @param {Number} options.pingStreakDelay range of interval (in
+   * seconds) between ping-pong streaks in a streak
+   * @param {Number} options.pingStreakDelay.min
+   * @param {Number} options.pingStreakDelay.max
+   * @param {Number} options.longTermDataTrainingDuration duration of
+   * training, in seconds, approximately, before using the estimate of
+   * clock frequency
+   * @param {Number} options.longTermDataDuration estimate synchronisation over
+   *  this duration, in seconds, approximately
    */
   constructor(getTimeFunction, options = {}) {
-    // timeout to consider a ping was not ponged back
     this.pingTimeoutDelay = options.pingTimeoutDelay
       || { min: 1, max: 30 };
     orderMinMax(this.pingTimeoutDelay);
 
-    // number of ping-pongs in a streak
     this.pingStreakIterations = options.pingStreakIterations || 10;
-
-    // interval between pings in a streak (in seconds)
     this.pingStreakPeriod = options.pingStreakPeriod || 0.250;
-
-    // range of interval between ping-pong streaks (in seconds)
     this.pingStreakDelay = options.pingStreakDelay
       || { min: 10, max: 20 };
     orderMinMax(this.pingStreakDelay);
-
-    // number of quickest roundtrip times used to compute mean offset in a streak
-    this.streakDataQuickestN = options.keepQuickestN || 4;
 
     this.pingDelay = 0; // current delay before next ping
     this.pingTimeoutId = 0; // to cancel timeout on sync_pinc
@@ -72,7 +126,19 @@ class SyncClient extends EventEmitter {
     this.streakData = []; // circular buffer
     this.streakDataNextIndex = 0; // next index to write in circular buffer
     this.streakDataLength = this.pingStreakIterations; // size of circular buffer
-    this.streakDataQuickestN = Math.min(this.streakDataQuickestN, this.streakDataLength);
+
+    this.longTermDataTrainingDuration
+      = options.longTermDataTrainingDuration || 120;
+    this.longTermDataTrainingLength = Math.max(
+      2,
+      this.longTermDataTrainingDuration
+        / (0.5 * (this.pingStreakDelay.min + this.pingStreakDelay.max) ) );
+
+    this.longTermDataDuration = options.longTermDataDuration || 900;
+    this.longTermDataLength = Math.max(
+      2,
+      this.longTermDataDuration /
+        (0.5 * (this.pingStreakDelay.min + this.pingStreakDelay.max) ) );
 
     // duration of training, before using estimate of synchronisation
     this.longTermDataTrainingDuration = 120; // in seconds, approximately
@@ -92,8 +158,8 @@ class SyncClient extends EventEmitter {
     this.longTermDataNextIndex = 0; // next index to write in circular buffer
 
     this.timeOffset = 0; // mean of (serverTime - clientTime) in the last streak
-    this.travelTime = 0;
-    this.travelTimeMax = 0;
+    this.travelDuration = 0;
+    this.travelDurationMax = 0;
 
     // T(t) = T0 + R * (t - t0)
     this.serverTimeReference = 0; // T0
@@ -107,6 +173,10 @@ class SyncClient extends EventEmitter {
     this.status = 'new';
   }
 
+  /**
+   * Private. Process to send ping messages.
+   * @param {SyncClient~sendFunction} sendFunction
+   */
   __syncLoop(sendFunction) {
     clearTimeout(this.timeoutId);
     ++this.pingId;
@@ -126,10 +196,11 @@ class SyncClient extends EventEmitter {
    * function passed as second parameter. Then, send regular messages
    * to the server, using the send function passed as first parameter.
    *
-   * @param {Function} sendFunction
-   * @param {Function} receiveFunction
+   * @param {SyncClient~sendFunction} sendFunction
+   * @param {SyncClient~receiveFunction} receiveFunction to register
+   * @param {SyncClient~reportFunction} reportFunction if defined, call to report the status
    */
-  start(sendFunction, receiveFunction) {
+  start(sendFunction, receiveFunction, reportFunction) {
     this.status = 'startup';
 
     this.streakData = [];
@@ -149,12 +220,17 @@ class SyncClient extends EventEmitter {
         const clientPongTime = this.getLocalTime();
         const clientTime = 0.5 * (clientPongTime + clientPingTime);
         const serverTime = 0.5 * (serverPongTime + serverPingTime);
-        const travelTime = Math.max(0, (clientPongTime - clientPingTime)
-                                    - (serverPongTime - serverPingTime));
+        const travelDuration = Math.max(0, (clientPongTime - clientPingTime)
+                                        - (serverPongTime - serverPingTime));
+        const offsetTime = serverTime - clientTime;
 
+        // order is important for sorting, later.
         this.streakData[this.streakDataNextIndex]
-          = [travelTime, clientTime, serverTime];
+          = [travelDuration, offsetTime, clientTime, serverTime];
         this.streakDataNextIndex = (++this.streakDataNextIndex) % this.streakDataLength;
+
+        // debug('ping %s, travel = %s, offset = %s, client = %s, server = %s',
+        //       pingId, travelDuration, offsetTime, clientTime, serverTime);
 
         // end of a streak
         if (this.pingStreakCount >= this.pingStreakIterations
@@ -164,27 +240,36 @@ class SyncClient extends EventEmitter {
             + Math.random() * (this.pingStreakDelay.max - this.pingStreakDelay.min);
           this.pingStreakCount = 0;
 
-          // mean travel time over the last iterations
+          // sort by travel time first, then offset time.
           const sorted = this.streakData.slice(0).sort();
-          this.travelTime = mean(sorted, 0);
-          this.travelTimeMax = sorted[sorted.length - 1][0];
 
-          // time offset is the mean of (serverTime - clientTime)
-          // over the N quickest travel times
-          const quickest = sorted.slice(0, this.streakDataQuickestN);
-          this.timeOffset = mean(quickest, 2) - mean(quickest, 1);
+          const streakTravelDuration = sorted[0][0];
 
-          // keep the quickest of the streak for the long-term data
-          const streakTravelTime = sorted[0][0];
-          const streakClientTime = sorted[0][1];
-          const streakServerTime = sorted[0][2];
+          // When the clock tick is long enough,
+          // some travel times (dimension 0) might be identical.
+          // Then, use the offset median (dimension 1 is the second sort key)
+          let s = 0;
+          while(s < sorted.length && sorted[s][0] <= streakTravelDuration * 1.01) {
+            ++s;
+          }
+          s = Math.max(0, s - 1);
+          let median = Math.floor(s / 2);
+
+          const streakClientTime = sorted[median][2];
+          const streakServerTime = sorted[median][3];
           const streakClientSquaredTime = streakClientTime * streakClientTime;
           const streakClientServerTime = streakClientTime * streakServerTime;
 
           this.longTermData[this.longTermDataNextIndex]
-            = [streakTravelTime, streakClientTime, streakServerTime,
+            = [streakTravelDuration, streakClientTime, streakServerTime,
                streakClientSquaredTime, streakClientServerTime];
           this.longTermDataNextIndex = (++this.longTermDataNextIndex) % this.longTermDataLength;
+
+          // mean of the time offset over 3 samples around median
+          // (it might use a longer travel duration)
+          const aroundMedian = sorted.slice(Math.max(0, median - 1),
+                                            Math.min(sorted.length, median + 1) );
+          this.timeOffset = mean(aroundMedian, 3) - mean(aroundMedian, 2);
 
           if(this.status === 'startup'
              || (this.status === 'training'
@@ -216,7 +301,8 @@ class SyncClient extends EventEmitter {
               this.clientTimeReference = regClientTime;
               this.serverTimeReference = regServerTime;
 
-              if(this.frequencyRatio > 0.999 && this.frequencyRatio < 1.001) {
+              // 10% is a lot
+              if(this.frequencyRatio > 0.99 && this.frequencyRatio < 1.01) {
                 this.status = 'sync';
               } else {
                 debug('clock frequency ratio out of sync: %s, training again',
@@ -228,7 +314,7 @@ class SyncClient extends EventEmitter {
                 this.frequencyRatio = 1;
 
                 this.longTermData[0]
-                  = [streakTravelTime, streakClientTime, streakServerTime,
+                  = [streakTravelDuration, streakClientTime, streakServerTime,
                      streakClientSquaredTime, streakClientServerTime];
                 this.longTermData.length = 1;
                 this.longTermDataNextIndex = 1;
@@ -241,10 +327,15 @@ class SyncClient extends EventEmitter {
                   this.getSyncTime(streakClientTime) );
           }
 
-          this.emit('sync:stats', {
+          this.travelDuration = mean(sorted, 0);
+          this.travelDurationMax = sorted[sorted.length - 1][0];
+
+          reportFunction('sync:status', {
+            status: this.status,
             timeOffset: this.timeOffset,
-            travelTime: this.travelTime,
-            travelTimeMax: this.travelTimeMax
+            frequencyRatio: this.frequencyRatio,
+            travelDuration: this.travelDuration,
+            travelDurationMax: this.travelDurationMax
           });
         } else {
           // we are in a streak, use the pingInterval value
