@@ -70,17 +70,20 @@ class SyncClient {
    * @param {String} messageType identification of status message type
    * @param {Object} report
    * @param {String} report.status
+   * @param {Number} report.statusDuration duration since last status
+   * change
    * @param {Number} report.timeOffset time difference between local
    * time and sync time, in seconds. Measured as the median of the
    * shortest round-trip times over the last ping-pong streak.
    * @param {Number} report.travelDuration half-duration of a
    * ping-pong round-trip, in seconds, mean over the the last
    * ping-pong streak.
+   * @param {Number} report.travelDurationMin half-duration of a
+   * ping-pong round-trip, in seconds, minimum over the the last
+   * ping-pong streak.
    * @param {Number} report.travelDurationMax half-duration of a
    * ping-pong round-trip, in seconds, maximum over the the last
    * ping-pong streak.
-   *
-   *
    **/
 
   /**
@@ -93,6 +96,8 @@ class SyncClient {
    * consider a ping was not ponged back
    * @param {Number} options.pingTimeOutDelay.min
    * @param {Number} options.pingTimeOutDelay.max
+   * @param {Number} options.pingTimeTravelDurationAccepted maximum
+   * travel time, in seconds, to take a ping-pong probe into account.
    * @param {Number} options.pingStreakIterations ping-pongs in a
    * streak
    * @param {Number} options.pingStreakPeriod interval (in seconds) between pings
@@ -112,6 +117,8 @@ class SyncClient {
       || { min: 1, max: 30 };
     orderMinMax(this.pingTimeoutDelay);
 
+    this.pingTravelDurationAccepted = options.pingTravelDurationAccepted || 0.5;
+
     this.pingStreakIterations = options.pingStreakIterations || 10;
     this.pingStreakPeriod = options.pingStreakPeriod || 0.250;
     this.pingStreakDelay = options.pingStreakDelay
@@ -129,26 +136,10 @@ class SyncClient {
 
     this.longTermDataTrainingDuration
       = options.longTermDataTrainingDuration || 120;
-    this.longTermDataTrainingLength = Math.max(
-      2,
-      this.longTermDataTrainingDuration
-        / (0.5 * (this.pingStreakDelay.min + this.pingStreakDelay.max) ) );
 
+    // use a fixed-size circular buffer, even if it does not match
+    // exactly the required duration
     this.longTermDataDuration = options.longTermDataDuration || 900;
-    this.longTermDataLength = Math.max(
-      2,
-      this.longTermDataDuration /
-        (0.5 * (this.pingStreakDelay.min + this.pingStreakDelay.max) ) );
-
-    // duration of training, before using estimate of synchronisation
-    this.longTermDataTrainingDuration = 120; // in seconds, approximately
-    this.longTermDataTrainingLength = Math.max(
-      2,
-      this.longTermDataTrainingDuration
-        / (0.5 * (this.pingStreakDelay.min + this.pingStreakDelay.max) ) );
-
-    // estimate synchronisation over this duration
-    this.longTermDataDuration = 300; // in seconds, approximately
     this.longTermDataLength = Math.max(
       2,
       this.longTermDataDuration /
@@ -159,6 +150,7 @@ class SyncClient {
 
     this.timeOffset = 0; // mean of (serverTime - clientTime) in the last streak
     this.travelDuration = 0;
+    this.travelDurationMin = 0;
     this.travelDurationMax = 0;
 
     // T(t) = T0 + R * (t - t0)
@@ -171,6 +163,30 @@ class SyncClient {
     this.getTimeFunction = getTimeFunction;
 
     this.status = 'new';
+    this.statusChangedTime = 0;
+  }
+
+
+  /**
+   * Set status, and set this.statusChangedTime, to later use @see
+   * {@linkcode SyncServer~getStatusDuration}
+   * @param {String} status
+   * @returns {Object} this
+   */
+  setStatus(status) {
+    if(status !== this.status) {
+      this.status = status;
+      this.statusChangedTime = this.getSyncTime();
+    }
+    return this;
+  }
+
+  /**
+   * Get time since last status change.
+   * @returns {Number} time, in seconds, since last status change.
+   */
+  getStatusDuration() {
+    return Math.max(0, this.getSyncTime() - this.statusChangedTime);
   }
 
   /**
@@ -198,10 +214,11 @@ class SyncClient {
    *
    * @param {SyncClient~sendFunction} sendFunction
    * @param {SyncClient~receiveFunction} receiveFunction to register
-   * @param {SyncClient~reportFunction} reportFunction if defined, call to report the status
+   * @param {SyncClient~reportFunction} reportFunction if defined,
+   * is called to report the status, on each status change
    */
   start(sendFunction, receiveFunction, reportFunction) {
-    this.status = 'startup';
+    this.setStatus('startup');
 
     this.streakData = [];
     this.streakDataNextIndex = 0;
@@ -273,12 +290,12 @@ class SyncClient {
 
           if(this.status === 'startup'
              || (this.status === 'training'
-                 && this.longTermData.length < this.longTermDataTrainingLength) ) {
-            this.status = 'training';
+                 && this.getStatusDuration() < this.longTermDataTrainingDuration) ) {
             // set only the phase offset, not the frequency
             this.serverTimeReference = this.timeOffset;
             this.clientTimeReference = 0;
             this.frequencyRatio = 1;
+            this.setStatus('training');
             debug('T = %s + %s * (%s - %s) = %s',
                   this.serverTimeReference, this.frequencyRatio,
                   streakClientTime, this.clientTimeReference,
@@ -286,7 +303,7 @@ class SyncClient {
           }
 
           if((this.status === 'training' || this.status === 'sync')
-             && this.longTermData.length >= this.longTermDataTrainingLength) {
+             && this.getStatusDuration() >= this.longTermDataTrainingDuration) {
             // linear regression, R = covariance(t,T) / variance(t)
             const regClientTime = mean(this.longTermData, 1);
             const regServerTime = mean(this.longTermData, 2);
@@ -303,15 +320,15 @@ class SyncClient {
 
               // 10% is a lot
               if(this.frequencyRatio > 0.99 && this.frequencyRatio < 1.01) {
-                this.status = 'sync';
+                this.setStatus('sync');
               } else {
                 debug('clock frequency ratio out of sync: %s, training again',
                       this.frequencyRatio);
                 // start the training again from the last streak
-                this.status = 'training';
                 this.serverTimeReference = this.timeOffset; // offset only
                 this.clientTimeReference = 0;
                 this.frequencyRatio = 1;
+                this.setStatus('training');
 
                 this.longTermData[0]
                   = [streakTravelDuration, streakClientTime, streakServerTime,
@@ -328,13 +345,16 @@ class SyncClient {
           }
 
           this.travelDuration = mean(sorted, 0);
+          this.travelDurationMax = sorted[0][0];
           this.travelDurationMax = sorted[sorted.length - 1][0];
 
           reportFunction('sync:status', {
             status: this.status,
+            statusDuration: this.getStatusDuration(),
             timeOffset: this.timeOffset,
             frequencyRatio: this.frequencyRatio,
             travelDuration: this.travelDuration,
+            travelDurationMin: this.travelDurationMin,
             travelDurationMax: this.travelDurationMax
           });
         } else {

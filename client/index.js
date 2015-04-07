@@ -70,17 +70,20 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
    * @param {String} messageType identification of status message type
    * @param {Object} report
    * @param {String} report.status
+   * @param {Number} report.statusDuration duration since last status
+   * change
    * @param {Number} report.timeOffset time difference between local
    * time and sync time, in seconds. Measured as the median of the
    * shortest round-trip times over the last ping-pong streak.
    * @param {Number} report.travelDuration half-duration of a
    * ping-pong round-trip, in seconds, mean over the the last
    * ping-pong streak.
+   * @param {Number} report.travelDurationMin half-duration of a
+   * ping-pong round-trip, in seconds, minimum over the the last
+   * ping-pong streak.
    * @param {Number} report.travelDurationMax half-duration of a
    * ping-pong round-trip, in seconds, maximum over the the last
    * ping-pong streak.
-   *
-   *
    **/
 
   /**
@@ -93,6 +96,8 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
    * consider a ping was not ponged back
    * @param {Number} options.pingTimeOutDelay.min
    * @param {Number} options.pingTimeOutDelay.max
+   * @param {Number} options.pingTimeTravelDurationAccepted maximum
+   * travel time, in seconds, to take a ping-pong probe into account.
    * @param {Number} options.pingStreakIterations ping-pongs in a
    * streak
    * @param {Number} options.pingStreakPeriod interval (in seconds) between pings
@@ -112,6 +117,8 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
       || { min: 1, max: 30 };
     orderMinMax(this.pingTimeoutDelay);
 
+    this.pingTravelDurationAccepted = options.pingTravelDurationAccepted || 0.5;
+
     this.pingStreakIterations = options.pingStreakIterations || 10;
     this.pingStreakPeriod = options.pingStreakPeriod || 0.250;
     this.pingStreakDelay = options.pingStreakDelay
@@ -129,26 +136,10 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
 
     this.longTermDataTrainingDuration
       = options.longTermDataTrainingDuration || 120;
-    this.longTermDataTrainingLength = Math.max(
-      2,
-      this.longTermDataTrainingDuration
-        / (0.5 * (this.pingStreakDelay.min + this.pingStreakDelay.max) ) );
 
+    // use a fixed-size circular buffer, even if it does not match
+    // exactly the required duration
     this.longTermDataDuration = options.longTermDataDuration || 900;
-    this.longTermDataLength = Math.max(
-      2,
-      this.longTermDataDuration /
-        (0.5 * (this.pingStreakDelay.min + this.pingStreakDelay.max) ) );
-
-    // duration of training, before using estimate of synchronisation
-    this.longTermDataTrainingDuration = 120; // in seconds, approximately
-    this.longTermDataTrainingLength = Math.max(
-      2,
-      this.longTermDataTrainingDuration
-        / (0.5 * (this.pingStreakDelay.min + this.pingStreakDelay.max) ) );
-
-    // estimate synchronisation over this duration
-    this.longTermDataDuration = 300; // in seconds, approximately
     this.longTermDataLength = Math.max(
       2,
       this.longTermDataDuration /
@@ -159,6 +150,7 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
 
     this.timeOffset = 0; // mean of (serverTime - clientTime) in the last streak
     this.travelDuration = 0;
+    this.travelDurationMin = 0;
     this.travelDurationMax = 0;
 
     // T(t) = T0 + R * (t - t0)
@@ -171,7 +163,31 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
     this.getTimeFunction = getTimeFunction;
 
     this.status = 'new';
+    this.statusChangedTime = 0;
   }DP$0(SyncClient,"prototype",{"configurable":false,"enumerable":false,"writable":false});
+
+
+  /**
+   * Set status, and set this.statusChangedTime, to later use @see
+   * {@linkcode SyncServer~getStatusDuration}
+   * @param {String} status
+   * @returns {Object} this
+   */
+  proto$0.setStatus = function(status) {
+    if(status !== this.status) {
+      this.status = status;
+      this.statusChangedTime = this.getSyncTime();
+    }
+    return this;
+  };
+
+  /**
+   * Get time since last status change.
+   * @returns {Number} time, in seconds, since last status change.
+   */
+  proto$0.getStatusDuration = function() {
+    return Math.max(0, this.getSyncTime() - this.statusChangedTime);
+  };
 
   /**
    * Private. Process to send ping messages.
@@ -198,10 +214,11 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
    *
    * @param {SyncClient~sendFunction} sendFunction
    * @param {SyncClient~receiveFunction} receiveFunction to register
-   * @param {SyncClient~reportFunction} reportFunction if defined, call to report the status
+   * @param {SyncClient~reportFunction} reportFunction if defined,
+   * is called to report the status, on each status change
    */
   proto$0.start = function(sendFunction, receiveFunction, reportFunction) {var this$0 = this;
-    this.status = 'startup';
+    this.setStatus('startup');
 
     this.streakData = [];
     this.streakDataNextIndex = 0;
@@ -273,12 +290,12 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
 
           if(this$0.status === 'startup'
              || (this$0.status === 'training'
-                 && this$0.longTermData.length < this$0.longTermDataTrainingLength) ) {
-            this$0.status = 'training';
+                 && this$0.getStatusDuration() < this$0.longTermDataTrainingDuration) ) {
             // set only the phase offset, not the frequency
             this$0.serverTimeReference = this$0.timeOffset;
             this$0.clientTimeReference = 0;
             this$0.frequencyRatio = 1;
+            this$0.setStatus('training');
             debug('T = %s + %s * (%s - %s) = %s',
                   this$0.serverTimeReference, this$0.frequencyRatio,
                   streakClientTime, this$0.clientTimeReference,
@@ -286,7 +303,7 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
           }
 
           if((this$0.status === 'training' || this$0.status === 'sync')
-             && this$0.longTermData.length >= this$0.longTermDataTrainingLength) {
+             && this$0.getStatusDuration() >= this$0.longTermDataTrainingDuration) {
             // linear regression, R = covariance(t,T) / variance(t)
             var regClientTime = mean(this$0.longTermData, 1);
             var regServerTime = mean(this$0.longTermData, 2);
@@ -303,15 +320,15 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
 
               // 10% is a lot
               if(this$0.frequencyRatio > 0.99 && this$0.frequencyRatio < 1.01) {
-                this$0.status = 'sync';
+                this$0.setStatus('sync');
               } else {
                 debug('clock frequency ratio out of sync: %s, training again',
                       this$0.frequencyRatio);
                 // start the training again from the last streak
-                this$0.status = 'training';
                 this$0.serverTimeReference = this$0.timeOffset; // offset only
                 this$0.clientTimeReference = 0;
                 this$0.frequencyRatio = 1;
+                this$0.setStatus('training');
 
                 this$0.longTermData[0]
                   = [streakTravelDuration, streakClientTime, streakServerTime,
@@ -328,13 +345,16 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
           }
 
           this$0.travelDuration = mean(sorted, 0);
+          this$0.travelDurationMax = sorted[0][0];
           this$0.travelDurationMax = sorted[sorted.length - 1][0];
 
           reportFunction('sync:status', {
             status: this$0.status,
+            statusDuration: this$0.getStatusDuration(),
             timeOffset: this$0.timeOffset,
             frequencyRatio: this$0.frequencyRatio,
             travelDuration: this$0.travelDuration,
+            travelDurationMin: this$0.travelDurationMin,
             travelDurationMax: this$0.travelDurationMax
           });
         } else {
