@@ -14,7 +14,7 @@ class SyncServer {
 
   /**
    * @callback SyncServer~sendFunction
-   * @see {@linkcode SyncServer~sendFunction}
+   * @see {@linkcode SyncClient~receiveFunction}
    * @param {String} messageType identification of pong message type
    * @param {Number} pingId unique identifier
    * @param {Number} clientPingTime time-stamp of ping emission
@@ -24,7 +24,7 @@ class SyncServer {
 
   /**
    * @callback SyncServer~receiveFunction
-   * @see {@linkcode SyncServer~receiveFunction}
+   * @see {@linkcode SyncClient~sendFunction}
    * @param {String} messageType identification of ping message type
    * @param {SyncServer~receiveCallback} receiveCallback called on
    * each message matching messageType.
@@ -37,9 +37,10 @@ class SyncServer {
    **/
 
   /**
-   * This is the constructor. @see {@linkcode start} method to
-   * actually start a synchronization process.
+   * This is the constructor. @see {@linkcode SyncServer~start} method to
+   * actually start a synchronisation process.
    *
+   * @constructs SyncServer
    * @param {SyncServer~getTimeFunction} getTimeFunction called to get the local
    * time. It must return a time in seconds, monotonic, ever
    * increasing.
@@ -49,10 +50,11 @@ class SyncServer {
   }
 
   /**
-   * Start a synchronization process by registering the receive
+   * Start a synchronisation process by registering the receive
    * function passed as second parameter. On each received message,
    * send a reply using the function passed as first parameter.
    *
+   * @function SyncServer~start
    * @param {SyncServer~sendFunction} sendFunction
    * @param {SyncServer~receiveFunction} receiveFunction
    */
@@ -65,8 +67,9 @@ class SyncServer {
   }
 
   /**
-   * Get local time, or convert a synchronized time to a local time.
+   * Get local time, or convert a synchronised time to a local time.
    *
+   * @function SyncServer~getLocalTime
    * @param {Number} syncTime undefined to get local time
    * @returns {Number} local time, in seconds
    */
@@ -79,10 +82,11 @@ class SyncServer {
   }
 
   /**
-   * Get Synchronized time, or convert a local time to a synchronized time.
+   * Get synchronised time, or convert a local time to a synchronised time.
    *
-   * @param {Number} localTime undefined to get synchronized time
-   * @returns {Number} synchronized time, in seconds.
+   * @function SyncServer~getSyncTime
+   * @param {Number} localTime undefined to get synchronised time
+   * @returns {Number} synchronised time, in seconds.
    */
   getSyncTime(localTime) {
     return this.getLocalTime(localTime); // sync time is local, here

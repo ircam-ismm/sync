@@ -42,7 +42,7 @@ class SyncClient {
 
   /**
    * @callback SyncClient~sendFunction
-   * @see {@linkcode SyncServer~sendFunction}
+   * @see {@linkcode SyncServer~receiveFunction}
    * @param {String} messageType identification of ping message type
    * @param {Number} pingId unique identifier
    * @param {Number} clientPingTime time-stamp of ping emission
@@ -50,7 +50,7 @@ class SyncClient {
 
   /**
    * @callback SyncClient~receiveFunction
-   * @see {@linkcode SyncServer~receiveFunction}
+   * @see {@linkcode SyncServer~sendFunction}
    * @param {String} messageType identification of pong message type
    * @param {SyncClient~receiveCallback} receiveCallback called on
    * each message matching messageType.
@@ -87,9 +87,10 @@ class SyncClient {
    **/
 
   /**
-   * This is the constructor. @see {@linkcode start} method to
-   * actually start a synchronization process.
+   * This is the constructor. @see {@linkcode SyncClient~start} method to
+   * actually start a synchronisation process.
    *
+   * @constructs SyncClient
    * @param {SyncClient~getTimeFunction} getTimeFunction
    * @param {Object} options
    * @param {Object} options.pingTimeOutDelay range of duration (in seconds) to
@@ -168,8 +169,10 @@ class SyncClient {
 
 
   /**
-   * Set status, and set this.statusChangedTime, to later use @see
-   * {@linkcode SyncServer~getStatusDuration}
+   * Set status, and set this.statusChangedTime, to later
+   * use @see {@linkcode SyncClient~getStatusDuration}
+   *
+   * @function SyncClient~setStatus
    * @param {String} status
    * @returns {Object} this
    */
@@ -182,7 +185,10 @@ class SyncClient {
   }
 
   /**
-   * Get time since last status change.
+   * Get time since last status change. @see {@linkcode
+   * SyncClient~setStatus}
+   *
+   * @function SyncClient~getStatusDuration
    * @returns {Number} time, in seconds, since last status change.
    */
   getStatusDuration() {
@@ -190,7 +196,10 @@ class SyncClient {
   }
 
   /**
-   * Private. Process to send ping messages.
+   * Process to send ping messages.
+   *
+   * @private
+   * @function SyncClient~__syncLoop
    * @param {SyncClient~sendFunction} sendFunction
    */
   __syncLoop(sendFunction) {
@@ -208,10 +217,11 @@ class SyncClient {
   }
 
   /**
-   * Start a synchronization process by registering the receive
+   * Start a synchronisation process by registering the receive
    * function passed as second parameter. Then, send regular messages
    * to the server, using the send function passed as first parameter.
    *
+   * @function SyncClient~start
    * @param {SyncClient~sendFunction} sendFunction
    * @param {SyncClient~receiveFunction} receiveFunction to register
    * @param {SyncClient~reportFunction} reportFunction if defined,
@@ -372,8 +382,9 @@ class SyncClient {
   }
 
   /**
-   * Get local time, or convert a synchronized time to a local time.
+   * Get local time, or convert a synchronised time to a local time.
    *
+   * @function SyncClient~getLocalTime
    * @param {Number} syncTime undefined to get local time
    * @returns {Number} local time, in seconds
    */
@@ -389,10 +400,11 @@ class SyncClient {
   }
 
   /**
-   * Get Synchronized time, or convert a local time to a synchronized time.
+   * Get synchronised time, or convert a local time to a synchronised time.
    *
-   * @param {Number} localTime undefined to get synchronized time
-   * @returns {Number} synchronized time, in seconds.
+   * @function SyncClient~getSyncTime
+   * @param {Number} localTime undefined to get synchronised time
+   * @returns {Number} synchronised time, in seconds.
    */
   getSyncTime(localTime = this.getLocalTime()) {
     // always convert: T(t) = T0 + R * (t - t0)

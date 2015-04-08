@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Home - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="SyncClient.html">SyncClient</a><ul class='methods'><li data-type='method'><a href="SyncClient.html#~__syncLoop">__syncLoop</a></li><li data-type='method'><a href="SyncClient.html#~getLocalTime">getLocalTime</a></li><li data-type='method'><a href="SyncClient.html#~getStatusDuration">getStatusDuration</a></li><li data-type='method'><a href="SyncClient.html#~getSyncTime">getSyncTime</a></li><li data-type='method'><a href="SyncClient.html#~setStatus">setStatus</a></li><li data-type='method'><a href="SyncClient.html#~start">start</a></li></ul></li><li><a href="SyncServer.html">SyncServer</a><ul class='methods'><li data-type='method'><a href="SyncServer.html#~getLocalTime">getLocalTime</a></li><li data-type='method'><a href="SyncServer.html#~getSyncTime">getSyncTime</a></li><li data-type='method'><a href="SyncServer.html#~start">start</a></li></ul></li></ul><h3>Global</h3><ul><li><a href="global.html#mean">mean</a></li><li><a href="global.html#orderMinMax">orderMinMax</a></li></ul>
+</nav>
+
+<div id="main">
+    
+
+    
+
+
+
+    
+
+
+
+
+
+
+
+
+
+    
+
+
+    <section class="readme">
+        <article><h1>sync</h1><p>This module synchronizes the server and clients clocks on a common shared clock called “sync clock”.</p>
+<p>All time calculations and exchanges should be expressed in the sync clock time, and all times are in seconds.</p>
+<h2>Get started</h2><p>On the client side, you have to launch an instance of <code>SyncClient</code> and call the method <code>start</code>. You must specify what functions to use to:</p>
+<ul>
+<li>get the local time,</li>
+<li>send a message to the server (WebSocket-like),</li>
+<li>receive a message from the server (WebSocket-like).</li>
+</ul>
+<p>For instance, with the <a href="https://github.com/Automattic/socket.io"><code>socket.io</code></a> library:</p>
+<pre class="prettyprint source lang-javascript"><code>/* Client side */
+
+var audioContext = new AudioContext() || new webkitAudioContext();
+var socket = io();
+var Sync = require('sync/client');
+
+////// Define the helper functions
+// function to get the local time
+var getTimeFunction = () => { return audioContext.currentTime; }
+// function to send a message to the server
+var sendFunction = socket.emit;
+ // function to receive a message from the server
+var receiveFunction = socket.on;
+
+// Initialize the sync module and start the synchronization process
+var sync = new SyncClient(getTimeFunction);
+sync.start(sendFunction, receiveFunction);
+
+// Listen for the events that indicate that the clock is in sync
+sync.on('sync:status', (report) => {
+  if(report.status === 'training' || 'sync') {
+    //  whatever you need to do once the clock is in sync
+    }
+})</code></pre><p>On the server side, you have to launch an instance of <code>SyncServer</code> and call the method <code>start</code>. Just like on the client side, you must specify what functions to use to:</p>
+<ul>
+<li>get the local time;</li>
+<li>send a message to the clients;</li>
+<li>receive a message from the clients.</li>
+</ul>
+<p>For instance, with the <a href="https://github.com/Automattic/socket.io"><code>socket.io</code></a> library:</p>
+<pre class="prettyprint source lang-javascript"><code>/* Server side */
+
+// Require libraries
+var io = require('socket.io');
+var Sync = require('sync/server');
+
+ // function to get the local time
+var getTimeFunction = () => {
+  let time = process.hrtime();
+  return time[0] + time[1] * 1e-9;
+};
+// Initialize sync module
+var sync = new Sync(getTimeFunction);
+
+// Set up a WebSocket communication channel with the client
+// and start to listen for the messages from that client
+io.on('connection', function (socket) {
+  // function to send a WebSocket message to the client
+  let sendFunction = (msg, ...args) => socket.emit(msg, ...args);
+  // function to receive a WebSocket message from the client
+  let receiveFunction = (msg, callback) => socket.on(msg, callback);
+
+  sync.start(sendFunction, receiveFunction);
+
+  ... // the rest of your code
+});</code></pre></article>
+    </section>
+
+
+
+
+
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>
+        client/index.js
+        </h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+            <div class="description"><p>Client-side syncronization component</p></div>
+        
+
+        
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-author">Author:</dt>
+    <dd class="tag-author">
+        <ul>
+            <li>Jean-Philippe.Lambert@ircam.fr, Sebastien.Robaszkiewicz@ircam.fr,
+        Norbert.Schnell@ircam.fr</li>
+        </ul>
+    </dd>
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line1">line 1</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>
+        server/index.js
+        </h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+            <div class="description"><p>Server-side syncronization component</p></div>
+        
+
+        
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-author">Author:</dt>
+    <dd class="tag-author">
+        <ul>
+            <li>Jean-Philippe.Lambert@ircam.fr, Sebastien.Robaszkiewicz@ircam.fr,
+        Norbert.Schnell@ircam.fr</li>
+        </ul>
+    </dd>
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="server_index.js.html">server/index.js</a>, <a href="server_index.js.html#line1">line 1</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-beta3</a> on Wed Apr 08 2015 20:04:12 GMT+0200 (CEST) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

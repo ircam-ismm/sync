@@ -1,4 +1,44 @@
-/**
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>client/index.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="SyncClient.html">SyncClient</a><ul class='methods'><li data-type='method'><a href="SyncClient.html#~__syncLoop">__syncLoop</a></li><li data-type='method'><a href="SyncClient.html#~getLocalTime">getLocalTime</a></li><li data-type='method'><a href="SyncClient.html#~getStatusDuration">getStatusDuration</a></li><li data-type='method'><a href="SyncClient.html#~getSyncTime">getSyncTime</a></li><li data-type='method'><a href="SyncClient.html#~setStatus">setStatus</a></li><li data-type='method'><a href="SyncClient.html#~start">start</a></li></ul></li><li><a href="SyncServer.html">SyncServer</a><ul class='methods'><li data-type='method'><a href="SyncServer.html#~getLocalTime">getLocalTime</a></li><li data-type='method'><a href="SyncServer.html#~getSyncTime">getSyncTime</a></li><li data-type='method'><a href="SyncServer.html#~start">start</a></li></ul></li></ul><h3>Global</h3><ul><li><a href="global.html#mean">mean</a></li><li><a href="global.html#orderMinMax">orderMinMax</a></li></ul>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">client/index.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
  * @fileOverview Client-side syncronization component
  * @author Jean-Philippe.Lambert@ircam.fr, Sebastien.Robaszkiewicz@ircam.fr,
  *         Norbert.Schnell@ircam.fr
@@ -16,7 +56,7 @@ var debug = require('debug')('soundworks:client:sync');
  * @returns {Object} with min and man attributes, swapped if that.min > that.max
  */
 function orderMinMax(that) {
-  if(that && that.min && that.max && that.min > that.max) {
+  if(that &amp;&amp; that.min &amp;&amp; that.max &amp;&amp; that.min > that.max) {
     var tmp = that.min;
     that.min = that.max;
     that.max = tmp;
@@ -26,7 +66,7 @@ function orderMinMax(that) {
 
 /**
  * Mean over an array, selecting one dimension of the array values.
- * @param {Array.<Array.<Number>>} array
+ * @param {Array.&lt;Array.&lt;Number>>} array
  * @param {Number} [dimension = 0]
  * @returns {Number} mean
  */
@@ -261,7 +301,7 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
 
         // end of a streak
         if (this$0.pingStreakCount >= this$0.pingStreakIterations
-            && this$0.streakData.length >= this$0.streakDataLength) {
+            &amp;&amp; this$0.streakData.length >= this$0.streakDataLength) {
           // plan the begining of the next streak
           this$0.pingDelay = this$0.pingStreakDelay.min
             + Math.random() * (this$0.pingStreakDelay.max - this$0.pingStreakDelay.min);
@@ -276,7 +316,7 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
           // some travel times (dimension 0) might be identical.
           // Then, use the offset median (dimension 1 is the second sort key)
           var s = 0;
-          while(s < sorted.length && sorted[s][0] <= streakTravelDuration * 1.01) {
+          while(s &lt; sorted.length &amp;&amp; sorted[s][0] &lt;= streakTravelDuration * 1.01) {
             ++s;
           }
           s = Math.max(0, s - 1);
@@ -300,7 +340,7 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
 
           if(this$0.status === 'startup'
              || (this$0.status === 'training'
-                 && this$0.getStatusDuration() < this$0.longTermDataTrainingDuration) ) {
+                 &amp;&amp; this$0.getStatusDuration() &lt; this$0.longTermDataTrainingDuration) ) {
             // set only the phase offset, not the frequency
             this$0.serverTimeReference = this$0.timeOffset;
             this$0.clientTimeReference = 0;
@@ -313,7 +353,7 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
           }
 
           if((this$0.status === 'training' || this$0.status === 'sync')
-             && this$0.getStatusDuration() >= this$0.longTermDataTrainingDuration) {
+             &amp;&amp; this$0.getStatusDuration() >= this$0.longTermDataTrainingDuration) {
             // linear regression, R = covariance(t,T) / variance(t)
             var regClientTime = mean(this$0.longTermData, 1);
             var regServerTime = mean(this$0.longTermData, 2);
@@ -329,7 +369,7 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
               this$0.serverTimeReference = regServerTime;
 
               // 10% is a lot
-              if(this$0.frequencyRatio > 0.99 && this$0.frequencyRatio < 1.01) {
+              if(this$0.frequencyRatio > 0.99 &amp;&amp; this$0.frequencyRatio &lt; 1.01) {
                 this$0.setStatus('sync');
               } else {
                 debug('clock frequency ratio out of sync: %s, training again',
@@ -414,3 +454,22 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
 MIXIN$0(SyncClient.prototype,proto$0);proto$0=void 0;return SyncClient;})();
 
 module.exports = SyncClient;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-beta3</a> on Wed Apr 08 2015 20:04:12 GMT+0200 (CEST) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

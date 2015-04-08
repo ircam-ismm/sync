@@ -19,6 +19,11 @@
     "gulp-browserify": "^0.5.1",
     "gulp-es6-transpiler": "^1.0.1",
     "gulp-rename": "^1.2.0",
-    "gulp-watch": "^4.1.1"
+    "gulp-watch": "^4.1.1",
+    "jsdoc": "^3.3.0-beta3",
+    "minami": "^1.1.0"
+  },
+  "scripts": {
+    "doc": "jsdoc -c doc/jsdoc.json"
   }
 }
