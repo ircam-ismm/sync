@@ -165,6 +165,9 @@ class SyncClient {
 
     this.status = 'new';
     this.statusChangedTime = 0;
+
+    this.connectionStatus = 'offline';
+    this.connectionStatusChangedTime = 0;
   }
 
 
@@ -179,7 +182,7 @@ class SyncClient {
   setStatus(status) {
     if(status !== this.status) {
       this.status = status;
-      this.statusChangedTime = this.getSyncTime();
+      this.statusChangedTime = this.getLocalTime();
     }
     return this;
   }
@@ -192,7 +195,59 @@ class SyncClient {
    * @returns {Number} time, in seconds, since last status change.
    */
   getStatusDuration() {
-    return Math.max(0, this.getSyncTime() - this.statusChangedTime);
+    return Math.max(0, this.getLocalTime() - this.statusChangedTime);
+  }
+
+  /**
+   * Set connectionStatus, and set this.connectionStatusChangedTime,
+   * to later use @see {@linkcode
+   * SyncClient~getConnectionStatusDuration}
+   *
+   * @function SyncClient~setConnectionStatus
+   * @param {String} connectionStatus
+   * @returns {Object} this
+   */
+  setConnectionStatus(connectionStatus) {
+    if(connectionStatus !== this.connectionStatus) {
+      this.connectionStatus = connectionStatus;
+      this.connectionStatusChangedTime = this.getLocalTime();
+    }
+    return this;
+  }
+
+  /**
+   * Get time since last connectionStatus change. @see {@linkcode
+   * SyncClient~setConnectionStatus}
+   *
+   * @function SyncClient~getConnectionStatusDuration
+   * @returns {Number} time, in seconds, since last connectionStatus
+   * change.
+   */
+  getConnectionStatusDuration() {
+    return Math.max(0, this.getLocalTime() - this.connectionStatusChangedTime);
+  }
+
+  /**
+   * Report the status of the synchronisation process, if
+   * reportFunction is defined.
+   *
+   * @param {SyncClient~reportFunction} reportFunction
+   */
+  reportStatus(reportFunction) {
+    if(typeof reportFunction !== 'undefined') {
+      reportFunction('sync:status', {
+        status: this.status,
+        statusDuration: this.getStatusDuration(),
+        timeOffset: this.timeOffset,
+        frequencyRatio: this.frequencyRatio,
+        connection: this.connectionStatus,
+        connectionDuration: this.getConnectionStatusDuration(),
+        connectionTimeOut: this.pingTimeoutDelay.current,
+        travelDuration: this.travelDuration,
+        travelDurationMin: this.travelDurationMin,
+        travelDurationMax: this.travelDurationMax
+      });
+    }
   }
 
   /**
@@ -201,8 +256,9 @@ class SyncClient {
    * @private
    * @function SyncClient~__syncLoop
    * @param {SyncClient~sendFunction} sendFunction
+   * @param {SyncClient~reportFunction} reportFunction
    */
-  __syncLoop(sendFunction) {
+  __syncLoop(sendFunction, reportFunction) {
     clearTimeout(this.timeoutId);
     ++this.pingId;
     sendFunction('sync:ping', this.pingId, this.getLocalTime());
@@ -212,7 +268,10 @@ class SyncClient {
       this.pingTimeoutDelay.current = Math.min(this.pingTimeoutDelay.current * 2,
                                                this.pingTimeoutDelay.max);
       debug('sync:ping timeout > %s', this.pingTimeoutDelay.current);
-      this.__syncLoop(sendFunction); // retry (yes, always increment pingId)
+      this.setConnectionStatus('offline');
+      this.reportStatus(reportFunction);
+      // retry (yes, always increment pingId)
+      this.__syncLoop(sendFunction, reportFunction);
     }, 1000 * this.pingTimeoutDelay.current);
   }
 
@@ -229,6 +288,7 @@ class SyncClient {
    */
   start(sendFunction, receiveFunction, reportFunction) {
     this.setStatus('startup');
+    this.setConnectionStatus('offline');
 
     this.streakData = [];
     this.streakDataNextIndex = 0;
@@ -241,6 +301,7 @@ class SyncClient {
       if (pingId === this.pingId) {
         ++this.pingStreakCount;
         clearTimeout(this.timeoutId);
+        this.setConnectionStatus('online');
         // reduce timeout duration on pong, for better reactivity
         this.pingTimeoutDelay.current = Math.max(this.pingTimeoutDelay.current * 0.75,
                                                  this.pingTimeoutDelay.min);
@@ -358,27 +419,19 @@ class SyncClient {
           this.travelDurationMax = sorted[0][0];
           this.travelDurationMax = sorted[sorted.length - 1][0];
 
-          reportFunction('sync:status', {
-            status: this.status,
-            statusDuration: this.getStatusDuration(),
-            timeOffset: this.timeOffset,
-            frequencyRatio: this.frequencyRatio,
-            travelDuration: this.travelDuration,
-            travelDurationMin: this.travelDurationMin,
-            travelDurationMax: this.travelDurationMax
-          });
+          this.reportStatus(reportFunction);
         } else {
           // we are in a streak, use the pingInterval value
           this.pingDelay = this.pingStreakPeriod;
         }
 
         setTimeout(() => {
-          this.__syncLoop(sendFunction);
+          this.__syncLoop(sendFunction, reportFunction);
         }, 1000 * this.pingDelay);
       }  // ping and pong ID match
     }); // receive function
 
-    this.__syncLoop(sendFunction);
+    this.__syncLoop(sendFunction, reportFunction);
   }
 
   /**

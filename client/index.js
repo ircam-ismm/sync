@@ -165,6 +165,9 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
 
     this.status = 'new';
     this.statusChangedTime = 0;
+
+    this.connectionStatus = 'offline';
+    this.connectionStatusChangedTime = 0;
   }DP$0(SyncClient,"prototype",{"configurable":false,"enumerable":false,"writable":false});
 
 
@@ -179,7 +182,7 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
   proto$0.setStatus = function(status) {
     if(status !== this.status) {
       this.status = status;
-      this.statusChangedTime = this.getSyncTime();
+      this.statusChangedTime = this.getLocalTime();
     }
     return this;
   };
@@ -192,7 +195,59 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
    * @returns {Number} time, in seconds, since last status change.
    */
   proto$0.getStatusDuration = function() {
-    return Math.max(0, this.getSyncTime() - this.statusChangedTime);
+    return Math.max(0, this.getLocalTime() - this.statusChangedTime);
+  };
+
+  /**
+   * Set connectionStatus, and set this.connectionStatusChangedTime,
+   * to later use @see {@linkcode
+   * SyncClient~getConnectionStatusDuration}
+   *
+   * @function SyncClient~setConnectionStatus
+   * @param {String} connectionStatus
+   * @returns {Object} this
+   */
+  proto$0.setConnectionStatus = function(connectionStatus) {
+    if(connectionStatus !== this.connectionStatus) {
+      this.connectionStatus = connectionStatus;
+      this.connectionStatusChangedTime = this.getLocalTime();
+    }
+    return this;
+  };
+
+  /**
+   * Get time since last connectionStatus change. @see {@linkcode
+   * SyncClient~setConnectionStatus}
+   *
+   * @function SyncClient~getConnectionStatusDuration
+   * @returns {Number} time, in seconds, since last connectionStatus
+   * change.
+   */
+  proto$0.getConnectionStatusDuration = function() {
+    return Math.max(0, this.getLocalTime() - this.connectionStatusChangedTime);
+  };
+
+  /**
+   * Report the status of the synchronisation process, if
+   * reportFunction is defined.
+   *
+   * @param {SyncClient~reportFunction} reportFunction
+   */
+  proto$0.reportStatus = function(reportFunction) {
+    if(typeof reportFunction !== 'undefined') {
+      reportFunction('sync:status', {
+        status: this.status,
+        statusDuration: this.getStatusDuration(),
+        timeOffset: this.timeOffset,
+        frequencyRatio: this.frequencyRatio,
+        connection: this.connectionStatus,
+        connectionDuration: this.getConnectionStatusDuration(),
+        connectionTimeOut: this.pingTimeoutDelay.current,
+        travelDuration: this.travelDuration,
+        travelDurationMin: this.travelDurationMin,
+        travelDurationMax: this.travelDurationMax
+      });
+    }
   };
 
   /**
@@ -201,8 +256,9 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
    * @private
    * @function SyncClient~__syncLoop
    * @param {SyncClient~sendFunction} sendFunction
+   * @param {SyncClient~reportFunction} reportFunction
    */
-  proto$0.__syncLoop = function(sendFunction) {var this$0 = this;
+  proto$0.__syncLoop = function(sendFunction, reportFunction) {var this$0 = this;
     clearTimeout(this.timeoutId);
     ++this.pingId;
     sendFunction('sync:ping', this.pingId, this.getLocalTime());
@@ -212,7 +268,10 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
       this$0.pingTimeoutDelay.current = Math.min(this$0.pingTimeoutDelay.current * 2,
                                                this$0.pingTimeoutDelay.max);
       debug('sync:ping timeout > %s', this$0.pingTimeoutDelay.current);
-      this$0.__syncLoop(sendFunction); // retry (yes, always increment pingId)
+      this$0.setConnectionStatus('offline');
+      this$0.reportStatus(reportFunction);
+      // retry (yes, always increment pingId)
+      this$0.__syncLoop(sendFunction, reportFunction);
     }, 1000 * this.pingTimeoutDelay.current);
   };
 
@@ -229,6 +288,7 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
    */
   proto$0.start = function(sendFunction, receiveFunction, reportFunction) {var this$0 = this;
     this.setStatus('startup');
+    this.setConnectionStatus('offline');
 
     this.streakData = [];
     this.streakDataNextIndex = 0;
@@ -241,6 +301,7 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
       if (pingId === this$0.pingId) {
         ++this$0.pingStreakCount;
         clearTimeout(this$0.timeoutId);
+        this$0.setConnectionStatus('online');
         // reduce timeout duration on pong, for better reactivity
         this$0.pingTimeoutDelay.current = Math.max(this$0.pingTimeoutDelay.current * 0.75,
                                                  this$0.pingTimeoutDelay.min);
@@ -358,27 +419,19 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
           this$0.travelDurationMax = sorted[0][0];
           this$0.travelDurationMax = sorted[sorted.length - 1][0];
 
-          reportFunction('sync:status', {
-            status: this$0.status,
-            statusDuration: this$0.getStatusDuration(),
-            timeOffset: this$0.timeOffset,
-            frequencyRatio: this$0.frequencyRatio,
-            travelDuration: this$0.travelDuration,
-            travelDurationMin: this$0.travelDurationMin,
-            travelDurationMax: this$0.travelDurationMax
-          });
+          this$0.reportStatus(reportFunction);
         } else {
           // we are in a streak, use the pingInterval value
           this$0.pingDelay = this$0.pingStreakPeriod;
         }
 
         setTimeout(function()  {
-          this$0.__syncLoop(sendFunction);
+          this$0.__syncLoop(sendFunction, reportFunction);
         }, 1000 * this$0.pingDelay);
       }  // ping and pong ID match
     }); // receive function
 
-    this.__syncLoop(sendFunction);
+    this.__syncLoop(sendFunction, reportFunction);
   };
 
   /**
