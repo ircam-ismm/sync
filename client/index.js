@@ -6,7 +6,7 @@
 
 'use strict';
 
-var debug = require('debug')('soundworks:client:sync');
+var debug = require('debug')('soundworks:sync');
 
 ////// helpers
 
@@ -16,7 +16,9 @@ var debug = require('debug')('soundworks:client:sync');
  * @returns {Object} with min and man attributes, swapped if that.min > that.max
  */
 function orderMinMax(that) {
-  if(that && that.min && that.max && that.min > that.max) {
+  if(typeof that !== 'undefined'
+     && typeof that.min !== 'undefined' && typeof that.max !== 'undefined'
+     && that.min > that.max) {
     var tmp = that.min;
     that.min = that.max;
     that.max = tmp;
@@ -416,7 +418,7 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
           }
 
           this$0.travelDuration = mean(sorted, 0);
-          this$0.travelDurationMax = sorted[0][0];
+          this$0.travelDurationMin = sorted[0][0];
           this$0.travelDurationMax = sorted[sorted.length - 1][0];
 
           this$0.reportStatus(reportFunction);
