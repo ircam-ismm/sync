@@ -6,6 +6,8 @@
 
 'use strict';
 
+const debug = require('debug')('soundworks:sync');
+
 class SyncServer {
   /**
    * @callback SyncServer~getTimeFunction
@@ -63,6 +65,7 @@ class SyncServer {
       const serverPingTime = this.getLocalTime();
       sendFunction('sync:pong', id, clientPingTime,
                    serverPingTime, this.getLocalTime());
+      // debug('ping: %s, %s, %s', id, clientPingTime, serverPingTime);
     });
   }
 

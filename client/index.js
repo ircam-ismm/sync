@@ -307,6 +307,8 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
         // reduce timeout duration on pong, for better reactivity
         this$0.pingTimeoutDelay.current = Math.max(this$0.pingTimeoutDelay.current * 0.75,
                                                  this$0.pingTimeoutDelay.min);
+
+        // time-differences are valid on a single-side only (client or server)
         var clientPongTime = this$0.getLocalTime();
         var clientTime = 0.5 * (clientPongTime + clientPingTime);
         var serverTime = 0.5 * (serverPongTime + serverPingTime);
@@ -375,8 +377,9 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
                   this$0.getSyncTime(streakClientTime));
           }
 
-          if((this$0.status === 'training' || this$0.status === 'sync')
-             && this$0.getStatusDuration() >= this$0.longTermDataTrainingDuration) {
+          if((this$0.status === 'training'
+              && this$0.getStatusDuration() >= this$0.longTermDataTrainingDuration)
+             || this$0.status === 'sync') {
             // linear regression, R = covariance(t,T) / variance(t)
             var regClientTime = mean(this$0.longTermData, 1);
             var regServerTime = mean(this$0.longTermData, 2);

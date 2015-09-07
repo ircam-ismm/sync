@@ -307,6 +307,8 @@ class SyncClient {
         // reduce timeout duration on pong, for better reactivity
         this.pingTimeoutDelay.current = Math.max(this.pingTimeoutDelay.current * 0.75,
                                                  this.pingTimeoutDelay.min);
+
+        // time-differences are valid on a single-side only (client or server)
         const clientPongTime = this.getLocalTime();
         const clientTime = 0.5 * (clientPongTime + clientPingTime);
         const serverTime = 0.5 * (serverPongTime + serverPingTime);
@@ -375,8 +377,9 @@ class SyncClient {
                   this.getSyncTime(streakClientTime));
           }
 
-          if((this.status === 'training' || this.status === 'sync')
-             && this.getStatusDuration() >= this.longTermDataTrainingDuration) {
+          if((this.status === 'training'
+              && this.getStatusDuration() >= this.longTermDataTrainingDuration)
+             || this.status === 'sync') {
             // linear regression, R = covariance(t,T) / variance(t)
             const regClientTime = mean(this.longTermData, 1);
             const regServerTime = mean(this.longTermData, 2);
