@@ -430,7 +430,7 @@ class SyncClient {
           this.pingDelay = this.pingStreakPeriod;
         }
 
-        setTimeout(() => {
+        this.timeoutId = setTimeout(() => {
           this.__syncLoop(sendFunction, reportFunction);
         }, 1000 * this.pingDelay);
       }  // ping and pong ID match

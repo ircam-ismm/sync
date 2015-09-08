@@ -430,7 +430,7 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
           this$0.pingDelay = this$0.pingStreakPeriod;
         }
 
-        setTimeout(function()  {
+        this$0.timeoutId = setTimeout(function()  {
           this$0.__syncLoop(sendFunction, reportFunction);
         }, 1000 * this$0.pingDelay);
       }  // ping and pong ID match
