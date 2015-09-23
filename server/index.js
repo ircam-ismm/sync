@@ -39,7 +39,7 @@ var SyncServer = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
    **/
 
   /**
-   * This is the constructor. @see {@linkcode SyncServer~start} method to
+   * This is the constructor. See {@linkcode SyncServer~start} method to
    * actually start a synchronisation process.
    *
    * @constructs SyncServer

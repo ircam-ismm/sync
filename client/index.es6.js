@@ -89,7 +89,7 @@ class SyncClient {
    **/
 
   /**
-   * This is the constructor. @see {@linkcode SyncClient~start} method to
+   * This is the constructor. See {@linkcode SyncClient~start} method to
    * actually start a synchronisation process.
    *
    * @constructs SyncClient
@@ -175,7 +175,7 @@ class SyncClient {
 
   /**
    * Set status, and set this.statusChangedTime, to later
-   * use @see {@linkcode SyncClient~getStatusDuration}
+   * use see {@linkcode SyncClient~getStatusDuration}
    *
    * @function SyncClient~setStatus
    * @param {String} status
@@ -190,7 +190,7 @@ class SyncClient {
   }
 
   /**
-   * Get time since last status change. @see {@linkcode
+   * Get time since last status change. See {@linkcode
    * SyncClient~setStatus}
    *
    * @function SyncClient~getStatusDuration
@@ -202,7 +202,7 @@ class SyncClient {
 
   /**
    * Set connectionStatus, and set this.connectionStatusChangedTime,
-   * to later use @see {@linkcode
+   * to later use see {@linkcode
    * SyncClient~getConnectionStatusDuration}
    *
    * @function SyncClient~setConnectionStatus
@@ -218,7 +218,7 @@ class SyncClient {
   }
 
   /**
-   * Get time since last connectionStatus change. @see {@linkcode
+   * Get time since last connectionStatus change. See {@linkcode
    * SyncClient~setConnectionStatus}
    *
    * @function SyncClient~getConnectionStatusDuration

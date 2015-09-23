@@ -39,7 +39,7 @@ class SyncServer {
    **/
 
   /**
-   * This is the constructor. @see {@linkcode SyncServer~start} method to
+   * This is the constructor. See {@linkcode SyncServer~start} method to
    * actually start a synchronisation process.
    *
    * @constructs SyncServer

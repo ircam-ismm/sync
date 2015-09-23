@@ -24,6 +24,6 @@
     "minami": "^1.1.1"
   },
   "scripts": {
-    "doc": "jsdoc -c doc/jsdoc.json"
+    "doc": "gulp transpile && jsdoc -c doc/jsdoc.json"
   }
 }
