@@ -394,8 +394,8 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
               this$0.clientTimeReference = regClientTime;
               this$0.serverTimeReference = regServerTime;
 
-              // 10% is a lot
-              if(this$0.frequencyRatio > 0.99 && this$0.frequencyRatio < 1.01) {
+              // 0.05% is a lot (500 PPM, like an old mechanical clock)
+              if(this$0.frequencyRatio > 0.9995 && this$0.frequencyRatio < 1.0005) {
                 this$0.setStatus('sync');
               } else {
                 debug('clock frequency ratio out of sync: %s, training again',

@@ -394,8 +394,8 @@ class SyncClient {
               this.clientTimeReference = regClientTime;
               this.serverTimeReference = regServerTime;
 
-              // 10% is a lot
-              if(this.frequencyRatio > 0.99 && this.frequencyRatio < 1.01) {
+              // 0.05% is a lot (500 PPM, like an old mechanical clock)
+              if(this.frequencyRatio > 0.9995 && this.frequencyRatio < 1.0005) {
                 this.setStatus('sync');
               } else {
                 debug('clock frequency ratio out of sync: %s, training again',
