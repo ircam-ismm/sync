@@ -77,3 +77,7 @@ io.on('connection', function (socket) {
   ... // the rest of your code
 });
 ```
+
+## License
+
+[BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause). See [LICENSE file](LICENSE).

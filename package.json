@@ -1,12 +1,13 @@
 {
   "name": "sync",
-  "version": "0.6.4",
+  "version": "0.7.0",
   "description": "Client/Server time synchronization component",
   "authors": [
     "Jean-Philippe.Lambert@ircam.fr",
     "Sebastien.Robaszkiewicz@ircam.fr",
     "Norbert.Schnell@ircam.fr"
   ],
+  "license": "BSD-3-Clause",
   "repository": {
     "type": "git",
     "url": "https://github.com/collective-soundworks/sync"
@@ -20,7 +21,7 @@
     "gulp-es6-transpiler": "^1.0.1",
     "gulp-rename": "^1.2.0",
     "gulp-watch": "^4.1.1",
-    "jsdoc": "^3.3.2",
+    "jsdoc": "^3.3.3",
     "minami": "^1.1.1"
   },
   "scripts": {

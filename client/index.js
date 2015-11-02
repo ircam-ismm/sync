@@ -2,6 +2,8 @@
  * @fileOverview Client-side syncronization component
  * @author Jean-Philippe.Lambert@ircam.fr, Sebastien.Robaszkiewicz@ircam.fr,
  *         Norbert.Schnell@ircam.fr
+ * @copyright 2015 IRCAM, Paris, France
+ * @license BSD-3-Clause
  */
 
 'use strict';
@@ -76,16 +78,16 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
    * change
    * @param {Number} report.timeOffset time difference between local
    * time and sync time, in seconds. Measured as the median of the
-   * shortest round-trip times over the last ping-pong streak.
-   * @param {Number} report.travelDuration half-duration of a
+   * shortest round-trip times over the last ping-pong series.
+   * @param {Number} report.travelDuration duration of a
    * ping-pong round-trip, in seconds, mean over the the last
-   * ping-pong streak.
-   * @param {Number} report.travelDurationMin half-duration of a
+   * ping-pong series.
+   * @param {Number} report.travelDurationMin duration of a
    * ping-pong round-trip, in seconds, minimum over the the last
-   * ping-pong streak.
-   * @param {Number} report.travelDurationMax half-duration of a
+   * ping-pong series.
+   * @param {Number} report.travelDurationMax duration of a
    * ping-pong round-trip, in seconds, maximum over the the last
-   * ping-pong streak.
+   * ping-pong series.
    **/
 
   /**
@@ -101,14 +103,14 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
    * @param {Number} options.pingTimeOutDelay.max
    * @param {Number} options.pingTimeTravelDurationAccepted maximum
    * travel time, in seconds, to take a ping-pong probe into account.
-   * @param {Number} options.pingStreakIterations ping-pongs in a
-   * streak
-   * @param {Number} options.pingStreakPeriod interval (in seconds) between pings
-   * in a streak
-   * @param {Number} options.pingStreakDelay range of interval (in
-   * seconds) between ping-pong streaks in a streak
-   * @param {Number} options.pingStreakDelay.min
-   * @param {Number} options.pingStreakDelay.max
+   * @param {Number} options.pingSeriesIterations number of ping-pongs in a
+   * series
+   * @param {Number} options.pingSeriesPeriod interval (in seconds) between pings
+   * in a series
+   * @param {Number} options.pingSeriesDelay range of interval (in
+   * seconds) between ping-pong seriess in a series
+   * @param {Number} options.pingSeriesDelay.min
+   * @param {Number} options.pingSeriesDelay.max
    * @param {Number} options.longTermDataTrainingDuration duration of
    * training, in seconds, approximately, before using the estimate of
    * clock frequency
@@ -120,22 +122,20 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
       || { min: 1, max: 30 };
     orderMinMax(this.pingTimeoutDelay);
 
-    this.pingTravelDurationAccepted = options.pingTravelDurationAccepted || 0.5;
-
-    this.pingStreakIterations = options.pingStreakIterations || 10;
-    this.pingStreakPeriod = options.pingStreakPeriod || 0.250;
-    this.pingStreakDelay = options.pingStreakDelay
+    this.pingSeriesIterations = options.pingSeriesIterations || 10;
+    this.pingSeriesPeriod = options.pingSeriesPeriod || 0.250;
+    this.pingSeriesDelay = options.pingSeriesDelay
       || { min: 10, max: 20 };
-    orderMinMax(this.pingStreakDelay);
+    orderMinMax(this.pingSeriesDelay);
 
     this.pingDelay = 0; // current delay before next ping
     this.pingTimeoutId = 0; // to cancel timeout on sync_pinc
     this.pingId = 0; // absolute ID to mach pong against
 
-    this.pingStreakCount = 0; // elapsed pings in a streak
-    this.streakData = []; // circular buffer
-    this.streakDataNextIndex = 0; // next index to write in circular buffer
-    this.streakDataLength = this.pingStreakIterations; // size of circular buffer
+    this.pingSeriesCount = 0; // elapsed pings in a series
+    this.seriesData = []; // circular buffer
+    this.seriesDataNextIndex = 0; // next index to write in circular buffer
+    this.seriesDataLength = this.pingSeriesIterations; // size of circular buffer
 
     this.longTermDataTrainingDuration
       = options.longTermDataTrainingDuration || 120;
@@ -146,12 +146,12 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
     this.longTermDataLength = Math.max(
       2,
       this.longTermDataDuration /
-        (0.5 * (this.pingStreakDelay.min + this.pingStreakDelay.max) ) );
+        (0.5 * (this.pingSeriesDelay.min + this.pingSeriesDelay.max) ) );
 
     this.longTermData = []; // circular buffer
     this.longTermDataNextIndex = 0; // next index to write in circular buffer
 
-    this.timeOffset = 0; // mean of (serverTime - clientTime) in the last streak
+    this.timeOffset = 0; // mean of (serverTime - clientTime) in the last series
     this.travelDuration = 0;
     this.travelDurationMin = 0;
     this.travelDurationMax = 0;
@@ -292,8 +292,8 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
     this.setStatus('startup');
     this.setConnectionStatus('offline');
 
-    this.streakData = [];
-    this.streakDataNextIndex = 0;
+    this.seriesData = [];
+    this.seriesDataNextIndex = 0;
 
     this.longTermData = [];
     this.longTermDataNextIndex = 0;
@@ -301,7 +301,7 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
     receiveFunction('sync:pong', function(pingId, clientPingTime, serverPingTime, serverPongTime)  {
       // accept only the pong that corresponds to the last ping
       if (pingId === this$0.pingId) {
-        ++this$0.pingStreakCount;
+        ++this$0.pingSeriesCount;
         clearTimeout(this$0.timeoutId);
         this$0.setConnectionStatus('online');
         // reduce timeout duration on pong, for better reactivity
@@ -317,44 +317,44 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
         var offsetTime = serverTime - clientTime;
 
         // order is important for sorting, later.
-        this$0.streakData[this$0.streakDataNextIndex]
+        this$0.seriesData[this$0.seriesDataNextIndex]
           = [travelDuration, offsetTime, clientTime, serverTime];
-        this$0.streakDataNextIndex = (++this$0.streakDataNextIndex) % this$0.streakDataLength;
+        this$0.seriesDataNextIndex = (++this$0.seriesDataNextIndex) % this$0.seriesDataLength;
 
         // debug('ping %s, travel = %s, offset = %s, client = %s, server = %s',
         //       pingId, travelDuration, offsetTime, clientTime, serverTime);
 
-        // end of a streak
-        if (this$0.pingStreakCount >= this$0.pingStreakIterations
-            && this$0.streakData.length >= this$0.streakDataLength) {
-          // plan the begining of the next streak
-          this$0.pingDelay = this$0.pingStreakDelay.min
-            + Math.random() * (this$0.pingStreakDelay.max - this$0.pingStreakDelay.min);
-          this$0.pingStreakCount = 0;
+        // end of a series
+        if (this$0.pingSeriesCount >= this$0.pingSeriesIterations
+            && this$0.seriesData.length >= this$0.seriesDataLength) {
+          // plan the begining of the next series
+          this$0.pingDelay = this$0.pingSeriesDelay.min
+            + Math.random() * (this$0.pingSeriesDelay.max - this$0.pingSeriesDelay.min);
+          this$0.pingSeriesCount = 0;
 
           // sort by travel time first, then offset time.
-          var sorted = this$0.streakData.slice(0).sort();
+          var sorted = this$0.seriesData.slice(0).sort();
 
-          var streakTravelDuration = sorted[0][0];
+          var seriesTravelDuration = sorted[0][0];
 
           // When the clock tick is long enough,
           // some travel times (dimension 0) might be identical.
           // Then, use the offset median (dimension 1 is the second sort key)
           var s = 0;
-          while(s < sorted.length && sorted[s][0] <= streakTravelDuration * 1.01) {
+          while(s < sorted.length && sorted[s][0] <= seriesTravelDuration * 1.01) {
             ++s;
           }
           s = Math.max(0, s - 1);
           var median = Math.floor(s / 2);
 
-          var streakClientTime = sorted[median][2];
-          var streakServerTime = sorted[median][3];
-          var streakClientSquaredTime = streakClientTime * streakClientTime;
-          var streakClientServerTime = streakClientTime * streakServerTime;
+          var seriesClientTime = sorted[median][2];
+          var seriesServerTime = sorted[median][3];
+          var seriesClientSquaredTime = seriesClientTime * seriesClientTime;
+          var seriesClientServerTime = seriesClientTime * seriesServerTime;
 
           this$0.longTermData[this$0.longTermDataNextIndex]
-            = [streakTravelDuration, streakClientTime, streakServerTime,
-               streakClientSquaredTime, streakClientServerTime];
+            = [seriesTravelDuration, seriesClientTime, seriesServerTime,
+               seriesClientSquaredTime, seriesClientServerTime];
           this$0.longTermDataNextIndex = (++this$0.longTermDataNextIndex) % this$0.longTermDataLength;
 
           // mean of the time offset over 3 samples around median
@@ -373,8 +373,8 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
             this$0.setStatus('training');
             debug('T = %s + %s * (%s - %s) = %s',
                   this$0.serverTimeReference, this$0.frequencyRatio,
-                  streakClientTime, this$0.clientTimeReference,
-                  this$0.getSyncTime(streakClientTime));
+                  seriesClientTime, this$0.clientTimeReference,
+                  this$0.getSyncTime(seriesClientTime));
           }
 
           if((this$0.status === 'training'
@@ -400,15 +400,15 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
               } else {
                 debug('clock frequency ratio out of sync: %s, training again',
                       this$0.frequencyRatio);
-                // start the training again from the last streak
+                // start the training again from the last series
                 this$0.serverTimeReference = this$0.timeOffset; // offset only
                 this$0.clientTimeReference = 0;
                 this$0.frequencyRatio = 1;
                 this$0.setStatus('training');
 
                 this$0.longTermData[0]
-                  = [streakTravelDuration, streakClientTime, streakServerTime,
-                     streakClientSquaredTime, streakClientServerTime];
+                  = [seriesTravelDuration, seriesClientTime, seriesServerTime,
+                     seriesClientSquaredTime, seriesClientServerTime];
                 this$0.longTermData.length = 1;
                 this$0.longTermDataNextIndex = 1;
               }
@@ -416,8 +416,8 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
 
             debug('T = %s + %s * (%s - %s) = %s',
                   this$0.serverTimeReference, this$0.frequencyRatio,
-                  streakClientTime, this$0.clientTimeReference,
-                  this$0.getSyncTime(streakClientTime) );
+                  seriesClientTime, this$0.clientTimeReference,
+                  this$0.getSyncTime(seriesClientTime) );
           }
 
           this$0.travelDuration = mean(sorted, 0);
@@ -426,8 +426,8 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
 
           this$0.reportStatus(reportFunction);
         } else {
-          // we are in a streak, use the pingInterval value
-          this$0.pingDelay = this$0.pingStreakPeriod;
+          // we are in a series, use the pingInterval value
+          this$0.pingDelay = this$0.pingSeriesPeriod;
         }
 
         this$0.timeoutId = setTimeout(function()  {

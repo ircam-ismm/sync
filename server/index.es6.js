@@ -2,6 +2,8 @@
  * @fileoverview Server-side syncronization component
  * @author Jean-Philippe.Lambert@ircam.fr, Sebastien.Robaszkiewicz@ircam.fr,
  *         Norbert.Schnell@ircam.fr
+ * @copyright 2015 IRCAM, Paris, France
+ * @license BSD-3-Clause
  */
 
 'use strict';
