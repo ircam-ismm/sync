@@ -1,6 +1,6 @@
 # sync
 
-This module synchronizes the server and clients clocks on a common shared clock called “sync clock”.
+This module synchronises the server and clients clocks on a common shared clock called “sync clock”.
 
 All time calculations and exchanges should be expressed in the sync clock time, and all times are in seconds.
 
@@ -29,7 +29,7 @@ var sendFunction = socket.emit;
  // function to receive a message from the server
 var receiveFunction = socket.on;
 
-// Initialize the sync module and start the synchronization process
+// Initialize the sync module and start the synchronisation process
 var sync = new SyncClient(getTimeFunction);
 sync.start(sendFunction, receiveFunction);
 
@@ -77,6 +77,11 @@ io.on('connection', function (socket) {
   ... // the rest of your code
 });
 ```
+
+## Documentation
+
+The documentation is available at `./doc/sync/${sync_version}/index.html`
+Use `npm run doc` to generate it.
 
 ## License
 

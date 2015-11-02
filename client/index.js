@@ -14,6 +14,8 @@ var debug = require('debug')('soundworks:sync');
 
 /**
  * Order min and max attributes.
+ *
+ * @private
  * @param {Object} that with min and max attributes
  * @returns {Object} with min and man attributes, swapped if that.min > that.max
  */
@@ -30,6 +32,8 @@ function orderMinMax(that) {
 
 /**
  * Mean over an array, selecting one dimension of the array values.
+ *
+ * @private
  * @param {Array.<Array.<Number>>} array
  * @param {Number} [dimension = 0]
  * @returns {Number} mean
