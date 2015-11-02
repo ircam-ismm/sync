@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>client/index.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="SyncClient.html">SyncClient</a><ul class='methods'><li data-type='method'><a href="SyncClient.html#~getConnectionStatusDuration">getConnectionStatusDuration</a></li><li data-type='method'><a href="SyncClient.html#~getLocalTime">getLocalTime</a></li><li data-type='method'><a href="SyncClient.html#~getStatusDuration">getStatusDuration</a></li><li data-type='method'><a href="SyncClient.html#~getSyncTime">getSyncTime</a></li><li data-type='method'><a href="SyncClient.html#~setConnectionStatus">setConnectionStatus</a></li><li data-type='method'><a href="SyncClient.html#~setStatus">setStatus</a></li><li data-type='method'><a href="SyncClient.html#~start">start</a></li></ul></li><li><a href="SyncServer.html">SyncServer</a><ul class='methods'><li data-type='method'><a href="SyncServer.html#~getLocalTime">getLocalTime</a></li><li data-type='method'><a href="SyncServer.html#~getSyncTime">getSyncTime</a></li><li data-type='method'><a href="SyncServer.html#~start">start</a></li></ul></li></ul><h3>Global</h3><ul><li><a href="global.html#mean">mean</a></li><li><a href="global.html#orderMinMax">orderMinMax</a></li></ul>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">client/index.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @fileOverview Client-side syncronization component
+ * @author Jean-Philippe.Lambert@ircam.fr, Sebastien.Robaszkiewicz@ircam.fr,
+ *         Norbert.Schnell@ircam.fr
+ * @copyright 2015 IRCAM, Paris, France
+ * @license BSD-3-Clause
+ */
+
+'use strict';
+
+var debug = require('debug')('soundworks:sync');
+
+////// helpers
+
+/**
+ * Order min and max attributes.
+ * @param {Object} that with min and max attributes
+ * @returns {Object} with min and man attributes, swapped if that.min > that.max
+ */
+function orderMinMax(that) {
+  if(typeof that !== 'undefined'
+     &amp;&amp; typeof that.min !== 'undefined' &amp;&amp; typeof that.max !== 'undefined'
+     &amp;&amp; that.min > that.max) {
+    var tmp = that.min;
+    that.min = that.max;
+    that.max = tmp;
+  }
+  return that;
+}
+
+/**
+ * Mean over an array, selecting one dimension of the array values.
+ * @param {Array.&lt;Array.&lt;Number>>} array
+ * @param {Number} [dimension = 0]
+ * @returns {Number} mean
+ */
+function mean(array) {var dimension = arguments[1];if(dimension === void 0)dimension = 0;
+  return array.reduce(function(p, q)  {return p + q[dimension]}, 0) / array.length;
+}
+
+var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};return o["a"]===t})({},{});var DP$0 = Object.defineProperty;var GOPD$0 = Object.getOwnPropertyDescriptor;var MIXIN$0 = function(t,s){for(var p in s){if(s.hasOwnProperty(p)){DP$0(t,p,GOPD$0(s,p));}}return t};var proto$0={};
+  /**
+   * @callback SyncClient~getTimeFunction
+   * @return {Number} monotonic, ever increasing, time in second.
+   **/
+
+  /**
+   * @callback SyncClient~sendFunction
+   * @see {@linkcode SyncServer~receiveFunction}
+   * @param {String} messageType identification of ping message type
+   * @param {Number} pingId unique identifier
+   * @param {Number} clientPingTime time-stamp of ping emission
+   **/
+
+  /**
+   * @callback SyncClient~receiveFunction
+   * @see {@linkcode SyncServer~sendFunction}
+   * @param {String} messageType identification of pong message type
+   * @param {SyncClient~receiveCallback} receiveCallback called on
+   * each message matching messageType.
+   **/
+
+  /**
+   * @callback SyncClient~receiveCallback
+   * @param {Number} pingId unique identifier
+   * @param {Number} clientPingTime time-stamp of ping emission
+   * @param {Number} serverPingTime time-stamp of ping reception
+   * @param {Number} serverPongTime time-stamp of pong emission
+   * @param {Number} clientPongTime time-stamp of pong reception
+   **/
+
+  /**
+   * @callback SyncClient~reportFunction
+   * @param {String} messageType identification of status message type
+   * @param {Object} report
+   * @param {String} report.status
+   * @param {Number} report.statusDuration duration since last status
+   * change
+   * @param {Number} report.timeOffset time difference between local
+   * time and sync time, in seconds. Measured as the median of the
+   * shortest round-trip times over the last ping-pong series.
+   * @param {Number} report.travelDuration duration of a
+   * ping-pong round-trip, in seconds, mean over the the last
+   * ping-pong series.
+   * @param {Number} report.travelDurationMin duration of a
+   * ping-pong round-trip, in seconds, minimum over the the last
+   * ping-pong series.
+   * @param {Number} report.travelDurationMax duration of a
+   * ping-pong round-trip, in seconds, maximum over the the last
+   * ping-pong series.
+   **/
+
+  /**
+   * This is the constructor. See {@linkcode SyncClient~start} method to
+   * actually start a synchronisation process.
+   *
+   * @constructs SyncClient
+   * @param {SyncClient~getTimeFunction} getTimeFunction
+   * @param {Object} options
+   * @param {Object} options.pingTimeOutDelay range of duration (in seconds) to
+   * consider a ping was not ponged back
+   * @param {Number} options.pingTimeOutDelay.min
+   * @param {Number} options.pingTimeOutDelay.max
+   * @param {Number} options.pingTimeTravelDurationAccepted maximum
+   * travel time, in seconds, to take a ping-pong probe into account.
+   * @param {Number} options.pingSeriesIterations number of ping-pongs in a
+   * series
+   * @param {Number} options.pingSeriesPeriod interval (in seconds) between pings
+   * in a series
+   * @param {Number} options.pingSeriesDelay range of interval (in
+   * seconds) between ping-pong seriess in a series
+   * @param {Number} options.pingSeriesDelay.min
+   * @param {Number} options.pingSeriesDelay.max
+   * @param {Number} options.longTermDataTrainingDuration duration of
+   * training, in seconds, approximately, before using the estimate of
+   * clock frequency
+   * @param {Number} options.longTermDataDuration estimate synchronisation over
+   *  this duration, in seconds, approximately
+   */
+  function SyncClient(getTimeFunction) {var options = arguments[1];if(options === void 0)options = {};
+    this.pingTimeoutDelay = options.pingTimeoutDelay
+      || { min: 1, max: 30 };
+    orderMinMax(this.pingTimeoutDelay);
+
+    this.pingSeriesIterations = options.pingSeriesIterations || 10;
+    this.pingSeriesPeriod = options.pingSeriesPeriod || 0.250;
+    this.pingSeriesDelay = options.pingSeriesDelay
+      || { min: 10, max: 20 };
+    orderMinMax(this.pingSeriesDelay);
+
+    this.pingDelay = 0; // current delay before next ping
+    this.pingTimeoutId = 0; // to cancel timeout on sync_pinc
+    this.pingId = 0; // absolute ID to mach pong against
+
+    this.pingSeriesCount = 0; // elapsed pings in a series
+    this.seriesData = []; // circular buffer
+    this.seriesDataNextIndex = 0; // next index to write in circular buffer
+    this.seriesDataLength = this.pingSeriesIterations; // size of circular buffer
+
+    this.longTermDataTrainingDuration
+      = options.longTermDataTrainingDuration || 120;
+
+    // use a fixed-size circular buffer, even if it does not match
+    // exactly the required duration
+    this.longTermDataDuration = options.longTermDataDuration || 900;
+    this.longTermDataLength = Math.max(
+      2,
+      this.longTermDataDuration /
+        (0.5 * (this.pingSeriesDelay.min + this.pingSeriesDelay.max) ) );
+
+    this.longTermData = []; // circular buffer
+    this.longTermDataNextIndex = 0; // next index to write in circular buffer
+
+    this.timeOffset = 0; // mean of (serverTime - clientTime) in the last series
+    this.travelDuration = 0;
+    this.travelDurationMin = 0;
+    this.travelDurationMax = 0;
+
+    // T(t) = T0 + R * (t - t0)
+    this.serverTimeReference = 0; // T0
+    this.clientTimeReference = 0; // t0
+    this.frequencyRatio = 1; // R
+
+    this.pingTimeoutDelay.current = this.pingTimeoutDelay.min;
+
+    this.getTimeFunction = getTimeFunction;
+
+    this.status = 'new';
+    this.statusChangedTime = 0;
+
+    this.connectionStatus = 'offline';
+    this.connectionStatusChangedTime = 0;
+  }DP$0(SyncClient,"prototype",{"configurable":false,"enumerable":false,"writable":false});
+
+
+  /**
+   * Set status, and set this.statusChangedTime, to later
+   * use see {@linkcode SyncClient~getStatusDuration}
+   *
+   * @function SyncClient~setStatus
+   * @param {String} status
+   * @returns {Object} this
+   */
+  proto$0.setStatus = function(status) {
+    if(status !== this.status) {
+      this.status = status;
+      this.statusChangedTime = this.getLocalTime();
+    }
+    return this;
+  };
+
+  /**
+   * Get time since last status change. See {@linkcode
+   * SyncClient~setStatus}
+   *
+   * @function SyncClient~getStatusDuration
+   * @returns {Number} time, in seconds, since last status change.
+   */
+  proto$0.getStatusDuration = function() {
+    return Math.max(0, this.getLocalTime() - this.statusChangedTime);
+  };
+
+  /**
+   * Set connectionStatus, and set this.connectionStatusChangedTime,
+   * to later use see {@linkcode
+   * SyncClient~getConnectionStatusDuration}
+   *
+   * @function SyncClient~setConnectionStatus
+   * @param {String} connectionStatus
+   * @returns {Object} this
+   */
+  proto$0.setConnectionStatus = function(connectionStatus) {
+    if(connectionStatus !== this.connectionStatus) {
+      this.connectionStatus = connectionStatus;
+      this.connectionStatusChangedTime = this.getLocalTime();
+    }
+    return this;
+  };
+
+  /**
+   * Get time since last connectionStatus change. See {@linkcode
+   * SyncClient~setConnectionStatus}
+   *
+   * @function SyncClient~getConnectionStatusDuration
+   * @returns {Number} time, in seconds, since last connectionStatus
+   * change.
+   */
+  proto$0.getConnectionStatusDuration = function() {
+    return Math.max(0, this.getLocalTime() - this.connectionStatusChangedTime);
+  };
+
+  /**
+   * Report the status of the synchronisation process, if
+   * reportFunction is defined.
+   *
+   * @param {SyncClient~reportFunction} reportFunction
+   */
+  proto$0.reportStatus = function(reportFunction) {
+    if(typeof reportFunction !== 'undefined') {
+      reportFunction('sync:status', {
+        status: this.status,
+        statusDuration: this.getStatusDuration(),
+        timeOffset: this.timeOffset,
+        frequencyRatio: this.frequencyRatio,
+        connection: this.connectionStatus,
+        connectionDuration: this.getConnectionStatusDuration(),
+        connectionTimeOut: this.pingTimeoutDelay.current,
+        travelDuration: this.travelDuration,
+        travelDurationMin: this.travelDurationMin,
+        travelDurationMax: this.travelDurationMax
+      });
+    }
+  };
+
+  /**
+   * Process to send ping messages.
+   *
+   * @private
+   * @function SyncClient~__syncLoop
+   * @param {SyncClient~sendFunction} sendFunction
+   * @param {SyncClient~reportFunction} reportFunction
+   */
+  proto$0.__syncLoop = function(sendFunction, reportFunction) {var this$0 = this;
+    clearTimeout(this.timeoutId);
+    ++this.pingId;
+    sendFunction('sync:ping', this.pingId, this.getLocalTime());
+
+    this.timeoutId = setTimeout(function()  {
+      // increase timeout duration on timeout, to avoid overflow
+      this$0.pingTimeoutDelay.current = Math.min(this$0.pingTimeoutDelay.current * 2,
+                                               this$0.pingTimeoutDelay.max);
+      debug('sync:ping timeout > %s', this$0.pingTimeoutDelay.current);
+      this$0.setConnectionStatus('offline');
+      this$0.reportStatus(reportFunction);
+      // retry (yes, always increment pingId)
+      this$0.__syncLoop(sendFunction, reportFunction);
+    }, 1000 * this.pingTimeoutDelay.current);
+  };
+
+  /**
+   * Start a synchronisation process by registering the receive
+   * function passed as second parameter. Then, send regular messages
+   * to the server, using the send function passed as first parameter.
+   *
+   * @function SyncClient~start
+   * @param {SyncClient~sendFunction} sendFunction
+   * @param {SyncClient~receiveFunction} receiveFunction to register
+   * @param {SyncClient~reportFunction} reportFunction if defined,
+   * is called to report the status, on each status change
+   */
+  proto$0.start = function(sendFunction, receiveFunction, reportFunction) {var this$0 = this;
+    this.setStatus('startup');
+    this.setConnectionStatus('offline');
+
+    this.seriesData = [];
+    this.seriesDataNextIndex = 0;
+
+    this.longTermData = [];
+    this.longTermDataNextIndex = 0;
+
+    receiveFunction('sync:pong', function(pingId, clientPingTime, serverPingTime, serverPongTime)  {
+      // accept only the pong that corresponds to the last ping
+      if (pingId === this$0.pingId) {
+        ++this$0.pingSeriesCount;
+        clearTimeout(this$0.timeoutId);
+        this$0.setConnectionStatus('online');
+        // reduce timeout duration on pong, for better reactivity
+        this$0.pingTimeoutDelay.current = Math.max(this$0.pingTimeoutDelay.current * 0.75,
+                                                 this$0.pingTimeoutDelay.min);
+
+        // time-differences are valid on a single-side only (client or server)
+        var clientPongTime = this$0.getLocalTime();
+        var clientTime = 0.5 * (clientPongTime + clientPingTime);
+        var serverTime = 0.5 * (serverPongTime + serverPingTime);
+        var travelDuration = Math.max(0, (clientPongTime - clientPingTime)
+                                        - (serverPongTime - serverPingTime));
+        var offsetTime = serverTime - clientTime;
+
+        // order is important for sorting, later.
+        this$0.seriesData[this$0.seriesDataNextIndex]
+          = [travelDuration, offsetTime, clientTime, serverTime];
+        this$0.seriesDataNextIndex = (++this$0.seriesDataNextIndex) % this$0.seriesDataLength;
+
+        // debug('ping %s, travel = %s, offset = %s, client = %s, server = %s',
+        //       pingId, travelDuration, offsetTime, clientTime, serverTime);
+
+        // end of a series
+        if (this$0.pingSeriesCount >= this$0.pingSeriesIterations
+            &amp;&amp; this$0.seriesData.length >= this$0.seriesDataLength) {
+          // plan the begining of the next series
+          this$0.pingDelay = this$0.pingSeriesDelay.min
+            + Math.random() * (this$0.pingSeriesDelay.max - this$0.pingSeriesDelay.min);
+          this$0.pingSeriesCount = 0;
+
+          // sort by travel time first, then offset time.
+          var sorted = this$0.seriesData.slice(0).sort();
+
+          var seriesTravelDuration = sorted[0][0];
+
+          // When the clock tick is long enough,
+          // some travel times (dimension 0) might be identical.
+          // Then, use the offset median (dimension 1 is the second sort key)
+          var s = 0;
+          while(s &lt; sorted.length &amp;&amp; sorted[s][0] &lt;= seriesTravelDuration * 1.01) {
+            ++s;
+          }
+          s = Math.max(0, s - 1);
+          var median = Math.floor(s / 2);
+
+          var seriesClientTime = sorted[median][2];
+          var seriesServerTime = sorted[median][3];
+          var seriesClientSquaredTime = seriesClientTime * seriesClientTime;
+          var seriesClientServerTime = seriesClientTime * seriesServerTime;
+
+          this$0.longTermData[this$0.longTermDataNextIndex]
+            = [seriesTravelDuration, seriesClientTime, seriesServerTime,
+               seriesClientSquaredTime, seriesClientServerTime];
+          this$0.longTermDataNextIndex = (++this$0.longTermDataNextIndex) % this$0.longTermDataLength;
+
+          // mean of the time offset over 3 samples around median
+          // (it might use a longer travel duration)
+          var aroundMedian = sorted.slice(Math.max(0, median - 1),
+                                            Math.min(sorted.length, median + 1) );
+          this$0.timeOffset = mean(aroundMedian, 3) - mean(aroundMedian, 2);
+
+          if(this$0.status === 'startup'
+             || (this$0.status === 'training'
+                 &amp;&amp; this$0.getStatusDuration() &lt; this$0.longTermDataTrainingDuration) ) {
+            // set only the phase offset, not the frequency
+            this$0.serverTimeReference = this$0.timeOffset;
+            this$0.clientTimeReference = 0;
+            this$0.frequencyRatio = 1;
+            this$0.setStatus('training');
+            debug('T = %s + %s * (%s - %s) = %s',
+                  this$0.serverTimeReference, this$0.frequencyRatio,
+                  seriesClientTime, this$0.clientTimeReference,
+                  this$0.getSyncTime(seriesClientTime));
+          }
+
+          if((this$0.status === 'training'
+              &amp;&amp; this$0.getStatusDuration() >= this$0.longTermDataTrainingDuration)
+             || this$0.status === 'sync') {
+            // linear regression, R = covariance(t,T) / variance(t)
+            var regClientTime = mean(this$0.longTermData, 1);
+            var regServerTime = mean(this$0.longTermData, 2);
+            var regClientSquaredTime = mean(this$0.longTermData, 3);
+            var regClientServerTime = mean(this$0.longTermData, 4);
+
+            var covariance = regClientServerTime - regClientTime * regServerTime;
+            var variance = regClientSquaredTime - regClientTime * regClientTime;
+            if(variance > 0) {
+              // update freq and shift
+              this$0.frequencyRatio = covariance / variance;
+              this$0.clientTimeReference = regClientTime;
+              this$0.serverTimeReference = regServerTime;
+
+              // 0.05% is a lot (500 PPM, like an old mechanical clock)
+              if(this$0.frequencyRatio > 0.9995 &amp;&amp; this$0.frequencyRatio &lt; 1.0005) {
+                this$0.setStatus('sync');
+              } else {
+                debug('clock frequency ratio out of sync: %s, training again',
+                      this$0.frequencyRatio);
+                // start the training again from the last series
+                this$0.serverTimeReference = this$0.timeOffset; // offset only
+                this$0.clientTimeReference = 0;
+                this$0.frequencyRatio = 1;
+                this$0.setStatus('training');
+
+                this$0.longTermData[0]
+                  = [seriesTravelDuration, seriesClientTime, seriesServerTime,
+                     seriesClientSquaredTime, seriesClientServerTime];
+                this$0.longTermData.length = 1;
+                this$0.longTermDataNextIndex = 1;
+              }
+            }
+
+            debug('T = %s + %s * (%s - %s) = %s',
+                  this$0.serverTimeReference, this$0.frequencyRatio,
+                  seriesClientTime, this$0.clientTimeReference,
+                  this$0.getSyncTime(seriesClientTime) );
+          }
+
+          this$0.travelDuration = mean(sorted, 0);
+          this$0.travelDurationMin = sorted[0][0];
+          this$0.travelDurationMax = sorted[sorted.length - 1][0];
+
+          this$0.reportStatus(reportFunction);
+        } else {
+          // we are in a series, use the pingInterval value
+          this$0.pingDelay = this$0.pingSeriesPeriod;
+        }
+
+        this$0.timeoutId = setTimeout(function()  {
+          this$0.__syncLoop(sendFunction, reportFunction);
+        }, 1000 * this$0.pingDelay);
+      }  // ping and pong ID match
+    }); // receive function
+
+    this.__syncLoop(sendFunction, reportFunction);
+  };
+
+  /**
+   * Get local time, or convert a synchronised time to a local time.
+   *
+   * @function SyncClient~getLocalTime
+   * @param {Number} syncTime undefined to get local time
+   * @returns {Number} local time, in seconds
+   */
+  proto$0.getLocalTime = function(syncTime) {
+    if (typeof syncTime !== 'undefined') {
+      // conversion: t(T) = t0 + (T - T0) / R
+      return this.clientTimeReference
+        + (syncTime - this.serverTimeReference) / this.frequencyRatio;
+    } else {
+      // read local clock
+      return this.getTimeFunction();
+    }
+  };
+
+  /**
+   * Get synchronised time, or convert a local time to a synchronised time.
+   *
+   * @function SyncClient~getSyncTime
+   * @param {Number} localTime undefined to get synchronised time
+   * @returns {Number} synchronised time, in seconds.
+   */
+  proto$0.getSyncTime = function() {var localTime = arguments[0];if(localTime === void 0)localTime = this.getLocalTime();
+    // always convert: T(t) = T0 + R * (t - t0)
+    return this.serverTimeReference
+      + this.frequencyRatio * (localTime - this.clientTimeReference);
+  };
+MIXIN$0(SyncClient.prototype,proto$0);proto$0=void 0;return SyncClient;})();
+
+module.exports = SyncClient;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Mon Nov 02 2015 16:58:42 GMT+0100 (CET) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>
