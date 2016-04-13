@@ -23,7 +23,7 @@
 <label for="nav-trigger" class="overlay"></label>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="SyncClient.html">SyncClient</a><ul class='methods'><li data-type='method'><a href="SyncClient.html#~getConnectionStatusDuration">getConnectionStatusDuration</a></li><li data-type='method'><a href="SyncClient.html#~getLocalTime">getLocalTime</a></li><li data-type='method'><a href="SyncClient.html#~getStatusDuration">getStatusDuration</a></li><li data-type='method'><a href="SyncClient.html#~getSyncTime">getSyncTime</a></li><li data-type='method'><a href="SyncClient.html#~setConnectionStatus">setConnectionStatus</a></li><li data-type='method'><a href="SyncClient.html#~setStatus">setStatus</a></li><li data-type='method'><a href="SyncClient.html#~start">start</a></li></ul></li><li><a href="SyncServer.html">SyncServer</a><ul class='methods'><li data-type='method'><a href="SyncServer.html#~getLocalTime">getLocalTime</a></li><li data-type='method'><a href="SyncServer.html#~getSyncTime">getSyncTime</a></li><li data-type='method'><a href="SyncServer.html#~start">start</a></li></ul></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="SyncClient.html">SyncClient</a><ul class='methods'><li data-type='method'><a href="SyncClient.html#~getConnectionStatusDuration">getConnectionStatusDuration</a></li><li data-type='method'><a href="SyncClient.html#~getLocalTime">getLocalTime</a></li><li data-type='method'><a href="SyncClient.html#~getStatusDuration">getStatusDuration</a></li><li data-type='method'><a href="SyncClient.html#~getSyncTime">getSyncTime</a></li><li data-type='method'><a href="SyncClient.html#~reportStatus">reportStatus</a></li><li data-type='method'><a href="SyncClient.html#~setConnectionStatus">setConnectionStatus</a></li><li data-type='method'><a href="SyncClient.html#~setStatus">setStatus</a></li><li data-type='method'><a href="SyncClient.html#~start">start</a></li></ul></li><li><a href="SyncServer.html">SyncServer</a><ul class='methods'><li data-type='method'><a href="SyncServer.html#~getLocalTime">getLocalTime</a></li><li data-type='method'><a href="SyncServer.html#~getSyncTime">getSyncTime</a></li><li data-type='method'><a href="SyncServer.html#~start">start</a></li></ul></li></ul>
 </nav>
 
 <div id="main">
@@ -54,15 +54,14 @@
 
     
 
-    <h4 class="name" id="SyncClient"><span class="type-signature"></span>new SyncClient<span class="signature">(getTimeFunction, options)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="SyncClient"><span class="type-signature"></span>new SyncClient<span class="signature">(getTimeFunction, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
 
 
 
 <div class="description">
-    <p>This is the constructor. See <a href="SyncClient.html#~start"><code>SyncClient~start</code></a> method to
-actually start a synchronisation process.</p>
+    <p>This is the constructor. See <a href="SyncClient.html#~start"><code>SyncClient~start</code></a> method to<br>actually start a synchronisation process.</p>
 </div>
 
 
@@ -85,6 +84,8 @@ actually start a synchronisation process.</p>
 
         <th>Type</th>
 
+        
+        <th>Attributes</th>
         
 
         
@@ -111,6 +112,14 @@ actually start a synchronisation process.</p>
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
@@ -134,6 +143,16 @@ actually start a synchronisation process.</p>
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
 
             
 
@@ -151,7 +170,11 @@ actually start a synchronisation process.</p>
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -176,11 +199,24 @@ actually start a synchronisation process.</p>
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"><p>range of duration (in seconds) to
-consider a ping was not ponged back</p>
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>range of duration (in seconds) to<br>consider a ping was not ponged back</p>
                 <h6>Properties</h6>
                 
 
@@ -194,7 +230,11 @@ consider a ping was not ponged back</p>
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -219,10 +259,26 @@ consider a ping was not ponged back</p>
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"></td>
+            
+                <td class="default">
+                
+                    1
+                
+                </td>
+            
+
+            <td class="description last"><p>min and max must be set together</p></td>
         </tr>
 
     
@@ -242,10 +298,26 @@ consider a ping was not ponged back</p>
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"></td>
+            
+                <td class="default">
+                
+                    30
+                
+                </td>
+            
+
+            <td class="description last"><p>min and max must be set together</p></td>
         </tr>
 
     
@@ -253,30 +325,6 @@ consider a ping was not ponged back</p>
 </table>
 
             </td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>pingTimeTravelDurationAccepted</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>maximum
-travel time, in seconds, to take a ping-pong probe into account.</p></td>
         </tr>
 
     
@@ -296,11 +344,26 @@ travel time, in seconds, to take a ping-pong probe into account.</p></td>
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"><p>number of ping-pongs in a
-series</p></td>
+            
+                <td class="default">
+                
+                    10
+                
+                </td>
+            
+
+            <td class="description last"><p>number of ping-pongs in a<br>series</p></td>
         </tr>
 
     
@@ -320,11 +383,26 @@ series</p></td>
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"><p>interval (in seconds) between pings
-in a series</p></td>
+            
+                <td class="default">
+                
+                    0.250
+                
+                </td>
+            
+
+            <td class="description last"><p>interval (in seconds) between pings<br>in a series</p></td>
         </tr>
 
     
@@ -344,11 +422,24 @@ in a series</p></td>
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"><p>range of interval (in
-seconds) between ping-pong seriess in a series</p>
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>range of interval (in<br>seconds) between ping-pong series</p>
                 <h6>Properties</h6>
                 
 
@@ -362,7 +453,11 @@ seconds) between ping-pong seriess in a series</p>
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -387,10 +482,26 @@ seconds) between ping-pong seriess in a series</p>
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"></td>
+            
+                <td class="default">
+                
+                    10
+                
+                </td>
+            
+
+            <td class="description last"><p>min and max must be set together</p></td>
         </tr>
 
     
@@ -410,10 +521,26 @@ seconds) between ping-pong seriess in a series</p>
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"></td>
+            
+                <td class="default">
+                
+                    20
+                
+                </td>
+            
+
+            <td class="description last"><p>min and max must be set together</p></td>
         </tr>
 
     
@@ -440,12 +567,26 @@ seconds) between ping-pong seriess in a series</p>
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"><p>duration of
-training, in seconds, approximately, before using the estimate of
-clock frequency</p></td>
+            
+                <td class="default">
+                
+                    120
+                
+                </td>
+            
+
+            <td class="description last"><p>duration of<br>training, in seconds, approximately, before using the estimate of<br>clock frequency</p></td>
         </tr>
 
     
@@ -465,11 +606,26 @@ clock frequency</p></td>
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"><p>estimate synchronisation over
- this duration, in seconds, approximately</p></td>
+            
+                <td class="default">
+                
+                    900
+                
+                </td>
+            
+
+            <td class="description last"><p>estimate synchronisation over<br> this duration, in seconds, approximately</p></td>
         </tr>
 
     
@@ -517,7 +673,7 @@ clock frequency</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line124">line 124</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line129">line 129</a>
     </li></ul></dd>
     
 
@@ -573,7 +729,7 @@ clock frequency</p></td>
 
 
 <div class="description">
-    <p>Get time since last connectionStatus change. See <a href="SyncClient.html#~setConnectionStatus"><code>SyncClient~setConnectionStatus</code></a></p>
+    <p>Get time since last connectionStatus change.<br>See <a href="SyncClient.html#~setConnectionStatus"><code>SyncClient~setConnectionStatus</code></a></p>
 </div>
 
 
@@ -617,7 +773,7 @@ clock frequency</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line224">line 224</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line229">line 229</a>
     </li></ul></dd>
     
 
@@ -644,8 +800,7 @@ clock frequency</p></td>
 
         
 <div class="param-desc">
-    <p>time, in seconds, since last connectionStatus
-change.</p>
+    <p>time, in seconds, since last connectionStatus<br>change.</p>
 </div>
 
 
@@ -771,7 +926,7 @@ change.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line446">line 446</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line452">line 452</a>
     </li></ul></dd>
     
 
@@ -875,7 +1030,7 @@ change.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line196">line 196</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line202">line 202</a>
     </li></ul></dd>
     
 
@@ -1028,7 +1183,7 @@ change.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line464">line 464</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line470">line 470</a>
     </li></ul></dd>
     
 
@@ -1081,6 +1236,137 @@ change.</p>
 
     
 
+    <h4 class="name" id="~reportStatus"><span class="type-signature">(inner) </span>reportStatus<span class="signature">(reportFunction)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Report the status of the synchronisation process, if<br>reportFunction is defined.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>reportFunction</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="SyncClient.html#~reportFunction">SyncClient~reportFunction</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line241">line 241</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
     <h4 class="name" id="~setConnectionStatus"><span class="type-signature">(inner) </span>setConnectionStatus<span class="signature">(connectionStatus)</span><span class="type-signature"> &rarr; {Object}</span></h4>
 
     
@@ -1088,8 +1374,7 @@ change.</p>
 
 
 <div class="description">
-    <p>Set connectionStatus, and set this.connectionStatusChangedTime,
-to later use see <a href="SyncClient.html#~getConnectionStatusDuration"><code>SyncClient~getConnectionStatusDuration</code></a></p>
+    <p>Set connectionStatus, and set this.connectionStatusChangedTime,<br>to later use see <a href="SyncClient.html#~getConnectionStatusDuration"><code>SyncClient~getConnectionStatusDuration</code></a><br>and <a href="SyncClient.html#~reportStatus"><code>SyncClient~reportStatus</code></a>.</p>
 </div>
 
 
@@ -1182,7 +1467,7 @@ to later use see <a href="SyncClient.html#~getConnectionStatusDuration"><code>Sy
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line207">line 207</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line212">line 212</a>
     </li></ul></dd>
     
 
@@ -1242,8 +1527,7 @@ to later use see <a href="SyncClient.html#~getConnectionStatusDuration"><code>Sy
 
 
 <div class="description">
-    <p>Set status, and set this.statusChangedTime, to later
-use see <a href="SyncClient.html#~getStatusDuration"><code>SyncClient~getStatusDuration</code></a></p>
+    <p>Set status, and set this.statusChangedTime, to later<br>use see <a href="SyncClient.html#~getStatusDuration"><code>SyncClient~getStatusDuration</code></a><br>and <a href="SyncClient.html#~reportStatus"><code>SyncClient~reportStatus</code></a>.</p>
 </div>
 
 
@@ -1336,7 +1620,7 @@ use see <a href="SyncClient.html#~getStatusDuration"><code>SyncClient~getStatusD
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line180">line 180</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line185">line 185</a>
     </li></ul></dd>
     
 
@@ -1396,9 +1680,7 @@ use see <a href="SyncClient.html#~getStatusDuration"><code>SyncClient~getStatusD
 
 
 <div class="description">
-    <p>Start a synchronisation process by registering the receive
-function passed as second parameter. Then, send regular messages
-to the server, using the send function passed as first parameter.</p>
+    <p>Start a synchronisation process by registering the receive<br>function passed as second parameter. Then, send regular messages<br>to the server, using the send function passed as first parameter.</p>
 </div>
 
 
@@ -1496,8 +1778,7 @@ to the server, using the send function passed as first parameter.</p>
 
             
 
-            <td class="description last"><p>if defined,
-is called to report the status, on each status change</p></td>
+            <td class="description last"><p>if defined,<br>is called to report the status, on each status change</p></td>
         </tr>
 
     
@@ -1538,7 +1819,7 @@ is called to report the status, on each status change</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line284">line 284</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line290">line 290</a>
     </li></ul></dd>
     
 
@@ -1972,8 +2253,7 @@ is called to report the status, on each status change</p></td>
 
             
 
-            <td class="description last"><p>called on
-each message matching messageType.</p></td>
+            <td class="description last"><p>called on<br>each message matching messageType.</p></td>
         </tr>
 
     
@@ -2172,7 +2452,7 @@ each message matching messageType.</p></td>
 
             
 
-            <td class="description last"></td>
+            <td class="description last"><p><code>new</code>, <code>startup</code>,<br><code>training</code> (offset adaptation), or <code>sync</code> (offset and ratio adaptation).</p></td>
         </tr>
 
     
@@ -2195,8 +2475,7 @@ each message matching messageType.</p></td>
 
             
 
-            <td class="description last"><p>duration since last status
-change</p></td>
+            <td class="description last"><p>duration since last status<br>change.</p></td>
         </tr>
 
     
@@ -2219,9 +2498,99 @@ change</p></td>
 
             
 
-            <td class="description last"><p>time difference between local
-time and sync time, in seconds. Measured as the median of the
-shortest round-trip times over the last ping-pong series.</p></td>
+            <td class="description last"><p>time difference between local<br>time and sync time, in seconds.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>frequencyRatio</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>time ratio between local<br>time and sync time.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>connection</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p><code>offline</code> or <code>online</code></p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>connectionDuration</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>duration since last connection<br>change.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>connectionTimeOut</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>duration, in seconds, before<br>a time-out occurs.</p></td>
         </tr>
 
     
@@ -2244,9 +2613,7 @@ shortest round-trip times over the last ping-pong series.</p></td>
 
             
 
-            <td class="description last"><p>duration of a
-ping-pong round-trip, in seconds, mean over the the last
-ping-pong series.</p></td>
+            <td class="description last"><p>duration of a<br>ping-pong round-trip, in seconds, mean over the the last<br>ping-pong series.</p></td>
         </tr>
 
     
@@ -2269,9 +2636,7 @@ ping-pong series.</p></td>
 
             
 
-            <td class="description last"><p>duration of a
-ping-pong round-trip, in seconds, minimum over the the last
-ping-pong series.</p></td>
+            <td class="description last"><p>duration of a<br>ping-pong round-trip, in seconds, minimum over the the last<br>ping-pong series.</p></td>
         </tr>
 
     
@@ -2294,9 +2659,7 @@ ping-pong series.</p></td>
 
             
 
-            <td class="description last"><p>duration of a
-ping-pong round-trip, in seconds, maximum over the the last
-ping-pong series.</p></td>
+            <td class="description last"><p>duration of a<br>ping-pong round-trip, in seconds, maximum over the the last<br>ping-pong series.</p></td>
         </tr>
 
     
@@ -2566,7 +2929,7 @@ ping-pong series.</p></td>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Mon Nov 02 2015 17:31:50 GMT+0100 (CET) using the Minami theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Apr 13 2016 19:23:21 GMT+0200 (CEST) using the Minami theme.
 </footer>
 
 <script>prettyPrint();</script>

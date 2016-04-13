@@ -23,7 +23,7 @@ var Sync = require('sync/client');
 
 ////// Define the helper functions
 // function to get the local time
-var getTimeFunction = () => { return audioContext.currentTime; }
+var getTimeFunction = () => { return audioContext.currentTime; };
 // function to send a message to the server
 var sendFunction = socket.emit;
  // function to receive a message from the server
@@ -31,6 +31,7 @@ var receiveFunction = socket.on;
 
 // Initialize the sync module and start the synchronisation process
 var sync = new SyncClient(getTimeFunction);
+// CAVEAT: first start the audioContext (via click or touch event)
 sync.start(sendFunction, receiveFunction);
 
 // Listen for the events that indicate that the clock is in sync

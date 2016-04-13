@@ -35,7 +35,7 @@ function orderMinMax(that) {
  *
  * @private
  * @param {Array.<Array.<Number>>} array
- * @param {Number} [dimension = 0]
+ * @param {Number} [dimension=0]
  * @returns {Number} mean
  */
 function mean(array) {var dimension = arguments[1];if(dimension === void 0)dimension = 0;
@@ -77,12 +77,19 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
    * @callback SyncClient~reportFunction
    * @param {String} messageType identification of status message type
    * @param {Object} report
-   * @param {String} report.status
+   * @param {String} report.status `new`, `startup`,
+   * `training` (offset adaptation), or `sync` (offset and ratio adaptation).
    * @param {Number} report.statusDuration duration since last status
-   * change
+   * change.
    * @param {Number} report.timeOffset time difference between local
-   * time and sync time, in seconds. Measured as the median of the
-   * shortest round-trip times over the last ping-pong series.
+   * time and sync time, in seconds.
+   * @param {Number} report.frequencyRatio time ratio between local
+   * time and sync time.
+   * @param {String} report.connection `offline` or `online`
+   * @param {Number} report.connectionDuration duration since last connection
+   * change.
+   * @param {Number} report.connectionTimeOut duration, in seconds, before
+   * a time-out occurs.
    * @param {Number} report.travelDuration duration of a
    * ping-pong round-trip, in seconds, mean over the the last
    * ping-pong series.
@@ -100,25 +107,23 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
    *
    * @constructs SyncClient
    * @param {SyncClient~getTimeFunction} getTimeFunction
-   * @param {Object} options
-   * @param {Object} options.pingTimeOutDelay range of duration (in seconds) to
+   * @param {Object} [options]
+   * @param {Object} [options.pingTimeOutDelay] range of duration (in seconds) to
    * consider a ping was not ponged back
-   * @param {Number} options.pingTimeOutDelay.min
-   * @param {Number} options.pingTimeOutDelay.max
-   * @param {Number} options.pingTimeTravelDurationAccepted maximum
-   * travel time, in seconds, to take a ping-pong probe into account.
-   * @param {Number} options.pingSeriesIterations number of ping-pongs in a
+   * @param {Number} [options.pingTimeOutDelay.min=1] min and max must be set together
+   * @param {Number} [options.pingTimeOutDelay.max=30] min and max must be set together
+   * @param {Number} [options.pingSeriesIterations=10] number of ping-pongs in a
    * series
-   * @param {Number} options.pingSeriesPeriod interval (in seconds) between pings
+   * @param {Number} [options.pingSeriesPeriod=0.250] interval (in seconds) between pings
    * in a series
-   * @param {Number} options.pingSeriesDelay range of interval (in
-   * seconds) between ping-pong seriess in a series
-   * @param {Number} options.pingSeriesDelay.min
-   * @param {Number} options.pingSeriesDelay.max
-   * @param {Number} options.longTermDataTrainingDuration duration of
+   * @param {Number} [options.pingSeriesDelay] range of interval (in
+   * seconds) between ping-pong series
+   * @param {Number} [options.pingSeriesDelay.min=10] min and max must be set together
+   * @param {Number} [options.pingSeriesDelay.max=20] min and max must be set together
+   * @param {Number} [options.longTermDataTrainingDuration=120] duration of
    * training, in seconds, approximately, before using the estimate of
    * clock frequency
-   * @param {Number} options.longTermDataDuration estimate synchronisation over
+   * @param {Number} [options.longTermDataDuration=900] estimate synchronisation over
    *  this duration, in seconds, approximately
    */
   function SyncClient(getTimeFunction) {var options = arguments[1];if(options === void 0)options = {};
@@ -180,6 +185,7 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
   /**
    * Set status, and set this.statusChangedTime, to later
    * use see {@linkcode SyncClient~getStatusDuration}
+   * and {@linkcode SyncClient~reportStatus}.
    *
    * @function SyncClient~setStatus
    * @param {String} status
@@ -194,8 +200,7 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
   };
 
   /**
-   * Get time since last status change. See {@linkcode
-   * SyncClient~setStatus}
+   * Get time since last status change. See {@linkcode SyncClient~setStatus}
    *
    * @function SyncClient~getStatusDuration
    * @returns {Number} time, in seconds, since last status change.
@@ -206,8 +211,8 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
 
   /**
    * Set connectionStatus, and set this.connectionStatusChangedTime,
-   * to later use see {@linkcode
-   * SyncClient~getConnectionStatusDuration}
+   * to later use see {@linkcode SyncClient~getConnectionStatusDuration}
+   * and {@linkcode SyncClient~reportStatus}.
    *
    * @function SyncClient~setConnectionStatus
    * @param {String} connectionStatus
@@ -222,8 +227,8 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
   };
 
   /**
-   * Get time since last connectionStatus change. See {@linkcode
-   * SyncClient~setConnectionStatus}
+   * Get time since last connectionStatus change.
+   * See {@linkcode SyncClient~setConnectionStatus}
    *
    * @function SyncClient~getConnectionStatusDuration
    * @returns {Number} time, in seconds, since last connectionStatus
@@ -237,6 +242,7 @@ var SyncClient = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};r
    * Report the status of the synchronisation process, if
    * reportFunction is defined.
    *
+   * @function SyncClient~reportStatus
    * @param {SyncClient~reportFunction} reportFunction
    */
   proto$0.reportStatus = function(reportFunction) {
