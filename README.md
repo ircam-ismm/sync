@@ -79,11 +79,38 @@ io.on('connection', function (socket) {
 });
 ```
 
+## Caveats
+
+The synchronisation process is continuous: after a call to the `start`
+method, it runs in the background. It is important to avoid blocking
+it, on the client side and on the server side.
+
+The reading of the clock often takes place in the main [event loop], when
+it is not accessible from a [Web Worker] or a [Node.js]
+[child process]. Then, the synchronisation process also runs in the main
+[event loop]. For [Node.js], you can use [node-blocked] to monitor the
+blockage.
+
 ## Documentation
 
-The documentation is available at `./doc/sync/${sync_version}/index.html`
+The API documentation is available at `./doc/sync/${sync_version}/index.html`
 Use `npm run doc` to generate it.
+
+You can an read an [article], presented during the [Web Audio Conference
+2016],  that describes the synchronisation process in
+details, with measurements.
 
 ## License
 
-[BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause). See [LICENSE file](LICENSE).
+[BSD-3-Clause]. See the [LICENSE file].
+
+
+[article]:  http://hdl.handle.net/1853/54598
+[BSD-3-Clause]: https://opensource.org/licenses/BSD-3-Clause
+[child process]: https://nodejs.org/api/child_process.html
+[event loop]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/EventLoop
+[LICENSE file]: ./LICENSE.
+[node-blocked]: https://www.npmjs.com/package/blocked
+[Node.js]: https://nodejs.org
+[Web Audio Conference 2016]: http://webaudio.gatech.edu/
+[Web Worker]: https://developer.mozilla.org/en-US/docs/Web/API/Worker
