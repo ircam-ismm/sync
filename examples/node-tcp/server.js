@@ -30,6 +30,7 @@ server.on('connection', socket => {
 
       if (request[0] === 0) { // this is a ping
         console.log(`[ping] - id: %s, pingTime: %s`, request[1], request[2]);
+
         callback(request[1], request[2]);
       }
     });

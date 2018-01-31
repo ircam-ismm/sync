@@ -169,7 +169,6 @@ class SyncClient {
     this.connectionStatusChangedTime = 0;
   }
 
-
   /**
    * Set status, and set this.statusChangedTime, to later
    * use see {@linkcode SyncClient~getStatusDuration}
