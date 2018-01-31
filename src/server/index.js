@@ -5,9 +5,6 @@
  * @copyright 2015 IRCAM, Paris, France
  * @license BSD-3-Clause
  */
-
-'use strict';
-
 const debug = require('debug')('soundworks:sync');
 
 class SyncServer {
@@ -99,4 +96,4 @@ class SyncServer {
 
 }
 
-module.exports = SyncServer;
+export default SyncServer;

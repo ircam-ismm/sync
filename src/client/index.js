@@ -6,9 +6,7 @@
  * @license BSD-3-Clause
  */
 
-'use strict';
-
-var debug = require('debug')('soundworks:sync');
+const debug = require('debug')('soundworks:sync');
 
 ////// helpers
 
@@ -481,4 +479,4 @@ class SyncClient {
   }
 }
 
-module.exports = SyncClient;
+export default SyncClient;
