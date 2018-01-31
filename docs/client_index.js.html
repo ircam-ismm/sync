@@ -30,17 +30,8 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>/**
- * @fileOverview Client-side syncronization component
- * @author Jean-Philippe.Lambert@ircam.fr, Sebastien.Robaszkiewicz@ircam.fr,
- *         Norbert.Schnell@ircam.fr
- * @copyright 2015 IRCAM, Paris, France
- * @license BSD-3-Clause
- */
-
-'use strict';
-
-var debug = require('debug')('soundworks:sync');
+            <pre class="prettyprint source linenums"><code>import debug from 'debug';
+const log = debug('sync');
 
 ////// helpers
 
@@ -83,7 +74,6 @@ class SyncClient {
   /**
    * @callback SyncClient~sendFunction
    * @see {@linkcode SyncServer~receiveFunction}
-   * @param {String} messageType identification of ping message type
    * @param {Number} pingId unique identifier
    * @param {Number} clientPingTime time-stamp of ping emission
    **/
@@ -91,7 +81,6 @@ class SyncClient {
   /**
    * @callback SyncClient~receiveFunction
    * @see {@linkcode SyncServer~sendFunction}
-   * @param {String} messageType identification of pong message type
    * @param {SyncClient~receiveCallback} receiveCallback called on
    * each message matching messageType.
    **/
@@ -107,7 +96,6 @@ class SyncClient {
 
   /**
    * @callback SyncClient~reportFunction
-   * @param {String} messageType identification of status message type
    * @param {Object} report
    * @param {String} report.status `new`, `startup`,
    * `training` (offset adaptation), or `sync` (offset and ratio adaptation).
@@ -279,7 +267,7 @@ class SyncClient {
    */
   reportStatus(reportFunction) {
     if(typeof reportFunction !== 'undefined') {
-      reportFunction('sync:status', {
+      reportFunction({
         status: this.status,
         statusDuration: this.getStatusDuration(),
         timeOffset: this.timeOffset,
@@ -305,13 +293,13 @@ class SyncClient {
   __syncLoop(sendFunction, reportFunction) {
     clearTimeout(this.timeoutId);
     ++this.pingId;
-    sendFunction('sync:ping', this.pingId, this.getLocalTime());
+    sendFunction(this.pingId, this.getLocalTime());
 
     this.timeoutId = setTimeout(() => {
       // increase timeout duration on timeout, to avoid overflow
       this.pingTimeoutDelay.current = Math.min(this.pingTimeoutDelay.current * 2,
                                                this.pingTimeoutDelay.max);
-      debug('sync:ping timeout > %s', this.pingTimeoutDelay.current);
+      log('sync:ping timeout > %s', this.pingTimeoutDelay.current);
       this.setConnectionStatus('offline');
       this.reportStatus(reportFunction);
       // retry (yes, always increment pingId)
@@ -340,7 +328,7 @@ class SyncClient {
     this.longTermData = [];
     this.longTermDataNextIndex = 0;
 
-    receiveFunction('sync:pong', (pingId, clientPingTime, serverPingTime, serverPongTime) => {
+    receiveFunction((pingId, clientPingTime, serverPingTime, serverPongTime) => {
       // accept only the pong that corresponds to the last ping
       if (pingId === this.pingId) {
         ++this.pingSeriesCount;
@@ -363,7 +351,7 @@ class SyncClient {
           = [travelDuration, offsetTime, clientTime, serverTime];
         this.seriesDataNextIndex = (++this.seriesDataNextIndex) % this.seriesDataLength;
 
-        // debug('ping %s, travel = %s, offset = %s, client = %s, server = %s',
+        // log('ping %s, travel = %s, offset = %s, client = %s, server = %s',
         //       pingId, travelDuration, offsetTime, clientTime, serverTime);
 
         // end of a series
@@ -413,7 +401,7 @@ class SyncClient {
             this.clientTimeReference = 0;
             this.frequencyRatio = 1;
             this.setStatus('training');
-            debug('T = %s + %s * (%s - %s) = %s',
+            log('T = %s + %s * (%s - %s) = %s',
                   this.serverTimeReference, this.frequencyRatio,
                   seriesClientTime, this.clientTimeReference,
                   this.getSyncTime(seriesClientTime));
@@ -440,7 +428,7 @@ class SyncClient {
               if(this.frequencyRatio > 0.9995 &amp;&amp; this.frequencyRatio &lt; 1.0005) {
                 this.setStatus('sync');
               } else {
-                debug('clock frequency ratio out of sync: %s, training again',
+                log('clock frequency ratio out of sync: %s, training again',
                       this.frequencyRatio);
                 // start the training again from the last series
                 this.serverTimeReference = this.timeOffset; // offset only
@@ -456,7 +444,7 @@ class SyncClient {
               }
             }
 
-            debug('T = %s + %s * (%s - %s) = %s',
+            log('T = %s + %s * (%s - %s) = %s',
                   this.serverTimeReference, this.frequencyRatio,
                   seriesClientTime, this.clientTimeReference,
                   this.getSyncTime(seriesClientTime) );
@@ -513,7 +501,7 @@ class SyncClient {
   }
 }
 
-module.exports = SyncClient;
+export default SyncClient;
 </code></pre>
         </article>
     </section>
@@ -531,7 +519,7 @@ module.exports = SyncClient;
 
 <footer>
     
-        Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Jan 31 2018 11:33:31 GMT+0100 (CET)
+        Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Jan 31 2018 15:10:11 GMT+0100 (CET)
     
 </footer>
 
