@@ -36,9 +36,12 @@ server.on('connection', socket => {
       const request = new Float64Array(data.buffer, data.byteOffset, data.byteLength / Float64Array.BYTES_PER_ELEMENT);
 
       if (request[0] === 0) { // this is a ping
-        console.log(`[ping] - id: %s, pingTime: %s`, request[1], request[2]);
+        const pingId = request[1];
+        const clientPingTime = request[2];
 
-        callback(request[1], request[2]);
+        console.log(`[ping] - pingId: %s, clientPingTime: %s`, clientPingTime);
+
+        callback(pingId, clientPingTime);
       }
     });
   };
