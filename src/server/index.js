@@ -16,7 +16,6 @@ class SyncServer {
   /**
    * @callback SyncServer~sendFunction
    * @see {@linkcode SyncClient~receiveFunction}
-   * @param {String} messageType identification of pong message type
    * @param {Number} pingId unique identifier
    * @param {Number} clientPingTime time-stamp of ping emission
    * @param {Number} serverPingTime time-stamp of ping reception
@@ -26,7 +25,6 @@ class SyncServer {
   /**
    * @callback SyncServer~receiveFunction
    * @see {@linkcode SyncClient~sendFunction}
-   * @param {String} messageType identification of ping message type
    * @param {SyncServer~receiveCallback} receiveCallback called on
    * each message matching messageType.
    **/
@@ -60,12 +58,18 @@ class SyncServer {
    * @param {SyncServer~receiveFunction} receiveFunction
    */
   start(sendFunction, receiveFunction) {
-    receiveFunction('sync:ping', (id, clientPingTime) => {
+    receiveFunction((id, clientPingTime) => {
       const serverPingTime = this.getLocalTime();
-      sendFunction('sync:pong', id, clientPingTime,
+      // with this algorithm, the dual call to `getLocalTime` can appear
+      // non-necessary, however keeping this can allow to implement other
+      // algorithms while keeping the API unchanged, thus making easier
+      // to implement and compare several algorithms.
+      sendFunction(id, clientPingTime,
                    serverPingTime, this.getLocalTime());
       // debug('ping: %s, %s, %s', id, clientPingTime, serverPingTime);
     });
+
+    // return some handle that would allow to clean memory ?
   }
 
   /**

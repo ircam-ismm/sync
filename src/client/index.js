@@ -49,7 +49,6 @@ class SyncClient {
   /**
    * @callback SyncClient~sendFunction
    * @see {@linkcode SyncServer~receiveFunction}
-   * @param {String} messageType identification of ping message type
    * @param {Number} pingId unique identifier
    * @param {Number} clientPingTime time-stamp of ping emission
    **/
@@ -57,7 +56,6 @@ class SyncClient {
   /**
    * @callback SyncClient~receiveFunction
    * @see {@linkcode SyncServer~sendFunction}
-   * @param {String} messageType identification of pong message type
    * @param {SyncClient~receiveCallback} receiveCallback called on
    * each message matching messageType.
    **/
@@ -73,7 +71,6 @@ class SyncClient {
 
   /**
    * @callback SyncClient~reportFunction
-   * @param {String} messageType identification of status message type
    * @param {Object} report
    * @param {String} report.status `new`, `startup`,
    * `training` (offset adaptation), or `sync` (offset and ratio adaptation).
@@ -245,7 +242,7 @@ class SyncClient {
    */
   reportStatus(reportFunction) {
     if(typeof reportFunction !== 'undefined') {
-      reportFunction('sync:status', {
+      reportFunction({
         status: this.status,
         statusDuration: this.getStatusDuration(),
         timeOffset: this.timeOffset,
@@ -271,7 +268,7 @@ class SyncClient {
   __syncLoop(sendFunction, reportFunction) {
     clearTimeout(this.timeoutId);
     ++this.pingId;
-    sendFunction('sync:ping', this.pingId, this.getLocalTime());
+    sendFunction(this.pingId, this.getLocalTime());
 
     this.timeoutId = setTimeout(() => {
       // increase timeout duration on timeout, to avoid overflow
@@ -306,7 +303,7 @@ class SyncClient {
     this.longTermData = [];
     this.longTermDataNextIndex = 0;
 
-    receiveFunction('sync:pong', (pingId, clientPingTime, serverPingTime, serverPongTime) => {
+    receiveFunction((pingId, clientPingTime, serverPingTime, serverPongTime) => {
       // accept only the pong that corresponds to the last ping
       if (pingId === this.pingId) {
         ++this.pingSeriesCount;
