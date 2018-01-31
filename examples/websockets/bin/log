@@ -1,0 +1,79 @@
+#!/usr/bin/env node
+const pkg = require('../package.json');
+const chalk = require('chalk');
+const path = require('path');
+
+'use strict';
+
+const prefix = '[' + pkg.name + ']\t';
+const cwd = process.cwd();
+
+function toRel(target) {
+  return path.relative(cwd, target);
+}
+
+function getDeltaTime(time) {
+  return new Date().getTime() - time;
+}
+
+const log = {
+  bundleStart: function(dest) {
+    const msg = prefix + chalk.yellow('%s: bundle start');
+    console.log(msg, toRel(dest));
+  },
+
+  bundleSuccess: function(dest, startTime) {
+    const time = getDeltaTime(startTime);
+    const msg = prefix + chalk.green('%s: successfully created (%sms)');
+
+    console.log(msg, toRel(dest), time);
+  },
+
+  bundleError: function(dest, err) {
+    const msg = prefix + chalk.red('%s: bundle error');
+
+    console.log(msg, toRel(dest));
+    console.log('> ' + err.message);
+  },
+
+  transpileSuccess: function(src, dest, startTime) {
+    const time = getDeltaTime(startTime);
+    const msg = prefix + chalk.green('%s: successfully transpiled to "%s" (%sms)');
+
+    console.log(msg, toRel(src), toRel(dest), time);
+  },
+
+  transpileError: function(err) {
+    const parts = err.message.split(':');
+    const msg = prefix + chalk.red('%s');
+
+    console.log(msg, toRel(err.message));
+    console.log(err.codeFrame);
+  },
+
+  uglifySuccess: function(src, dest, startTime) {
+    const time = getDeltaTime(startTime);
+    const msg = prefix + chalk.green('%s: successfully uglified to "%s" (%sms)');
+    console.log(msg, toRel(src), toRel(dest), time);
+  },
+
+  deleteFile: function(filename) {
+    const msg = prefix + chalk.yellow('%s: successfully removed');
+    console.log(msg, toRel(filename));
+  },
+
+  serverStart: function() {
+    console.log(prefix + chalk.cyan('server start'));
+  },
+
+  serverStop: function() {
+    console.log(prefix + chalk.cyan('server stop'));
+  },
+
+  serverError: function(serverIndex) {
+    const msg = prefix + chalk.red('%s: not found, run `npm run transpile`');
+    console.log(msg, toRel(serverIndex));
+  },
+};
+
+module.exports = log;
