@@ -1,0 +1,23 @@
+{
+  "source": {
+    "include": [
+      "README.md",
+      "src"
+    ],
+    "includePattern": ".+\\.js(doc)?$",
+    "excludePattern": "(^|\\/|\\\\)_"
+  },
+  "plugins": [
+    "plugins/markdown"
+  ],
+  "opts": {
+    "destination": "./docs",
+    "encoding": "utf8",
+    "template": "node_modules/@ircam/jsdoc-template"
+  },
+  "templates": {
+    "default": {
+      "useLongnameInNav": true
+    }
+  }
+}

@@ -1,0 +1,60 @@
+#!/usr/bin/env node
+const pkg = require('../package.json');
+const chalk = require('chalk');
+const path = require('path');
+
+const prefix = '[' + pkg.name + ']\t';
+const getDeltaTime = time => new Date().getTime() - time;
+
+
+module.exports.transpileSuccess = (src, dist, dt) => {
+    const msg = prefix + chalk.green('%s: successfully transpiled to "%s" (%sms)');
+    console.log(msg, src.rel, dist.rel, dt);
+
+    return Promise.resolve([src, dist]);
+  },
+
+module.exports.transpileError = (src, err) => {
+  const msg = prefix + chalk.red('%s');
+  const content = err.message.replace(src.abs, src.rel);
+
+  console.log(msg, content);
+  console.log(err.codeFrame);
+
+  return Promise.resolve(src);
+}
+
+module.exports.deleteFileSuccess = (file) => {
+  const msg = prefix + chalk.yellow('%s: successfully removed');
+  console.log(msg, file.rel);
+
+  return Promise.resolve(file);
+}
+
+module.exports.deleteFileError = (file, err) => {
+  const msg = prefix + chalk.red('error deleting %s');
+
+  console.log(msg, file.rel);
+  console.error(err.stack);
+
+  return Promise.resolve(file);
+}
+
+module.exports.bundleSuccess = (src, dist, min, dt) => {
+    const msg1 = prefix + chalk.green('%s: successfully bundled to "%s" (%sms)');
+    console.log(msg1, src.rel, dist.rel, dt);
+
+    const msg2 = prefix + chalk.green('%s: successfully minified to "%s" (%sms)');
+    console.log(msg2, src.rel, min.rel, dt);
+
+    return Promise.resolve([src, dist]);
+  },
+
+module.exports.bundleError = (src, err) => {
+  const msg = prefix + chalk.red(`${err.message}`);
+
+  console.log(msg);
+  console.error(err.stack);
+
+  return Promise.reject(src);
+}

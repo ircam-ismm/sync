@@ -1,0 +1,7 @@
+.babelrc
+jsdoc.conf
+
+bin
+docs
+src
+tests

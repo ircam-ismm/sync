@@ -1,0 +1,155 @@
+#!/usr/bin/env node
+const pkg = require('../package.json');
+const fileStore = require('./fileStore');
+const fs = require('fs');
+const log = require('./log');
+const path = require('path');
+const transpiler = require('./transpiler');
+const watch = require('watch');
+
+const cwd = process.cwd();
+
+/* --------------------------------------------------------------------------
+ * Configuration
+ * -------------------------------------------------------------------------- */
+
+const srcDir = path.join(cwd, 'src');
+const srcRegExp = new RegExp('^' + srcDir);
+
+const distDir = path.join(cwd, 'dist');
+const distRegExp = new RegExp('^' + distDir);
+
+const watchOptions = {
+  ignoreDotFiles: true,
+  ignoreUnreadableDir: true,
+  ignoreNotPermitted: true,
+  interval: 2,
+};
+
+const babelOptions = JSON.parse(fs.readFileSync(path.join(cwd, '.babelrc')));
+
+// bundle configuration
+const umdTarget = pkg.name + '.umd.js';
+const minTarget = pkg.name + '.min.js';
+
+const browserifyOptions = {
+  debug: true,
+  fullPaths: false,
+  standalone: pkg.standalone,
+};
+
+/* --------------------------------------------------------------------------
+ * High-Level logic
+ * -------------------------------------------------------------------------- */
+
+// watch
+function __watch(srcDirectory, distDirectory, watchOptions, babelOptions) {
+
+  const processFile = (filename, stats) => {
+    const startTime = new Date().getTime();
+    const distFilename = filename.replace(srcRegExp, distDirectory);
+
+    Promise
+      .all([fileStore.get(filename), fileStore.get(distFilename)])
+      .then(([src, dist]) => {
+        transpiler.transpile(src, dist, babelOptions)
+          .then(([src, dist]) => {
+            const dt = new Date().getTime() - startTime;
+            return log.transpileSuccess(src, dist, dt);
+          })
+          .catch(err => log.transpileError(src, err));
+      })
+      .catch(err => console.error(err.stack))
+  };
+
+  const deleteFile = (filename, stats) => {
+    const distFilename = filename.replace(srcRegExp, distDir);
+
+    fileStore.get(distFilename)
+      .then(transpiler.delete)
+      .then(log.deleteFileSuccess)
+      .catch(err => log.deleteFileError(dist, err));
+  };
+
+  // watch file system
+  watch.createMonitor(srcDirectory, watchOptions, function(monitor) {
+    monitor.on('created', processFile);
+    monitor.on('changed', processFile);
+    monitor.on('removed', deleteFile);
+  });
+}
+
+function __transpile(srcDirectory, distDirectory, babelOptions) {
+  return new Promise((resolve, reject) => {
+    fileStore.getAll(srcDirectory)
+      .then(files => {
+        const promises = files.map(src => {
+          const startTime = new Date().getTime();
+          const distFilename = src.abs.replace(srcRegExp, distDirectory);
+
+          return fileStore.get(distFilename)
+            .then(dist => transpiler.transpile(src, dist, babelOptions))
+            .then(([src, dist]) => {
+              const dt = new Date().getTime() - startTime;
+              return log.transpileSuccess(src, dist, dt);
+            })
+            .catch(err => log.transpileError(src, err));
+        });
+
+        return Promise.all(promises);
+      })
+      .then(() => { return resolve(); })
+      .catch(err => console.error(err.stack));
+  });
+}
+
+function __bundle(entryPoint, umdTarget, minTarget, browserifyOptions) {
+  const startTime = new Date().getTime();
+  const promises = [
+    fileStore.get(entryPoint),
+    fileStore.get(umdTarget),
+    fileStore.get(minTarget),
+  ];
+
+  return Promise.all(promises)
+    .then(([src, umd, min]) => {
+      return transpiler.bundle(src, umd, min, browserifyOptions);
+    })
+    .then(([src, dist, min]) => {
+      const dt = new Date().getTime() - startTime;
+      return log.bundleSuccess(src, dist, min, dt);
+    })
+    .catch(err => log.bundleError(entryPoint, err));
+}
+
+/* --------------------------------------------------------------------------
+ * Parse commands
+ * -------------------------------------------------------------------------- */
+
+const command = process.argv[2];
+// servers.configure(config.devices);
+
+switch (command) {
+  // keep file system in sync with remote servers
+  case '--watch':
+    __watch(srcDir, distDir, watchOptions, babelOptions);
+    break;
+
+  case '--transpile':
+    __transpile(srcDir, distDir, babelOptions);
+    break;
+
+  case '--bundle':
+    __transpile(srcDir, distDir, babelOptions)
+      .then(() => {
+        return __bundle(pkg.main, umdTarget, minTarget, browserifyOptions);
+      })
+      .catch(err => {
+        if (err && err.stack)
+          console.error(err.stack);
+      });
+    break;
+}
+
+/* -------------------------------------------------------------------------- */
+
