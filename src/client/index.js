@@ -1,12 +1,5 @@
-/**
- * @fileOverview Client-side syncronization component
- * @author Jean-Philippe.Lambert@ircam.fr, Sebastien.Robaszkiewicz@ircam.fr,
- *         Norbert.Schnell@ircam.fr
- * @copyright 2015 IRCAM, Paris, France
- * @license BSD-3-Clause
- */
-
-const debug = require('debug')('soundworks:sync');
+import debug from 'debug';
+const log = debug('sync');
 
 ////// helpers
 
@@ -274,7 +267,7 @@ class SyncClient {
       // increase timeout duration on timeout, to avoid overflow
       this.pingTimeoutDelay.current = Math.min(this.pingTimeoutDelay.current * 2,
                                                this.pingTimeoutDelay.max);
-      debug('sync:ping timeout > %s', this.pingTimeoutDelay.current);
+      log('sync:ping timeout > %s', this.pingTimeoutDelay.current);
       this.setConnectionStatus('offline');
       this.reportStatus(reportFunction);
       // retry (yes, always increment pingId)
@@ -326,7 +319,7 @@ class SyncClient {
           = [travelDuration, offsetTime, clientTime, serverTime];
         this.seriesDataNextIndex = (++this.seriesDataNextIndex) % this.seriesDataLength;
 
-        // debug('ping %s, travel = %s, offset = %s, client = %s, server = %s',
+        // log('ping %s, travel = %s, offset = %s, client = %s, server = %s',
         //       pingId, travelDuration, offsetTime, clientTime, serverTime);
 
         // end of a series
@@ -376,7 +369,7 @@ class SyncClient {
             this.clientTimeReference = 0;
             this.frequencyRatio = 1;
             this.setStatus('training');
-            debug('T = %s + %s * (%s - %s) = %s',
+            log('T = %s + %s * (%s - %s) = %s',
                   this.serverTimeReference, this.frequencyRatio,
                   seriesClientTime, this.clientTimeReference,
                   this.getSyncTime(seriesClientTime));
@@ -403,7 +396,7 @@ class SyncClient {
               if(this.frequencyRatio > 0.9995 && this.frequencyRatio < 1.0005) {
                 this.setStatus('sync');
               } else {
-                debug('clock frequency ratio out of sync: %s, training again',
+                log('clock frequency ratio out of sync: %s, training again',
                       this.frequencyRatio);
                 // start the training again from the last series
                 this.serverTimeReference = this.timeOffset; // offset only
@@ -419,7 +412,7 @@ class SyncClient {
               }
             }
 
-            debug('T = %s + %s * (%s - %s) = %s',
+            log('T = %s + %s * (%s - %s) = %s',
                   this.serverTimeReference, this.frequencyRatio,
                   seriesClientTime, this.clientTimeReference,
                   this.getSyncTime(seriesClientTime) );

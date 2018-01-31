@@ -1,11 +1,5 @@
-/**
- * @fileoverview Server-side syncronization component
- * @author Jean-Philippe.Lambert@ircam.fr, Sebastien.Robaszkiewicz@ircam.fr,
- *         Norbert.Schnell@ircam.fr
- * @copyright 2015 IRCAM, Paris, France
- * @license BSD-3-Clause
- */
-const debug = require('debug')('soundworks:sync');
+import debug from 'debug';
+const log = debug('sync');
 
 class SyncServer {
   /**
@@ -66,7 +60,7 @@ class SyncServer {
       // to implement and compare several algorithms.
       sendFunction(id, clientPingTime,
                    serverPingTime, this.getLocalTime());
-      // debug('ping: %s, %s, %s', id, clientPingTime, serverPingTime);
+      // log('ping: %s, %s, %s', id, clientPingTime, serverPingTime);
     });
 
     // return some handle that would allow to clean memory ?
