@@ -4,7 +4,17 @@ const log = debug('sync');
 class SyncServer {
   /**
    * @callback SyncServer~getTimeFunction
-   * @return {Number} monotonic, ever increasing, time in second.
+   * @return {Number} monotonic, ever increasing, time in second. When possible
+   *  the server code should define its own origin (i.e. `time=0`) in order to
+   *  maximize the eesolution of the clock for a long period of time.
+   *
+   * @example
+   * const startTime = process.hrtime();
+   *
+   * const getTimeFunction = () => {
+   *   const now = process.hrtime(startTime);
+   *   return now[0] + now[1] * 1e-9;
+   * };
    **/
 
   /**
