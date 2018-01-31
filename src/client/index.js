@@ -271,7 +271,7 @@ class SyncClient {
       this.reportStatus(reportFunction);
       // retry (yes, always increment pingId)
       this.__syncLoop(sendFunction, reportFunction);
-    }, 1000 * this.pingTimeoutDelay.current);
+    }, Math.ceil(1000 * this.pingTimeoutDelay.current));
   }
 
   /**
@@ -429,7 +429,7 @@ class SyncClient {
 
         this.timeoutId = setTimeout(() => {
           this.__syncLoop(sendFunction, reportFunction);
-        }, 1000 * this.pingDelay);
+        }, Math.ceil(1000 * this.pingDelay));
       }  // ping and pong ID match
     }); // receive function
 
