@@ -12,6 +12,14 @@
     "type": "git",
     "url": "https://github.com/collective-soundworks/sync"
   },
+  "scripts": {
+    "deploy": "np",
+    "doc": "jsdoc -c jsdoc.json",
+    "transpile": "node ./bin/runner --transpile",
+    "version": "npm run transpile && npm run doc && git add docs",
+    "prewatch": "npm run transpile",
+    "watch": "node ./bin/runner --watch"
+  },
   "dependencies": {
     "browserify": "^15.2.0",
     "debug": "^2.1.1",
@@ -30,13 +38,5 @@
     "np": "^2.18.2",
     "tape": "^4.8.0",
     "watch": "^1.0.2"
-  },
-  "scripts": {
-    "deploy": "np",
-    "doc": "jsdoc -c jsdoc.json",
-    "transpile": "node ./bin/runner --transpile",
-    "version": "npm run transpile && npm run doc && git add docs",
-    "prewatch": "npm run transpile",
-    "watch": "node ./bin/runner --watch"
   }
 }
