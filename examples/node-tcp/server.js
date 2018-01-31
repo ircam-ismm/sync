@@ -2,8 +2,15 @@ const net = require('net');
 const SyncServer = require('../../dist/server').default;
 const config = require('./config');
 
+
+/**
+ * We want to define time = 0 as when the server starts to maximize
+ * resolution is the server needs to run for a long time.
+ */
+const startTime = process.hrtime();
+
 const getTimeFunction = () => {
-  const now = process.hrtime();
+  const now = process.hrtime(startTime);
   return now[0] + now[1] * 1e-9;
 };
 
