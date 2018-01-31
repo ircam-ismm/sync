@@ -36,6 +36,10 @@ this has an order of magnitude of 10 * 10^-6 sec (aka 10 µs)
 => response from JP : it should be kept in order to have an API able to handle other algorithms
 
 
+- `start`
+  + return some handle that would allow to clean memory ?
+
+
 ## misc
 
 => update `woodland`
