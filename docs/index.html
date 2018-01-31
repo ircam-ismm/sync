@@ -2,31 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Home - Documentation</title>
+    <title>Documentation - Home</title>
 
-    <script src="scripts/prettify/prettify.js"></script>
-    <script src="scripts/prettify/lang-css.js"></script>
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
     <!--[if lt IE 9]>
       <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
     <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
     <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+    <link type="text/css" rel="stylesheet" href="styles/overrides.css">
 </head>
+
 <body>
 
-<input type="checkbox" id="nav-trigger" class="nav-trigger" />
-<label for="nav-trigger" class="navicon-button x">
-  <div class="navicon"></div>
-</label>
-
-<label for="nav-trigger" class="overlay"></label>
-
-<nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="SyncClient.html">SyncClient</a><ul class='methods'><li data-type='method'><a href="SyncClient.html#~getConnectionStatusDuration">getConnectionStatusDuration</a></li><li data-type='method'><a href="SyncClient.html#~getLocalTime">getLocalTime</a></li><li data-type='method'><a href="SyncClient.html#~getStatusDuration">getStatusDuration</a></li><li data-type='method'><a href="SyncClient.html#~getSyncTime">getSyncTime</a></li><li data-type='method'><a href="SyncClient.html#~reportStatus">reportStatus</a></li><li data-type='method'><a href="SyncClient.html#~setConnectionStatus">setConnectionStatus</a></li><li data-type='method'><a href="SyncClient.html#~setStatus">setStatus</a></li><li data-type='method'><a href="SyncClient.html#~start">start</a></li></ul></li><li><a href="SyncServer.html">SyncServer</a><ul class='methods'><li data-type='method'><a href="SyncServer.html#~getLocalTime">getLocalTime</a></li><li data-type='method'><a href="SyncServer.html#~getSyncTime">getSyncTime</a></li><li data-type='method'><a href="SyncServer.html#~start">start</a></li></ul></li></ul>
-</nav>
-
 <div id="main">
+
+    <!-- if home page assume a title is already present in README -->
     
 
     
@@ -35,6 +27,9 @@
 
     
 
+<!-- why is it used for ? -->
+
+
 
 
 
@@ -45,9 +40,26 @@
 
     
 
+<!-- why is it used for ? -->
 
-    <section class="readme">
-        <article><h1>sync</h1><p>This module synchronises the server and clients clocks on a common shared clock called “sync clock”.</p>
+
+
+  <section>
+    <article>
+      <div id="metas">
+        
+          <a id="github" href="https://github.com/collective-soundworks/sync">
+            <svg aria-hidden="true" class="octicon octicon-mark-github" height="28" version="1.1" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path></svg>
+          </a>
+        
+        
+          <a id="release" target="_blank" href="https://github.com/collective-soundworks/sync/releases/tag/v0.7.5">
+            v0.7.5
+          </a>
+        
+      </div>
+
+      <h1>sync</h1><p>This module synchronises the server and clients clocks on a common shared clock called “sync clock”.</p>
 <p>All time calculations and exchanges should be expressed in the sync clock time, and all times are in seconds.</p>
 <h2>Get started</h2><p>On the client side, you have to launch an instance of <code>SyncClient</code> and call the method <code>start</code>. You must specify what functions to use to:</p>
 <ul>
@@ -112,9 +124,21 @@ io.on('connection', function (socket) {
   sync.start(sendFunction, receiveFunction);
 
   ... // the rest of your code
-});</code></pre><h2>Documentation</h2><p>The documentation is available at <code>./doc/sync/${sync_version}/index.html</code><br>Use <code>npm run doc</code> to generate it.</p>
-<h2>License</h2><p><a href="https://opensource.org/licenses/BSD-3-Clause">BSD-3-Clause</a>. See <a href="LICENSE">LICENSE file</a>.</p></article>
-    </section>
+});</code></pre><h2>Caveats</h2><p>The synchronisation process is continuous: after a call to the <code>start</code>
+method, it runs in the background. It is important to avoid blocking
+it, on the client side and on the server side.</p>
+<p>The reading of the clock often takes place in the main <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/EventLoop">event loop</a>, when
+it is not accessible from a <a href="https://developer.mozilla.org/en-US/docs/Web/API/Worker">Web Worker</a> or a <a href="https://nodejs.org/api/child_process.html">Node.js</a>. Then, the synchronisation process also runs in the main
+<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/EventLoop">event loop</a>. For <a href="https://nodejs.org">Node.js</a>, you can use <a href="https://www.npmjs.com/package/blocked">node-blocked</a> to monitor the
+blockage.</p>
+<h2>Documentation</h2><p>The API documentation is available at <code>./doc/sync/${sync_version}/index.html</code>
+Use <code>npm run doc</code> to generate it.</p>
+<p>You can an read an <a href="http://hdl.handle.net/1853/54598">article</a>, presented during the <a href="http://webaudio.gatech.edu/">Web Audio Conference
+2016</a>,  that describes the synchronisation process in
+details, with measurements.</p>
+<h2>License</h2><p><a href="https://opensource.org/licenses/BSD-3-Clause">BSD-3-Clause</a>. See the <a href="./LICENSE.">LICENSE file</a>.</p>
+    </article>
+  </section>
 
 
 
@@ -128,9 +152,7 @@ io.on('connection', function (socket) {
 
 <header>
     
-        <h2>
-        client/index.js
-        </h2>
+        <h2>client/index.js</h2>
         
     
 </header>
@@ -235,9 +257,7 @@ io.on('connection', function (socket) {
 
 <header>
     
-        <h2>
-        server/index.js
-        </h2>
+        <h2>server/index.js</h2>
         
     
 </header>
@@ -337,13 +357,19 @@ io.on('connection', function (socket) {
 
 </div>
 
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="SyncClient.html">SyncClient</a></li><li><a href="SyncServer.html">SyncServer</a></li></ul>
+</nav>
+
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Apr 13 2016 19:23:21 GMT+0200 (CEST) using the Minami theme.
+    
+        Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Jan 31 2018 11:33:31 GMT+0100 (CET)
+    
 </footer>
 
-<script>prettyPrint();</script>
-<script src="scripts/linenumber.js"></script>
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
 </body>
 </html>
