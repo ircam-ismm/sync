@@ -13,7 +13,9 @@
     "url": "https://github.com/collective-soundworks/sync"
   },
   "dependencies": {
-    "debug": "^2.1.1"
+    "browserify": "^15.2.0",
+    "debug": "^2.1.1",
+    "uglify-js": "^3.3.9"
   },
   "devDependencies": {
     "@ircam/jsdoc-template": "^1.0.2",
