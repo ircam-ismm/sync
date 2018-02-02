@@ -10,9 +10,7 @@ import serveFavicon from 'serve-favicon';
 import template from 'ejs-template';
 // not very clean but works...
 import { getTranspiler } from '../../bin/runner';
-
-// import SyncServer class
-import SyncServer from '../../../../dist/server';
+import SyncServer from 'sync/server';
 
 /**
  * Configure and start the `websocket` and `sync` servers

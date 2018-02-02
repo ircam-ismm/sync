@@ -1,4 +1,4 @@
-import SyncClient from '../../../../dist/client';
+import SyncClient from 'sync/client';
 
 const getTimeFunction = () => {
   return performance.now() / 1000;
@@ -12,6 +12,12 @@ function init() {
   socket.binaryType = 'arraybuffer';
   // init sync client
   const syncClient = new SyncClient(getTimeFunction);
+
+  const $syncTime = document.querySelector('#sync-time');
+  setInterval(() => {
+    const syncTime = syncClient.getSyncTime();
+    $syncTime.innerHTML = syncTime;
+  }, 100);
 
   socket.addEventListener('open', () => {
 

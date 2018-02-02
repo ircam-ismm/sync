@@ -5,8 +5,10 @@
 ## Usage
 
 In a terminal, run
+
 ```
+npm install
 npm run watch
 ```
 
-open a browser that at: `http://127.0.0.1:3000`
+open several browser tabs at: `http://127.0.0.1:3000`

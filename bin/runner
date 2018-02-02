@@ -16,7 +16,7 @@ const cwd = process.cwd();
 const srcDir = path.join(cwd, 'src');
 const srcRegExp = new RegExp('^' + srcDir);
 
-const distDir = path.join(cwd, 'dist');
+const distDir = path.join(cwd);
 const distRegExp = new RegExp('^' + distDir);
 
 const watchOptions = {

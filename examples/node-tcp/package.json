@@ -1,15 +1,7 @@
 {
-  "name": "sync-server",
+  "name": "sync-node-tcp",
   "version": "1.0.0",
-  "description": "",
-  "main": "client.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
-  },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "sync": "github:collective-soundworks/sync"
+    "sync": "github:collective-soundworks/sync#v1.0.0"
   }
 }

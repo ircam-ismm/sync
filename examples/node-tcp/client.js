@@ -1,5 +1,5 @@
 const net = require('net');
-const SyncClient = require('../../dist/client').default;
+const SyncClient = require('sync/client').default;
 const config = require('./config');
 
 const startTime = process.hrtime();
@@ -22,6 +22,11 @@ const syncClient = new SyncClient(getTimeFunction);
 
 client.connect(config.SERVER_PORT, config.SERVER_HOST, () => {
   console.log(`client connected to ${config.SERVER_HOST}:${config.SERVER_PORT}`);
+
+  setInterval(() => {
+    const syncTime = syncClient.getSyncTime();
+    console.log('[syncTime]', syncTime);
+  }, 1000);
 
   const sendFunction = (pingId, clientPingTime) => {
     const request = new Float64Array(3);

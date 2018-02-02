@@ -6,7 +6,9 @@ class SyncServer {
    * @callback SyncServer~getTimeFunction
    * @return {Number} monotonic, ever increasing, time in second. When possible
    *  the server code should define its own origin (i.e. `time=0`) in order to
-   *  maximize the eesolution of the clock for a long period of time.
+   *  maximize the resolution of the clock for a long period of time. When
+   *  `SyncServer~start` is called the clock should be running
+   *  (cf. `audioContext.currentTime` that needs user interaction to start)
    *
    * @example
    * const startTime = process.hrtime();

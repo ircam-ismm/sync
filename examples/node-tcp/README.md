@@ -5,11 +5,14 @@
 ## Usage
 
 In a terminal, run
+
 ```
+npm install
 node server.js
 ```
 
-In another terminal
+In other terminals
+
 ```
 node client.js
 ```

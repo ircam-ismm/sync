@@ -36,7 +36,11 @@ function mean(array, dimension = 0) {
 class SyncClient {
   /**
    * @callback SyncClient~getTimeFunction
-   * @return {Number} monotonic, ever increasing, time in second.
+   * @return {Number} monotonic, ever increasing, time in second. When possible
+   *  the server code should define its own origin (i.e. `time=0`) in order to
+   *  maximize the resolution of the clock for a long period of time. When
+   *  `SyncServer~start` is called the clock should be running
+   *  (cf. `audioContext.currentTime` that needs user interaction to start)
    **/
 
   /**

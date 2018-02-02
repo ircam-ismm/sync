@@ -1,5 +1,5 @@
 const net = require('net');
-const SyncServer = require('../../dist/server').default;
+const SyncServer = require('sync/server').default;
 const config = require('./config');
 
 
