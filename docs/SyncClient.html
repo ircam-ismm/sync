@@ -671,7 +671,7 @@ clock frequency</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line117">line 117</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line121">line 121</a>
     </li></ul></dd>
     
 
@@ -772,7 +772,7 @@ See <a href="SyncClient.html#~setConnectionStatus"><code>SyncClient~setConnectio
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line217">line 217</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line220">line 220</a>
     </li></ul></dd>
     
 
@@ -926,7 +926,7 @@ change.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line440">line 440</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line443">line 443</a>
     </li></ul></dd>
     
 
@@ -1030,7 +1030,7 @@ change.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line190">line 190</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line193">line 193</a>
     </li></ul></dd>
     
 
@@ -1183,7 +1183,7 @@ change.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line458">line 458</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line461">line 461</a>
     </li></ul></dd>
     
 
@@ -1337,7 +1337,7 @@ reportFunction is defined.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line229">line 229</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line232">line 232</a>
     </li></ul></dd>
     
 
@@ -1470,7 +1470,7 @@ and <a href="SyncClient.html#~reportStatus"><code>SyncClient~reportStatus</code>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line200">line 200</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line203">line 203</a>
     </li></ul></dd>
     
 
@@ -1625,7 +1625,7 @@ and <a href="SyncClient.html#~reportStatus"><code>SyncClient~reportStatus</code>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line173">line 173</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line176">line 176</a>
     </li></ul></dd>
     
 
@@ -1827,7 +1827,7 @@ is called to report the status, on each status change</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line278">line 278</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line281">line 281</a>
     </li></ul></dd>
     
 
@@ -1938,7 +1938,11 @@ is called to report the status, on each status change</p></td>
 
         
 <div class="param-desc">
-    <p>monotonic, ever increasing, time in second.</p>
+    <p>monotonic, ever increasing, time in second. When possible
+ the server code should define its own origin (i.e. <code>time=0</code>) in order to
+ maximize the resolution of the clock for a long period of time. When
+ <code>SyncServer~start</code> is called the clock should be running
+ (cf. <code>audioContext.currentTime</code> that needs user interaction to start)</p>
 </div>
 
 
@@ -2152,7 +2156,7 @@ is called to report the status, on each status change</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line56">line 56</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line60">line 60</a>
     </li></ul></dd>
     
 
@@ -2280,7 +2284,7 @@ each message matching messageType.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line49">line 49</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line53">line 53</a>
     </li></ul></dd>
     
 
@@ -2682,7 +2686,7 @@ ping-pong series.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line65">line 65</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line69">line 69</a>
     </li></ul></dd>
     
 
@@ -2832,7 +2836,7 @@ ping-pong series.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line42">line 42</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line46">line 46</a>
     </li></ul></dd>
     
 
@@ -2886,7 +2890,7 @@ ping-pong series.</p></td>
 
 <footer>
     
-        Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Jan 31 2018 15:10:11 GMT+0100 (CET)
+        Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Feb 02 2018 18:00:11 GMT+0100 (CET)
     
 </footer>
 

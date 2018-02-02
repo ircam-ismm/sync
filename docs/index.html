@@ -53,87 +53,22 @@
           </a>
         
         
-          <a id="release" target="_blank" href="https://github.com/collective-soundworks/sync/releases/tag/v0.7.5">
-            v0.7.5
+          <a id="release" target="_blank" href="https://github.com/collective-soundworks/sync/releases/tag/v1.0.0">
+            v1.0.0
           </a>
         
       </div>
 
-      <h1>sync</h1><p>This module synchronises the server and clients clocks on a common shared clock called “sync clock”.</p>
-<p>All time calculations and exchanges should be expressed in the sync clock time, and all times are in seconds.</p>
-<h2>Get started</h2><p>On the client side, you have to launch an instance of <code>SyncClient</code> and call the method <code>start</code>. You must specify what functions to use to:</p>
-<ul>
-<li>get the local time,</li>
-<li>send a message to the server (WebSocket-like),</li>
-<li>receive a message from the server (WebSocket-like).</li>
-</ul>
-<p>For instance, with the <a href="https://github.com/Automattic/socket.io"><code>socket.io</code></a> library:</p>
-<pre class="prettyprint source lang-javascript"><code>/* Client side */
-
-var audioContext = new AudioContext() || new webkitAudioContext();
-var socket = io();
-var Sync = require('sync/client');
-
-////// Define the helper functions
-// function to get the local time
-var getTimeFunction = () => { return audioContext.currentTime; };
-// function to send a message to the server
-var sendFunction = socket.emit;
- // function to receive a message from the server
-var receiveFunction = socket.on;
-
-// Initialize the sync module and start the synchronisation process
-var sync = new SyncClient(getTimeFunction);
-// CAVEAT: first start the audioContext (via click or touch event)
-sync.start(sendFunction, receiveFunction);
-
-// Listen for the events that indicate that the clock is in sync
-sync.on('sync:status', (report) => {
-  if(report.status === 'training' || 'sync') {
-    //  whatever you need to do once the clock is in sync
-    }
-})</code></pre><p>On the server side, you have to launch an instance of <code>SyncServer</code> and call the method <code>start</code>. Just like on the client side, you must specify what functions to use to:</p>
-<ul>
-<li>get the local time;</li>
-<li>send a message to the clients;</li>
-<li>receive a message from the clients.</li>
-</ul>
-<p>For instance, with the <a href="https://github.com/Automattic/socket.io"><code>socket.io</code></a> library:</p>
-<pre class="prettyprint source lang-javascript"><code>/* Server side */
-
-// Require libraries
-var io = require('socket.io');
-var Sync = require('sync/server');
-
- // function to get the local time
-var getTimeFunction = () => {
-  let time = process.hrtime();
-  return time[0] + time[1] * 1e-9;
-};
-// Initialize sync module
-var sync = new Sync(getTimeFunction);
-
-// Set up a WebSocket communication channel with the client
-// and start to listen for the messages from that client
-io.on('connection', function (socket) {
-  // function to send a WebSocket message to the client
-  let sendFunction = (msg, ...args) => socket.emit(msg, ...args);
-  // function to receive a WebSocket message from the client
-  let receiveFunction = (msg, callback) => socket.on(msg, callback);
-
-  sync.start(sendFunction, receiveFunction);
-
-  ... // the rest of your code
-});</code></pre><h2>Caveats</h2><p>The synchronisation process is continuous: after a call to the <code>start</code>
+      <h1>sync</h1><blockquote>
+<p>Module that synchronises all clients to a server master clock. </p>
+</blockquote>
+<p>Each client has access to a logical clock that synchronizes to the server clock. The module also provides helper functions that allows to convert the master clock, to and from, the local clock. Everybody can use the common master clock to schedule synchronized events. A good practice is to convert to local time at the last moment to trigger events, in order to avoid drift.</p>
+<h2>Install</h2><pre class="prettyprint source lang-sh"><code>npm install [--save] collective-soundworks/sync</code></pre><h2>Example usage</h2><p>see <a href="./examples"><code>./examples</code></a> folder</p>
+<h2>Caveats</h2><p>The synchronisation process is continuous: after a call to the <code>start</code>
 method, it runs in the background. It is important to avoid blocking
 it, on the client side and on the server side.</p>
-<p>The reading of the clock often takes place in the main <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/EventLoop">event loop</a>, when
-it is not accessible from a <a href="https://developer.mozilla.org/en-US/docs/Web/API/Worker">Web Worker</a> or a <a href="https://nodejs.org/api/child_process.html">Node.js</a>. Then, the synchronisation process also runs in the main
-<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/EventLoop">event loop</a>. For <a href="https://nodejs.org">Node.js</a>, you can use <a href="https://www.npmjs.com/package/blocked">node-blocked</a> to monitor the
-blockage.</p>
-<h2>Documentation</h2><p>The API documentation is available at <code>./doc/sync/${sync_version}/index.html</code>
-Use <code>npm run doc</code> to generate it.</p>
-<p>You can an read an <a href="http://hdl.handle.net/1853/54598">article</a>, presented during the <a href="http://webaudio.gatech.edu/">Web Audio Conference
+<p>In many cases, running the sync process in another thread is not an option as the local clock will be different accross threads or processes.</p>
+<h2>Documentation</h2><p>You can an read an <a href="http://hdl.handle.net/1853/54598">article</a>, presented during the <a href="http://webaudio.gatech.edu/">Web Audio Conference
 2016</a>,  that describes the synchronisation process in
 details, with measurements.</p>
 <h2>License</h2><p><a href="https://opensource.org/licenses/BSD-3-Clause">BSD-3-Clause</a>. See the <a href="./LICENSE.">LICENSE file</a>.</p>
@@ -155,7 +90,7 @@ details, with measurements.</p>
 
 <footer>
     
-        Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Jan 31 2018 15:10:11 GMT+0100 (CET)
+        Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Feb 02 2018 18:00:11 GMT+0100 (CET)
     
 </footer>
 
