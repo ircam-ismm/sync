@@ -1,5 +1,5 @@
 const net = require('net');
-const SyncClient = require('sync/client').default;
+const SyncClient = require('@ircam/sync/client').default;
 const config = require('./config');
 
 const startTime = process.hrtime();

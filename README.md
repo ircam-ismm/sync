@@ -7,8 +7,17 @@ Each client has access to a logical clock that synchronizes to the server clock.
 ## Install
 
 ```sh
-npm install [--save] collective-soundworks/sync
+npm install [--save] @ircam/sync
 ```
+
+
+## Documentation
+
+[http://collective-soundworks.github.io/sync/](http://collective-soundworks.github.io/sync/)
+
+You can also read an [article], presented at the [Web Audio Conference
+2016], that describes the synchronisation process in
+details with measurements.
 
 ## Example usage
 
@@ -21,12 +30,6 @@ method, it runs in the background. It is important to avoid blocking
 it, on the client side and on the server side.
 
 In many cases, running the sync process in another thread is not an option as the local clock will be different accross threads or processes.
-
-## Documentation
-
-You can an read an [article], presented during the [Web Audio Conference
-2016],  that describes the synchronisation process in
-details, with measurements.
 
 ## License
 

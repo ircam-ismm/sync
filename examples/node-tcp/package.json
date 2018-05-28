@@ -2,6 +2,6 @@
   "name": "sync-node-tcp",
   "version": "1.0.0",
   "dependencies": {
-    "sync": "github:collective-soundworks/sync#v1.0.0"
+    "@ircam/sync": "^1.0.1"
   }
 }

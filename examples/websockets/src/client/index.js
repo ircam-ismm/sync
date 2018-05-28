@@ -1,4 +1,4 @@
-import SyncClient from 'sync/client';
+import SyncClient from '@ircam/sync/client';
 
 const getTimeFunction = () => {
   return performance.now() / 1000;

@@ -1,7 +1,7 @@
 {
-  "name": "sync",
+  "name": "@ircam/sync",
   "version": "1.0.0",
-  "description": "Client/Server time synchronization component",
+  "description": "Client / Server time synchronization component",
   "authors": [
     "Jean-Philippe.Lambert@ircam.fr",
     "Sebastien.Robaszkiewicz@ircam.fr",
@@ -14,11 +14,11 @@
     "url": "https://github.com/collective-soundworks/sync"
   },
   "scripts": {
-    "deploy": "np",
+    "deploy": "np --yolo",
     "doc": "jsdoc -c jsdoc.json",
     "transpile": "node ./bin/runner --transpile",
-    "version": "npm run transpile && npm run doc && git add docs",
     "prewatch": "npm run transpile",
+    "version": "npm run transpile && npm run doc && git add docs",
     "watch": "node ./bin/runner --watch"
   },
   "dependencies": {
@@ -35,7 +35,7 @@
     "fs-extra": "^4.0.3",
     "jsdoc": "^3.5.5",
     "klaw": "^2.1.1",
-    "np": "^2.18.2",
+    "np": "^2.20.1",
     "tape": "^4.8.0",
     "uglify-js": "^3.3.9",
     "watch": "^1.0.2"
