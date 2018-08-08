@@ -5,6 +5,7 @@ Thumbs.db
 node_modules
 server
 client
+index.js
 
 # bundled files
 *.umd.js
