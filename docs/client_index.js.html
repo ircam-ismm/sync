@@ -69,10 +69,10 @@ class SyncClient {
   /**
    * @callback SyncClient~getTimeFunction
    * @return {Number} monotonic, ever increasing, time in second. When possible
-   *  the server code should define its own origin (i.e. `time=0`) in order to
-   *  maximize the resolution of the clock for a long period of time. When
-   *  `SyncServer~start` is called the clock should be running
-   *  (cf. `audioContext.currentTime` that needs user interaction to start)
+   *   the server code should define its own origin (i.e. `time=0`) in order to
+   *   maximize the resolution of the clock for a long period of time. When
+   *   `SyncServer~start` is called the clock should be running
+   *   (cf. `audioContext.currentTime` that needs user interaction to start)
    **/
 
   /**
@@ -85,8 +85,8 @@ class SyncClient {
   /**
    * @callback SyncClient~receiveFunction
    * @see {@linkcode SyncServer~sendFunction}
-   * @param {SyncClient~receiveCallback} receiveCallback called on
-   * each message matching messageType.
+   * @param {SyncClient~receiveCallback} receiveCallback called on each message
+   *   matching messageType.
    **/
 
   /**
@@ -101,28 +101,25 @@ class SyncClient {
   /**
    * @callback SyncClient~reportFunction
    * @param {Object} report
-   * @param {String} report.status `new`, `startup`,
-   * `training` (offset adaptation), or `sync` (offset and ratio adaptation).
+   * @param {String} report.status `new`, `startup`, `training` (offset
+   *   adaptation), or `sync` (offset and ratio adaptation).
    * @param {Number} report.statusDuration duration since last status
-   * change.
-   * @param {Number} report.timeOffset time difference between local
-   * time and sync time, in seconds.
+   *   change.
+   * @param {Number} report.timeOffset time difference between local time and
+   *   sync time, in seconds.
    * @param {Number} report.frequencyRatio time ratio between local
-   * time and sync time.
+   *   time and sync time.
    * @param {String} report.connection `offline` or `online`
    * @param {Number} report.connectionDuration duration since last connection
-   * change.
+   *   change.
    * @param {Number} report.connectionTimeOut duration, in seconds, before
-   * a time-out occurs.
-   * @param {Number} report.travelDuration duration of a
-   * ping-pong round-trip, in seconds, mean over the the last
-   * ping-pong series.
-   * @param {Number} report.travelDurationMin duration of a
-   * ping-pong round-trip, in seconds, minimum over the the last
-   * ping-pong series.
-   * @param {Number} report.travelDurationMax duration of a
-   * ping-pong round-trip, in seconds, maximum over the the last
-   * ping-pong series.
+   *   a time-out occurs.
+   * @param {Number} report.travelDuration duration of a ping-pong round-trip,
+   *   in seconds, mean over the the last ping-pong series.
+   * @param {Number} report.travelDurationMin duration of a ping-pong
+   *   round-trip, in seconds, minimum over the the last ping-pong series.
+   * @param {Number} report.travelDurationMax duration of a ping-pong
+   *   round-trip, in seconds, maximum over the the last ping-pong series.
    **/
 
   /**
@@ -132,37 +129,47 @@ class SyncClient {
    * @constructs SyncClient
    * @param {SyncClient~getTimeFunction} getTimeFunction
    * @param {Object} [options]
-   * @param {Object} [options.pingTimeOutDelay] range of duration (in seconds) to
-   * consider a ping was not ponged back
+   * @param {Number} [options.estimationStability=180] adaptation to the
+   *   estimated server time is limited by this value (in parts per million,
+   *   PPM). 80 PPM is quite stable, and corresponds to the stability of a
+   *   conventional clock. 160 PPM is moderately adaptive, and corresponds to
+   *   the relative stability of 2 clocks; 500 PPM is quite adaptive, and
+   *   corresponds to an old mechanical clock.
+   * @param {Object} [options.pingTimeOutDelay] range of duration (in seconds)
+   *   to consider a ping was not ponged back
    * @param {Number} [options.pingTimeOutDelay.min=1] min and max must be set together
    * @param {Number} [options.pingTimeOutDelay.max=30] min and max must be set together
    * @param {Number} [options.pingSeriesIterations=10] number of ping-pongs in a
-   * series
-   * @param {Number} [options.pingSeriesPeriod=0.250] interval (in seconds) between pings
-   * in a series
-   * @param {Number} [options.pingSeriesDelay] range of interval (in
-   * seconds) between ping-pong series
+   *   series
+   * @param {Number} [options.pingSeriesPeriod=0.250] interval (in seconds)
+   *   between pings in a series
+   * @param {Number} [options.pingSeriesDelay] range of interval (in seconds)
+   *   between ping-pong series
    * @param {Number} [options.pingSeriesDelay.min=10] min and max must be set together
    * @param {Number} [options.pingSeriesDelay.max=20] min and max must be set together
    * @param {Number} [options.longTermDataTrainingDuration=120] duration of
-   * training, in seconds, approximately, before using the estimate of
-   * clock frequency
-   * @param {Number} [options.longTermDataDuration=900] estimate synchronisation over
-   *  this duration, in seconds, approximately
+   *   training, in seconds, approximately, before using the estimate of clock
+   *   frequency
+   * @param {Number} [options.longTermDataDuration=900] estimate synchronisation
+   *    over this duration, in seconds, approximately
    */
   constructor(getTimeFunction, options = {}) {
-    this.pingTimeoutDelay = options.pingTimeoutDelay
-      || { min: 1, max: 30 };
+    this.estimationStability = options.estimationStability || 160;
+
+    this.pingTimeoutDelay = options.pingTimeoutDelay || { min: 1, max: 30 };
     orderMinMax(this.pingTimeoutDelay);
 
     this.pingSeriesIterations = options.pingSeriesIterations || 10;
-    this.pingSeriesPeriod = options.pingSeriesPeriod || 0.250;
-    this.pingSeriesDelay = options.pingSeriesDelay
-      || { min: 10, max: 20 };
+    // accept 0 value
+    this.pingSeriesPeriod = (typeof options.pingSeriesPeriod !== 'undefined'
+                             ? options.pingSeriesPeriod
+                             : 0.250);
+
+    this.pingSeriesDelay = options.pingSeriesDelay || { min: 10, max: 20 };
     orderMinMax(this.pingSeriesDelay);
 
     this.pingDelay = 0; // current delay before next ping
-    this.pingTimeoutId = 0; // to cancel timeout on sync_pinc
+    this.timeoutId = 0; // to cancel timeout on pong
     this.pingId = 0; // absolute ID to mach pong against
 
     this.pingSeriesCount = 0; // elapsed pings in a series
@@ -254,8 +261,7 @@ class SyncClient {
    * See {@linkcode SyncClient~setConnectionStatus}
    *
    * @function SyncClient~getConnectionStatusDuration
-   * @returns {Number} time, in seconds, since last connectionStatus
-   * change.
+   * @returns {Number} time, in seconds, since last connectionStatus change.
    */
   getConnectionStatusDuration() {
     return Math.max(0, this.getLocalTime() - this.connectionStatusChangedTime);
@@ -318,8 +324,8 @@ class SyncClient {
    * @function SyncClient~start
    * @param {SyncClient~sendFunction} sendFunction
    * @param {SyncClient~receiveFunction} receiveFunction to register
-   * @param {SyncClient~reportFunction} reportFunction if defined,
-   * is called to report the status, on each status change
+   * @param {SyncClient~reportFunction} reportFunction if defined, is called to
+   *   report the status, on each status change
    */
   start(sendFunction, receiveFunction, reportFunction) {
     this.setStatus('startup');
@@ -522,7 +528,7 @@ export default SyncClient;
 
 <footer>
     
-        Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Mon May 28 2018 19:35:45 GMT+0200 (CEST)
+        Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Thu Aug 23 2018 17:55:27 GMT+0200 (CEST)
     
 </footer>
 

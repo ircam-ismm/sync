@@ -177,6 +177,50 @@ actually start a synchronisation process.</p>
 
         <tr>
             
+                <td class="name"><code>estimationStability</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    180
+                
+                </td>
+            
+
+            <td class="description last"><p>adaptation to the
+  estimated server time is limited by this value (in parts per million,
+  PPM). 80 PPM is quite stable, and corresponds to the stability of a
+  conventional clock. 160 PPM is moderately adaptive, and corresponds to
+  the relative stability of 2 clocks; 500 PPM is quite adaptive, and
+  corresponds to an old mechanical clock.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
                 <td class="name"><code>pingTimeOutDelay</code></td>
             
 
@@ -207,8 +251,8 @@ actually start a synchronisation process.</p>
                 </td>
             
 
-            <td class="description last"><p>range of duration (in seconds) to
-consider a ping was not ponged back</p>
+            <td class="description last"><p>range of duration (in seconds)
+  to consider a ping was not ponged back</p>
                 <h6>Properties</h6>
                 
 
@@ -356,7 +400,7 @@ consider a ping was not ponged back</p>
             
 
             <td class="description last"><p>number of ping-pongs in a
-series</p></td>
+  series</p></td>
         </tr>
 
     
@@ -395,8 +439,8 @@ series</p></td>
                 </td>
             
 
-            <td class="description last"><p>interval (in seconds) between pings
-in a series</p></td>
+            <td class="description last"><p>interval (in seconds)
+  between pings in a series</p></td>
         </tr>
 
     
@@ -433,8 +477,8 @@ in a series</p></td>
                 </td>
             
 
-            <td class="description last"><p>range of interval (in
-seconds) between ping-pong series</p>
+            <td class="description last"><p>range of interval (in seconds)
+  between ping-pong series</p>
                 <h6>Properties</h6>
                 
 
@@ -582,8 +626,8 @@ seconds) between ping-pong series</p>
             
 
             <td class="description last"><p>duration of
-training, in seconds, approximately, before using the estimate of
-clock frequency</p></td>
+  training, in seconds, approximately, before using the estimate of clock
+  frequency</p></td>
         </tr>
 
     
@@ -622,8 +666,8 @@ clock frequency</p></td>
                 </td>
             
 
-            <td class="description last"><p>estimate synchronisation over
- this duration, in seconds, approximately</p></td>
+            <td class="description last"><p>estimate synchronisation
+   over this duration, in seconds, approximately</p></td>
         </tr>
 
     
@@ -671,7 +715,7 @@ clock frequency</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line121">line 121</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line124">line 124</a>
     </li></ul></dd>
     
 
@@ -772,7 +816,7 @@ See <a href="SyncClient.html#~setConnectionStatus"><code>SyncClient~setConnectio
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line220">line 220</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line227">line 227</a>
     </li></ul></dd>
     
 
@@ -799,8 +843,7 @@ See <a href="SyncClient.html#~setConnectionStatus"><code>SyncClient~setConnectio
 
         
 <div class="param-desc">
-    <p>time, in seconds, since last connectionStatus
-change.</p>
+    <p>time, in seconds, since last connectionStatus change.</p>
 </div>
 
 
@@ -926,7 +969,7 @@ change.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line443">line 443</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line449">line 449</a>
     </li></ul></dd>
     
 
@@ -1030,7 +1073,7 @@ change.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line193">line 193</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line200">line 200</a>
     </li></ul></dd>
     
 
@@ -1183,7 +1226,7 @@ change.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line461">line 461</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line467">line 467</a>
     </li></ul></dd>
     
 
@@ -1337,7 +1380,7 @@ reportFunction is defined.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line232">line 232</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line238">line 238</a>
     </li></ul></dd>
     
 
@@ -1470,7 +1513,7 @@ and <a href="SyncClient.html#~reportStatus"><code>SyncClient~reportStatus</code>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line203">line 203</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line210">line 210</a>
     </li></ul></dd>
     
 
@@ -1625,7 +1668,7 @@ and <a href="SyncClient.html#~reportStatus"><code>SyncClient~reportStatus</code>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line176">line 176</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line183">line 183</a>
     </li></ul></dd>
     
 
@@ -1785,8 +1828,8 @@ to the server, using the send function passed as first parameter.</p>
 
             
 
-            <td class="description last"><p>if defined,
-is called to report the status, on each status change</p></td>
+            <td class="description last"><p>if defined, is called to
+  report the status, on each status change</p></td>
         </tr>
 
     
@@ -1827,7 +1870,7 @@ is called to report the status, on each status change</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line281">line 281</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line287">line 287</a>
     </li></ul></dd>
     
 
@@ -1939,10 +1982,10 @@ is called to report the status, on each status change</p></td>
         
 <div class="param-desc">
     <p>monotonic, ever increasing, time in second. When possible
- the server code should define its own origin (i.e. <code>time=0</code>) in order to
- maximize the resolution of the clock for a long period of time. When
- <code>SyncServer~start</code> is called the clock should be running
- (cf. <code>audioContext.currentTime</code> that needs user interaction to start)</p>
+  the server code should define its own origin (i.e. <code>time=0</code>) in order to
+  maximize the resolution of the clock for a long period of time. When
+  <code>SyncServer~start</code> is called the clock should be running
+  (cf. <code>audioContext.currentTime</code> that needs user interaction to start)</p>
 </div>
 
 
@@ -2242,8 +2285,8 @@ is called to report the status, on each status change</p></td>
 
             
 
-            <td class="description last"><p>called on
-each message matching messageType.</p></td>
+            <td class="description last"><p>called on each message
+  matching messageType.</p></td>
         </tr>
 
     
@@ -2419,8 +2462,8 @@ each message matching messageType.</p></td>
 
             
 
-            <td class="description last"><p><code>new</code>, <code>startup</code>,
-<code>training</code> (offset adaptation), or <code>sync</code> (offset and ratio adaptation).</p></td>
+            <td class="description last"><p><code>new</code>, <code>startup</code>, <code>training</code> (offset
+  adaptation), or <code>sync</code> (offset and ratio adaptation).</p></td>
         </tr>
 
     
@@ -2444,7 +2487,7 @@ each message matching messageType.</p></td>
             
 
             <td class="description last"><p>duration since last status
-change.</p></td>
+  change.</p></td>
         </tr>
 
     
@@ -2467,8 +2510,8 @@ change.</p></td>
 
             
 
-            <td class="description last"><p>time difference between local
-time and sync time, in seconds.</p></td>
+            <td class="description last"><p>time difference between local time and
+  sync time, in seconds.</p></td>
         </tr>
 
     
@@ -2492,7 +2535,7 @@ time and sync time, in seconds.</p></td>
             
 
             <td class="description last"><p>time ratio between local
-time and sync time.</p></td>
+  time and sync time.</p></td>
         </tr>
 
     
@@ -2539,7 +2582,7 @@ time and sync time.</p></td>
             
 
             <td class="description last"><p>duration since last connection
-change.</p></td>
+  change.</p></td>
         </tr>
 
     
@@ -2563,7 +2606,7 @@ change.</p></td>
             
 
             <td class="description last"><p>duration, in seconds, before
-a time-out occurs.</p></td>
+  a time-out occurs.</p></td>
         </tr>
 
     
@@ -2586,9 +2629,8 @@ a time-out occurs.</p></td>
 
             
 
-            <td class="description last"><p>duration of a
-ping-pong round-trip, in seconds, mean over the the last
-ping-pong series.</p></td>
+            <td class="description last"><p>duration of a ping-pong round-trip,
+  in seconds, mean over the the last ping-pong series.</p></td>
         </tr>
 
     
@@ -2611,9 +2653,8 @@ ping-pong series.</p></td>
 
             
 
-            <td class="description last"><p>duration of a
-ping-pong round-trip, in seconds, minimum over the the last
-ping-pong series.</p></td>
+            <td class="description last"><p>duration of a ping-pong
+  round-trip, in seconds, minimum over the the last ping-pong series.</p></td>
         </tr>
 
     
@@ -2636,9 +2677,8 @@ ping-pong series.</p></td>
 
             
 
-            <td class="description last"><p>duration of a
-ping-pong round-trip, in seconds, maximum over the the last
-ping-pong series.</p></td>
+            <td class="description last"><p>duration of a ping-pong
+  round-trip, in seconds, maximum over the the last ping-pong series.</p></td>
         </tr>
 
     
@@ -2890,7 +2930,7 @@ ping-pong series.</p></td>
 
 <footer>
     
-        Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Mon May 28 2018 19:35:45 GMT+0200 (CEST)
+        Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Thu Aug 23 2018 17:55:27 GMT+0200 (CEST)
     
 </footer>
 
