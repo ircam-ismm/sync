@@ -63,7 +63,6 @@ class SyncClient {
    * @param {Number} clientPingTime time-stamp of ping emission
    * @param {Number} serverPingTime time-stamp of ping reception
    * @param {Number} serverPongTime time-stamp of pong emission
-   * @param {Number} clientPongTime time-stamp of pong reception
    **/
 
   /**
