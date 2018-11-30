@@ -402,7 +402,7 @@ class SyncClient {
           // (it might use a longer travel duration)
           const aroundMedian = sorted.slice(Math.max(0, median - 1),
                                             Math.min(sorted.length, median + 1) );
-          this.timeOffset = mean(aroundMedian, 3) - mean(aroundMedian, 2);
+          this.timeOffset = mean(aroundMedian, 1);
 
           if(this.status === 'startup'
              || (this.status === 'training'
