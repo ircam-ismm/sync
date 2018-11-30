@@ -40,6 +40,18 @@ function mean(array, dimension = 0) {
   return array.reduce((p, q) => p + q[dimension], 0) / array.length;
 }
 
+/**
+ * Function used to sort long-term data, using first and second dimensions, in
+ * that order.
+ *
+ * @param {Array.<Number>} a
+ * @param {Number.<Number>} b
+ * @returns {Number} negative if a < b, positive if a > b, or 0
+ */
+function dataCompare(a, b) {
+  return a[0] - b[0] || a[1] - b[1];
+}
+
 class SyncClient {
   /**
    * @callback SyncClient~getTimeFunction
@@ -336,7 +348,7 @@ class SyncClient {
           this.pingSeriesCount = 0;
 
           // sort by travel time first, then offset time.
-          const sorted = this.seriesData.slice(0).sort();
+          const sorted = this.seriesData.slice(0).sort(dataCompare);
 
           const seriesTravelDuration = sorted[0][0];
 
