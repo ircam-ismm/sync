@@ -381,12 +381,13 @@ class SyncClient {
           // When the clock tick is long enough,
           // some travel times (dimension 0) might be identical.
           // Then, use the offset median (dimension 1 is the second sort key)
-          let s = 0;
-          while(s < sorted.length && sorted[s][0] <= seriesTravelDuration * 1.01) {
-            ++s;
+          // of shortest travel duration
+          let quick = 0;
+          while(quick < sorted.length && sorted[quick][0] <= seriesTravelDuration * 1.01) {
+            ++quick;
           }
-          s = Math.max(0, s - 1);
-          const median = Math.floor(s / 2);
+          quick = Math.max(0, quick - 1);
+          const median = Math.floor(quick / 2);
 
           const seriesClientTime = sorted[median][2];
           const seriesServerTime = sorted[median][3];
@@ -399,9 +400,9 @@ class SyncClient {
           this.longTermDataNextIndex = (++this.longTermDataNextIndex) % this.longTermDataLength;
 
           // mean of the time offset over 3 samples around median
-          // (it might use a longer travel duration)
+          // (limited to shortest travel duration)
           const aroundMedian = sorted.slice(Math.max(0, median - 1),
-                                            Math.min(sorted.length, median + 1) );
+                                            Math.min(quick, median + 1) + 1);
           this.timeOffset = mean(aroundMedian, 1);
 
           if(this.status === 'startup'
