@@ -115,35 +115,37 @@ class SyncClient {
    * @constructs SyncClient
    * @param {SyncClient~getTimeFunction} getTimeFunction
    * @param {Object} [options]
-   * @param {Object} [options.pingTimeOutDelay] range of duration (in seconds) to
-   * consider a ping was not ponged back
-   * @param {Number} [options.pingTimeOutDelay.min=1] min and max must be set together
-   * @param {Number} [options.pingTimeOutDelay.max=30] min and max must be set together
+   * @param {Object} [options.pingTimeOutDelay] range of duration (in seconds)
+   *   to consider a ping was not ponged back
+   * @param {Number} [options.pingTimeOutDelay.min=1] min and max must be set
+   *   together
+   * @param {Number} [options.pingTimeOutDelay.max=30] min and max must be set
+   *   together
    * @param {Number} [options.pingSeriesIterations=10] number of ping-pongs in a
-   * series
-   * @param {Number} [options.pingSeriesPeriod=0.250] interval (in seconds) between pings
-   * in a series
-   * @param {Number} [options.pingSeriesDelay] range of interval (in
-   * seconds) between ping-pong series
-   * @param {Number} [options.pingSeriesDelay.min=10] min and max must be set together
-   * @param {Number} [options.pingSeriesDelay.max=20] min and max must be set together
+   *   series
+   * @param {Number} [options.pingSeriesPeriod=0.250] interval (in seconds)
+   *   between pings in a series
+   * @param {Number} [options.pingSeriesDelay] range of interval (in seconds)
+   *   between ping-pong series
+   * @param {Number} [options.pingSeriesDelay.min=10] min and max must be set
+   *   together
+   * @param {Number} [options.pingSeriesDelay.max=20] min and max must be set
+   *   together
    * @param {Number} [options.longTermDataTrainingDuration=120] duration of
-   * training, in seconds, approximately, before using the estimate of
-   * clock frequency
+   *   training, in seconds, approximately, before using the estimate of clock
+   *   frequency
    * @param {Number} [options.longTermDataDuration=900] estimate synchronisation over
-   *  this duration, in seconds, approximately
+   *   this duration, in seconds, approximately
    */
   constructor(getTimeFunction, options = {}) {
-    this.pingTimeoutDelay = options.pingTimeoutDelay
-      || { min: 1, max: 30 };
+    this.pingTimeoutDelay = options.pingTimeoutDelay || { min: 1, max: 30 };
     orderMinMax(this.pingTimeoutDelay);
 
     this.pingSeriesIterations = options.pingSeriesIterations || 10;
     this.pingSeriesPeriod = (typeof options.pingSeriesPeriod !== 'undefined'
                              ? options.pingSeriesPeriod
                              : 0.250);
-    this.pingSeriesDelay = options.pingSeriesDelay
-      || { min: 10, max: 20 };
+    this.pingSeriesDelay = options.pingSeriesDelay || { min: 10, max: 20 };
     orderMinMax(this.pingSeriesDelay);
 
     this.pingDelay = 0; // current delay before next ping
@@ -218,9 +220,9 @@ class SyncClient {
   }
 
   /**
-   * Set connectionStatus, and set this.connectionStatusChangedTime,
-   * to later use see {@linkcode SyncClient~getConnectionStatusDuration}
-   * and {@linkcode SyncClient~reportStatus}.
+   * Set connectionStatus, and set this.connectionStatusChangedTime, to later
+   * use {@linkcode SyncClient~getConnectionStatusDuration} and {@linkcode
+   * SyncClient~reportStatus}.
    *
    * @function SyncClient~setConnectionStatus
    * @param {String} connectionStatus
