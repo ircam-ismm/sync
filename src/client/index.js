@@ -139,13 +139,15 @@ class SyncClient {
     orderMinMax(this.pingTimeoutDelay);
 
     this.pingSeriesIterations = options.pingSeriesIterations || 10;
-    this.pingSeriesPeriod = options.pingSeriesPeriod || 0.250;
+    this.pingSeriesPeriod = (typeof options.pingSeriesPeriod !== 'undefined'
+                             ? options.pingSeriesPeriod
+                             : 0.250);
     this.pingSeriesDelay = options.pingSeriesDelay
       || { min: 10, max: 20 };
     orderMinMax(this.pingSeriesDelay);
 
     this.pingDelay = 0; // current delay before next ping
-    this.pingTimeoutId = 0; // to cancel timeout on sync_pinc
+    this.timeoutId = 0; // to cancel timeout on pong
     this.pingId = 0; // absolute ID to mach pong against
 
     this.pingSeriesCount = 0; // elapsed pings in a series

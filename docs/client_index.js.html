@@ -30,7 +30,14 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import debug from 'debug';
+            <pre class="prettyprint source linenums"><code>/**
+ * @fileOverview Estimation of a server time from a client time.
+ *
+ * @see {@link https://hal.archives-ouvertes.fr/hal-01304889v1}
+ * Stabilisation added after the article.
+ */
+
+import debug from 'debug';
 const log = debug('sync');
 
 ////// helpers
@@ -65,14 +72,26 @@ function mean(array, dimension = 0) {
   return array.reduce((p, q) => p + q[dimension], 0) / array.length;
 }
 
+/**
+ * Function used to sort long-term data, using first and second dimensions, in
+ * that order.
+ *
+ * @param {Array.&lt;Number>} a
+ * @param {Number.&lt;Number>} b
+ * @returns {Number} negative if a &lt; b, positive if a > b, or 0
+ */
+function dataCompare(a, b) {
+  return a[0] - b[0] || a[1] - b[1];
+}
+
 class SyncClient {
   /**
    * @callback SyncClient~getTimeFunction
    * @return {Number} monotonic, ever increasing, time in second. When possible
-   *  the server code should define its own origin (i.e. `time=0`) in order to
-   *  maximize the resolution of the clock for a long period of time. When
-   *  `SyncServer~start` is called the clock should be running
-   *  (cf. `audioContext.currentTime` that needs user interaction to start)
+   *   the server code should define its own origin (i.e. `time=0`) in order to
+   *   maximize the resolution of the clock for a long period of time. When
+   *   `SyncServer~start` is called the clock should be running
+   *   (cf. `audioContext.currentTime` that needs user interaction to start)
    **/
 
   /**
@@ -85,8 +104,8 @@ class SyncClient {
   /**
    * @callback SyncClient~receiveFunction
    * @see {@linkcode SyncServer~sendFunction}
-   * @param {SyncClient~receiveCallback} receiveCallback called on
-   * each message matching messageType.
+   * @param {SyncClient~receiveCallback} receiveCallback called on each message
+   *   matching messageType.
    **/
 
   /**
@@ -100,28 +119,25 @@ class SyncClient {
   /**
    * @callback SyncClient~reportFunction
    * @param {Object} report
-   * @param {String} report.status `new`, `startup`,
-   * `training` (offset adaptation), or `sync` (offset and ratio adaptation).
+   * @param {String} report.status `new`, `startup`, `training` (offset
+   *   adaptation), or `sync` (offset and speed adaptation).
    * @param {Number} report.statusDuration duration since last status
-   * change.
-   * @param {Number} report.timeOffset time difference between local
-   * time and sync time, in seconds.
+   *   change.
+   * @param {Number} report.timeOffset time difference between local time and
+   *   sync time, in seconds.
    * @param {Number} report.frequencyRatio time ratio between local
-   * time and sync time.
+   *   time and sync time.
    * @param {String} report.connection `offline` or `online`
    * @param {Number} report.connectionDuration duration since last connection
-   * change.
+   *   change.
    * @param {Number} report.connectionTimeOut duration, in seconds, before
-   * a time-out occurs.
-   * @param {Number} report.travelDuration duration of a
-   * ping-pong round-trip, in seconds, mean over the the last
-   * ping-pong series.
-   * @param {Number} report.travelDurationMin duration of a
-   * ping-pong round-trip, in seconds, minimum over the the last
-   * ping-pong series.
-   * @param {Number} report.travelDurationMax duration of a
-   * ping-pong round-trip, in seconds, maximum over the the last
-   * ping-pong series.
+   *   a time-out occurs.
+   * @param {Number} report.travelDuration duration of a ping-pong round-trip,
+   *   in seconds, mean over the the last ping-pong series.
+   * @param {Number} report.travelDurationMin duration of a ping-pong
+   *   round-trip, in seconds, minimum over the the last ping-pong series.
+   * @param {Number} report.travelDurationMax duration of a ping-pong
+   *   round-trip, in seconds, maximum over the the last ping-pong series.
    **/
 
   /**
@@ -253,8 +269,7 @@ class SyncClient {
    * See {@linkcode SyncClient~setConnectionStatus}
    *
    * @function SyncClient~getConnectionStatusDuration
-   * @returns {Number} time, in seconds, since last connectionStatus
-   * change.
+   * @returns {Number} time, in seconds, since last connectionStatus change.
    */
   getConnectionStatusDuration() {
     return Math.max(0, this.getLocalTime() - this.connectionStatusChangedTime);
@@ -317,8 +332,8 @@ class SyncClient {
    * @function SyncClient~start
    * @param {SyncClient~sendFunction} sendFunction
    * @param {SyncClient~receiveFunction} receiveFunction to register
-   * @param {SyncClient~reportFunction} reportFunction if defined,
-   * is called to report the status, on each status change
+   * @param {SyncClient~reportFunction} reportFunction if defined, is called to
+   *   report the status, on each status change
    */
   start(sendFunction, receiveFunction, reportFunction) {
     this.setStatus('startup');
@@ -365,19 +380,20 @@ class SyncClient {
           this.pingSeriesCount = 0;
 
           // sort by travel time first, then offset time.
-          const sorted = this.seriesData.slice(0).sort();
+          const sorted = this.seriesData.slice(0).sort(dataCompare);
 
           const seriesTravelDuration = sorted[0][0];
 
           // When the clock tick is long enough,
           // some travel times (dimension 0) might be identical.
           // Then, use the offset median (dimension 1 is the second sort key)
-          let s = 0;
-          while(s &lt; sorted.length &amp;&amp; sorted[s][0] &lt;= seriesTravelDuration * 1.01) {
-            ++s;
+          // of shortest travel duration
+          let quick = 0;
+          while(quick &lt; sorted.length &amp;&amp; sorted[quick][0] &lt;= seriesTravelDuration * 1.01) {
+            ++quick;
           }
-          s = Math.max(0, s - 1);
-          const median = Math.floor(s / 2);
+          quick = Math.max(0, quick - 1);
+          const median = Math.floor(quick / 2);
 
           const seriesClientTime = sorted[median][2];
           const seriesServerTime = sorted[median][3];
@@ -390,10 +406,10 @@ class SyncClient {
           this.longTermDataNextIndex = (++this.longTermDataNextIndex) % this.longTermDataLength;
 
           // mean of the time offset over 3 samples around median
-          // (it might use a longer travel duration)
+          // (limited to shortest travel duration)
           const aroundMedian = sorted.slice(Math.max(0, median - 1),
-                                            Math.min(sorted.length, median + 1) );
-          this.timeOffset = mean(aroundMedian, 3) - mean(aroundMedian, 2);
+                                            Math.min(quick, median + 1) + 1);
+          this.timeOffset = mean(aroundMedian, 1);
 
           if(this.status === 'startup'
              || (this.status === 'training'
@@ -514,14 +530,14 @@ export default SyncClient;
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="SyncClient.html">SyncClient</a></li><li><a href="SyncServer.html">SyncServer</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="SyncClient.html">SyncClient</a></li><li><a href="SyncServer.html">SyncServer</a></li></ul><h3>Global</h3><ul><li><a href="global.html#dataCompare">dataCompare</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
     
-        Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Mon Aug 27 2018 15:49:21 GMT+0200 (CEST)
+        Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Dec 05 2018 17:06:13 GMT+0100 (CET)
     
 </footer>
 

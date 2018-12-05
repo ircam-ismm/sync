@@ -671,7 +671,7 @@ clock frequency</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line120">line 120</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line136">line 136</a>
     </li></ul></dd>
     
 
@@ -772,7 +772,7 @@ See <a href="SyncClient.html#~setConnectionStatus"><code>SyncClient~setConnectio
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line219">line 219</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line235">line 235</a>
     </li></ul></dd>
     
 
@@ -799,8 +799,7 @@ See <a href="SyncClient.html#~setConnectionStatus"><code>SyncClient~setConnectio
 
         
 <div class="param-desc">
-    <p>time, in seconds, since last connectionStatus
-change.</p>
+    <p>time, in seconds, since last connectionStatus change.</p>
 </div>
 
 
@@ -926,7 +925,7 @@ change.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line442">line 442</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line458">line 458</a>
     </li></ul></dd>
     
 
@@ -1030,7 +1029,7 @@ change.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line192">line 192</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line208">line 208</a>
     </li></ul></dd>
     
 
@@ -1183,7 +1182,7 @@ change.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line460">line 460</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line476">line 476</a>
     </li></ul></dd>
     
 
@@ -1337,7 +1336,7 @@ reportFunction is defined.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line231">line 231</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line246">line 246</a>
     </li></ul></dd>
     
 
@@ -1470,7 +1469,7 @@ and <a href="SyncClient.html#~reportStatus"><code>SyncClient~reportStatus</code>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line202">line 202</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line218">line 218</a>
     </li></ul></dd>
     
 
@@ -1625,7 +1624,7 @@ and <a href="SyncClient.html#~reportStatus"><code>SyncClient~reportStatus</code>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line175">line 175</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line191">line 191</a>
     </li></ul></dd>
     
 
@@ -1785,8 +1784,8 @@ to the server, using the send function passed as first parameter.</p>
 
             
 
-            <td class="description last"><p>if defined,
-is called to report the status, on each status change</p></td>
+            <td class="description last"><p>if defined, is called to
+  report the status, on each status change</p></td>
         </tr>
 
     
@@ -1827,7 +1826,7 @@ is called to report the status, on each status change</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line280">line 280</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line295">line 295</a>
     </li></ul></dd>
     
 
@@ -1911,7 +1910,7 @@ is called to report the status, on each status change</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line37">line 37</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line56">line 56</a>
     </li></ul></dd>
     
 
@@ -1939,10 +1938,10 @@ is called to report the status, on each status change</p></td>
         
 <div class="param-desc">
     <p>monotonic, ever increasing, time in second. When possible
- the server code should define its own origin (i.e. <code>time=0</code>) in order to
- maximize the resolution of the clock for a long period of time. When
- <code>SyncServer~start</code> is called the clock should be running
- (cf. <code>audioContext.currentTime</code> that needs user interaction to start)</p>
+  the server code should define its own origin (i.e. <code>time=0</code>) in order to
+  maximize the resolution of the clock for a long period of time. When
+  <code>SyncServer~start</code> is called the clock should be running
+  (cf. <code>audioContext.currentTime</code> that needs user interaction to start)</p>
 </div>
 
 
@@ -2133,7 +2132,7 @@ is called to report the status, on each status change</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line60">line 60</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line79">line 79</a>
     </li></ul></dd>
     
 
@@ -2219,8 +2218,8 @@ is called to report the status, on each status change</p></td>
 
             
 
-            <td class="description last"><p>called on
-each message matching messageType.</p></td>
+            <td class="description last"><p>called on each message
+  matching messageType.</p></td>
         </tr>
 
     
@@ -2261,7 +2260,7 @@ each message matching messageType.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line53">line 53</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line72">line 72</a>
     </li></ul></dd>
     
 
@@ -2396,8 +2395,8 @@ each message matching messageType.</p></td>
 
             
 
-            <td class="description last"><p><code>new</code>, <code>startup</code>,
-<code>training</code> (offset adaptation), or <code>sync</code> (offset and ratio adaptation).</p></td>
+            <td class="description last"><p><code>new</code>, <code>startup</code>, <code>training</code> (offset
+  adaptation), or <code>sync</code> (offset and speed adaptation).</p></td>
         </tr>
 
     
@@ -2421,7 +2420,7 @@ each message matching messageType.</p></td>
             
 
             <td class="description last"><p>duration since last status
-change.</p></td>
+  change.</p></td>
         </tr>
 
     
@@ -2444,8 +2443,8 @@ change.</p></td>
 
             
 
-            <td class="description last"><p>time difference between local
-time and sync time, in seconds.</p></td>
+            <td class="description last"><p>time difference between local time and
+  sync time, in seconds.</p></td>
         </tr>
 
     
@@ -2469,7 +2468,7 @@ time and sync time, in seconds.</p></td>
             
 
             <td class="description last"><p>time ratio between local
-time and sync time.</p></td>
+  time and sync time.</p></td>
         </tr>
 
     
@@ -2516,7 +2515,7 @@ time and sync time.</p></td>
             
 
             <td class="description last"><p>duration since last connection
-change.</p></td>
+  change.</p></td>
         </tr>
 
     
@@ -2540,7 +2539,7 @@ change.</p></td>
             
 
             <td class="description last"><p>duration, in seconds, before
-a time-out occurs.</p></td>
+  a time-out occurs.</p></td>
         </tr>
 
     
@@ -2563,9 +2562,8 @@ a time-out occurs.</p></td>
 
             
 
-            <td class="description last"><p>duration of a
-ping-pong round-trip, in seconds, mean over the the last
-ping-pong series.</p></td>
+            <td class="description last"><p>duration of a ping-pong round-trip,
+  in seconds, mean over the the last ping-pong series.</p></td>
         </tr>
 
     
@@ -2588,9 +2586,8 @@ ping-pong series.</p></td>
 
             
 
-            <td class="description last"><p>duration of a
-ping-pong round-trip, in seconds, minimum over the the last
-ping-pong series.</p></td>
+            <td class="description last"><p>duration of a ping-pong
+  round-trip, in seconds, minimum over the the last ping-pong series.</p></td>
         </tr>
 
     
@@ -2613,9 +2610,8 @@ ping-pong series.</p></td>
 
             
 
-            <td class="description last"><p>duration of a
-ping-pong round-trip, in seconds, maximum over the the last
-ping-pong series.</p></td>
+            <td class="description last"><p>duration of a ping-pong
+  round-trip, in seconds, maximum over the the last ping-pong series.</p></td>
         </tr>
 
     
@@ -2663,7 +2659,7 @@ ping-pong series.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line68">line 68</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line87">line 87</a>
     </li></ul></dd>
     
 
@@ -2813,7 +2809,7 @@ ping-pong series.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line46">line 46</a>
+        <a href="client_index.js.html">client/index.js</a>, <a href="client_index.js.html#line65">line 65</a>
     </li></ul></dd>
     
 
@@ -2860,14 +2856,14 @@ ping-pong series.</p></td>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="SyncClient.html">SyncClient</a></li><li><a href="SyncServer.html">SyncServer</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="SyncClient.html">SyncClient</a></li><li><a href="SyncServer.html">SyncServer</a></li></ul><h3>Global</h3><ul><li><a href="global.html#dataCompare">dataCompare</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
     
-        Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Mon Aug 27 2018 15:49:21 GMT+0200 (CEST)
+        Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Dec 05 2018 17:06:13 GMT+0100 (CET)
     
 </footer>
 
