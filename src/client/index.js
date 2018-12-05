@@ -1,3 +1,10 @@
+/**
+ * @fileOverview Estimation of a server time from a client time.
+ *
+ * @see {@link https://hal.archives-ouvertes.fr/hal-01304889v1}
+ * Stabilisation added after the article.
+ */
+
 import debug from 'debug';
 const log = debug('sync');
 
@@ -37,10 +44,10 @@ class SyncClient {
   /**
    * @callback SyncClient~getTimeFunction
    * @return {Number} monotonic, ever increasing, time in second. When possible
-   *  the server code should define its own origin (i.e. `time=0`) in order to
-   *  maximize the resolution of the clock for a long period of time. When
-   *  `SyncServer~start` is called the clock should be running
-   *  (cf. `audioContext.currentTime` that needs user interaction to start)
+   *   the server code should define its own origin (i.e. `time=0`) in order to
+   *   maximize the resolution of the clock for a long period of time. When
+   *   `SyncServer~start` is called the clock should be running
+   *   (cf. `audioContext.currentTime` that needs user interaction to start)
    **/
 
   /**
@@ -53,8 +60,8 @@ class SyncClient {
   /**
    * @callback SyncClient~receiveFunction
    * @see {@linkcode SyncServer~sendFunction}
-   * @param {SyncClient~receiveCallback} receiveCallback called on
-   * each message matching messageType.
+   * @param {SyncClient~receiveCallback} receiveCallback called on each message
+   *   matching messageType.
    **/
 
   /**
@@ -68,28 +75,25 @@ class SyncClient {
   /**
    * @callback SyncClient~reportFunction
    * @param {Object} report
-   * @param {String} report.status `new`, `startup`,
-   * `training` (offset adaptation), or `sync` (offset and ratio adaptation).
+   * @param {String} report.status `new`, `startup`, `training` (offset
+   *   adaptation), or `sync` (offset and speed adaptation).
    * @param {Number} report.statusDuration duration since last status
-   * change.
-   * @param {Number} report.timeOffset time difference between local
-   * time and sync time, in seconds.
+   *   change.
+   * @param {Number} report.timeOffset time difference between local time and
+   *   sync time, in seconds.
    * @param {Number} report.frequencyRatio time ratio between local
-   * time and sync time.
+   *   time and sync time.
    * @param {String} report.connection `offline` or `online`
    * @param {Number} report.connectionDuration duration since last connection
-   * change.
+   *   change.
    * @param {Number} report.connectionTimeOut duration, in seconds, before
-   * a time-out occurs.
-   * @param {Number} report.travelDuration duration of a
-   * ping-pong round-trip, in seconds, mean over the the last
-   * ping-pong series.
-   * @param {Number} report.travelDurationMin duration of a
-   * ping-pong round-trip, in seconds, minimum over the the last
-   * ping-pong series.
-   * @param {Number} report.travelDurationMax duration of a
-   * ping-pong round-trip, in seconds, maximum over the the last
-   * ping-pong series.
+   *   a time-out occurs.
+   * @param {Number} report.travelDuration duration of a ping-pong round-trip,
+   *   in seconds, mean over the the last ping-pong series.
+   * @param {Number} report.travelDurationMin duration of a ping-pong
+   *   round-trip, in seconds, minimum over the the last ping-pong series.
+   * @param {Number} report.travelDurationMax duration of a ping-pong
+   *   round-trip, in seconds, maximum over the the last ping-pong series.
    **/
 
   /**
@@ -221,8 +225,7 @@ class SyncClient {
    * See {@linkcode SyncClient~setConnectionStatus}
    *
    * @function SyncClient~getConnectionStatusDuration
-   * @returns {Number} time, in seconds, since last connectionStatus
-   * change.
+   * @returns {Number} time, in seconds, since last connectionStatus change.
    */
   getConnectionStatusDuration() {
     return Math.max(0, this.getLocalTime() - this.connectionStatusChangedTime);
@@ -285,8 +288,8 @@ class SyncClient {
    * @function SyncClient~start
    * @param {SyncClient~sendFunction} sendFunction
    * @param {SyncClient~receiveFunction} receiveFunction to register
-   * @param {SyncClient~reportFunction} reportFunction if defined,
-   * is called to report the status, on each status change
+   * @param {SyncClient~reportFunction} reportFunction if defined, is called to
+   *   report the status, on each status change
    */
   start(sendFunction, receiveFunction, reportFunction) {
     this.setStatus('startup');
