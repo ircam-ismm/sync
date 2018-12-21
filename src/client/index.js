@@ -55,11 +55,12 @@ function dataCompare(a, b) {
 class SyncClient {
   /**
    * @callback SyncClient~getTimeFunction
-   * @return {Number} monotonic, ever increasing, time in second. When possible
-   *   the server code should define its own origin (i.e. `time=0`) in order to
-   *   maximize the resolution of the clock for a long period of time. When
-   *   `SyncServer~start` is called the clock should be running
-   *   (cf. `audioContext.currentTime` that needs user interaction to start)
+   * @return {Number} strictly monotonic, ever increasing, time in second. When
+   *   possible the server code should define its own origin (i.e. `time=0`) in
+   *   order to maximize the resolution of the clock for a long period of
+   *   time. When `SyncServer~start` is called the clock should already be
+   *   running (cf. `audioContext.currentTime` that needs user interaction to
+   *   start)
    **/
 
   /**
@@ -115,35 +116,79 @@ class SyncClient {
    * @constructs SyncClient
    * @param {SyncClient~getTimeFunction} getTimeFunction
    * @param {Object} [options]
-   * @param {Object} [options.pingTimeOutDelay] range of duration (in seconds) to
-   * consider a ping was not ponged back
-   * @param {Number} [options.pingTimeOutDelay.min=1] min and max must be set together
-   * @param {Number} [options.pingTimeOutDelay.max=30] min and max must be set together
+   * @param {Boolean} [options.estimationMonotonicity=true] When `true`, the
+   *   estimation of the server time is strictly monotonic, and the maximum
+   *   instability of the estimated server time is then limited to
+   *   `options.estimationStability`.
+   * @param {Number} [options.estimationStability=160e-6] This option applies
+   *   only when `options.estimationMonotonicity` is true. The adaptation to the
+   *   estimated server time is then limited by this positive value. 80e-6 (80
+   *   parts per million, PPM) is quite stable, and corresponds to the stability
+   *   of a conventional clock. 160e-6 is moderately adaptive, and corresponds
+   *   to the relative stability of 2 clocks; 500e-6 is quite adaptive, it
+   *   compensates 5 milliseconds in 1 second. It is the maximum value
+   *   (estimationStability must be lower than 500e-6).
+   * @param {Object} [options.pingTimeOutDelay] range of duration (in seconds)
+   *   to consider a ping was not ponged back
+   * @param {Number} [options.pingTimeOutDelay.min=1] min and max must be set
+   *   together
+   * @param {Number} [options.pingTimeOutDelay.max=30] min and max must be set
+   *   together
    * @param {Number} [options.pingSeriesIterations=10] number of ping-pongs in a
-   * series
-   * @param {Number} [options.pingSeriesPeriod=0.250] interval (in seconds) between pings
-   * in a series
-   * @param {Number} [options.pingSeriesDelay] range of interval (in
-   * seconds) between ping-pong series
-   * @param {Number} [options.pingSeriesDelay.min=10] min and max must be set together
-   * @param {Number} [options.pingSeriesDelay.max=20] min and max must be set together
+   *   series
+   * @param {Number} [options.pingSeriesPeriod=0.250] interval (in seconds)
+   *   between pings in a series
+   * @param {Number} [options.pingSeriesDelay] range of interval (in seconds)
+   *   between ping-pong series
+   * @param {Number} [options.pingSeriesDelay.min=10] min and max must be set
+   *   together
+   * @param {Number} [options.pingSeriesDelay.max=20] min and max must be set
+   *   together
    * @param {Number} [options.longTermDataTrainingDuration=120] duration of
-   * training, in seconds, approximately, before using the estimate of
-   * clock frequency
+   *   training, in seconds, approximately, before using the estimate of clock
+   *   frequency
    * @param {Number} [options.longTermDataDuration=900] estimate synchronisation over
-   *  this duration, in seconds, approximately
+   *   this duration, in seconds, approximately
    */
   constructor(getTimeFunction, options = {}) {
-    this.pingTimeoutDelay = options.pingTimeoutDelay
-      || { min: 1, max: 30 };
+
+    /**
+     * The minimum stability serves several purposes:
+     *
+     * 1. The estimation process will restart if the estimated server time
+     * reaches or exceeds this value.
+     *
+     * 2. The adaptation of a new estimation (after a ping-pong series) is also
+     * limited to this value.
+     *
+     * 3. Given 1. and 2., this ensures that the estimation is strictly
+     * monotonic.
+     *
+     * 4. Given 3., the conversion from server time to local time is unique.
+     *
+     * @constant {Number}
+     * @static
+     */
+    SyncClient.minimumStability = 500e-6;
+    // 500 PPM, like an old mechanical clock
+
+    this.estimationMonotonicity =
+      (typeof options.estimationMonotonicity !== 'undefined'
+       ? options.estimationMonotonicity
+       : true);
+    this.estimationStability = options.estimationStability || 160e-6;
+    this.estimationStability = Math.max(0,
+                                        Math.min(SyncClient.minimumStability,
+                                                 this.estimationStability));
+
+    this.pingTimeoutDelay = options.pingTimeoutDelay || { min: 1, max: 30 };
     orderMinMax(this.pingTimeoutDelay);
 
     this.pingSeriesIterations = options.pingSeriesIterations || 10;
     this.pingSeriesPeriod = (typeof options.pingSeriesPeriod !== 'undefined'
                              ? options.pingSeriesPeriod
                              : 0.250);
-    this.pingSeriesDelay = options.pingSeriesDelay
-      || { min: 10, max: 20 };
+    this.pingSeriesDelay = options.pingSeriesDelay || { min: 10, max: 20 };
     orderMinMax(this.pingSeriesDelay);
 
     this.pingDelay = 0; // current delay before next ping
@@ -175,9 +220,13 @@ class SyncClient {
     this.travelDurationMax = 0;
 
     // T(t) = T0 + R * (t - t0)
+    // t(T) = t0 + (T - T0) / R
     this.serverTimeReference = 0; // T0
     this.clientTimeReference = 0; // t0
     this.frequencyRatio = 1; // R
+
+    // For the first estimation, S = T and s = t
+    this._stabilisationReset();
 
     this.pingTimeoutDelay.current = this.pingTimeoutDelay.min;
 
@@ -218,9 +267,9 @@ class SyncClient {
   }
 
   /**
-   * Set connectionStatus, and set this.connectionStatusChangedTime,
-   * to later use see {@linkcode SyncClient~getConnectionStatusDuration}
-   * and {@linkcode SyncClient~reportStatus}.
+   * Set connectionStatus, and set this.connectionStatusChangedTime, to later
+   * use {@linkcode SyncClient~getConnectionStatusDuration} and {@linkcode
+   * SyncClient~reportStatus}.
    *
    * @function SyncClient~setConnectionStatus
    * @param {String} connectionStatus
@@ -270,31 +319,6 @@ class SyncClient {
   }
 
   /**
-   * Process to send ping messages.
-   *
-   * @private
-   * @function SyncClient~__syncLoop
-   * @param {SyncClient~sendFunction} sendFunction
-   * @param {SyncClient~reportFunction} reportFunction
-   */
-  __syncLoop(sendFunction, reportFunction) {
-    clearTimeout(this.timeoutId);
-    ++this.pingId;
-    sendFunction(this.pingId, this.getLocalTime());
-
-    this.timeoutId = setTimeout(() => {
-      // increase timeout duration on timeout, to avoid overflow
-      this.pingTimeoutDelay.current = Math.min(this.pingTimeoutDelay.current * 2,
-                                               this.pingTimeoutDelay.max);
-      log('sync:ping timeout > %s', this.pingTimeoutDelay.current);
-      this.setConnectionStatus('offline');
-      this.reportStatus(reportFunction);
-      // retry (yes, always increment pingId)
-      this.__syncLoop(sendFunction, reportFunction);
-    }, Math.ceil(1000 * this.pingTimeoutDelay.current));
-  }
-
-  /**
    * Start a synchronisation process by registering the receive
    * function passed as second parameter. Then, send regular messages
    * to the server, using the send function passed as first parameter.
@@ -339,7 +363,7 @@ class SyncClient {
         this.seriesDataNextIndex = (++this.seriesDataNextIndex) % this.seriesDataLength;
 
         // log('ping %s, travel = %s, offset = %s, client = %s, server = %s',
-        //       pingId, travelDuration, offsetTime, clientTime, serverTime);
+        //     pingId, travelDuration, offsetTime, clientTime, serverTime);
 
         // end of a series
         if (this.pingSeriesCount >= this.pingSeriesIterations
@@ -381,6 +405,9 @@ class SyncClient {
                                             Math.min(quick, median + 1) + 1);
           this.timeOffset = mean(aroundMedian, 1);
 
+          const updateClientTime = this.getLocalTime();
+          const updateServerTimeBefore = this.getSyncTime(updateClientTime);
+
           if(this.status === 'startup'
              || (this.status === 'training'
                  && this.getStatusDuration() < this.longTermDataTrainingDuration) ) {
@@ -388,11 +415,16 @@ class SyncClient {
             this.serverTimeReference = this.timeOffset;
             this.clientTimeReference = 0;
             this.frequencyRatio = 1;
+            if(this.status !== 'startup') {
+              // no stabilisation on startup
+              this._stabilisationUpdate(updateClientTime, updateServerTimeBefore);
+            }
+
             this.setStatus('training');
             log('T = %s + %s * (%s - %s) = %s',
-                  this.serverTimeReference, this.frequencyRatio,
-                  seriesClientTime, this.clientTimeReference,
-                  this.getSyncTime(seriesClientTime));
+                this.serverTimeReference, this.frequencyRatio,
+                seriesClientTime, this.clientTimeReference,
+                this.getSyncTime(seriesClientTime));
           }
 
           if((this.status === 'training'
@@ -412,16 +444,19 @@ class SyncClient {
               this.clientTimeReference = regClientTime;
               this.serverTimeReference = regServerTime;
 
-              // 0.05% is a lot (500 PPM, like an old mechanical clock)
-              if(this.frequencyRatio > 0.9995 && this.frequencyRatio < 1.0005) {
+              // exclude bounds, to ensure strict monotonicity
+              if(this.frequencyRatio > 1 - SyncClient.minimumStability
+                 && this.frequencyRatio < 1 + SyncClient.minimumStability) {
                 this.setStatus('sync');
+                this._stabilisationUpdate(updateClientTime, updateServerTimeBefore);
               } else {
                 log('clock frequency ratio out of sync: %s, training again',
-                      this.frequencyRatio);
+                    this.frequencyRatio);
                 // start the training again from the last series
                 this.serverTimeReference = this.timeOffset; // offset only
                 this.clientTimeReference = 0;
                 this.frequencyRatio = 1;
+                this._stabilisationReset();
                 this.setStatus('training');
 
                 this.longTermData[0]
@@ -433,9 +468,9 @@ class SyncClient {
             }
 
             log('T = %s + %s * (%s - %s) = %s',
-                  this.serverTimeReference, this.frequencyRatio,
-                  seriesClientTime, this.clientTimeReference,
-                  this.getSyncTime(seriesClientTime) );
+                this.serverTimeReference, this.frequencyRatio,
+                seriesClientTime, this.clientTimeReference,
+                this.getSyncTime(seriesClientTime) );
           }
 
           this.travelDuration = mean(sorted, 0);
@@ -449,12 +484,12 @@ class SyncClient {
         }
 
         this.timeoutId = setTimeout(() => {
-          this.__syncLoop(sendFunction, reportFunction);
+          this._syncLoop(sendFunction, reportFunction);
         }, Math.ceil(1000 * this.pingDelay));
       }  // ping and pong ID match
     }); // receive function
 
-    this.__syncLoop(sendFunction, reportFunction);
+    this._syncLoop(sendFunction, reportFunction);
   }
 
   /**
@@ -465,13 +500,30 @@ class SyncClient {
    * @returns {Number} local time, in seconds
    */
   getLocalTime(syncTime) {
-    if (typeof syncTime !== 'undefined') {
-      // conversion: t(T) = t0 + (T - T0) / R
-      return this.clientTimeReference
-        + (syncTime - this.serverTimeReference) / this.frequencyRatio;
-    } else {
-      // read local clock
+    if (typeof syncTime === 'undefined') {
+      // read t from local clock
       return this.getTimeFunction();
+    } else {
+      // S, stabilised sync time
+      let T = syncTime;
+
+      if(this.estimationMonotonicity
+         && T < this.stabilisationServerTimeEnd) {
+        // remove stabilisation before conversion
+        // S -> T
+        const Sss = Math.max(this.stabilisationServerTimeStart, T);
+
+        const stabilisation = this.stabilisationOffset
+              * (this.stabilisationServerTimeEnd - Sss)
+              / (this.stabilisationServerTimeEnd - this.stabilisationServerTimeStart);
+
+        T -= stabilisation;
+      }
+
+      // conversion: t(T) = t0 + (T - T0) / R
+      // T -> t
+      return this.clientTimeReference
+        + (T - this.serverTimeReference) / this.frequencyRatio;
     }
   }
 
@@ -484,9 +536,127 @@ class SyncClient {
    */
   getSyncTime(localTime = this.getLocalTime()) {
     // always convert: T(t) = T0 + R * (t - t0)
-    return this.serverTimeReference
-      + this.frequencyRatio * (localTime - this.clientTimeReference);
+    // t -> T
+    let T = this.serverTimeReference
+          + this.frequencyRatio * (localTime - this.clientTimeReference);
+
+    if(this.estimationMonotonicity
+       && localTime < this.stabilisationClientTimeEnd) {
+      const t = Math.max(this.stabilisationClientTimeStart, localTime);
+      // add stabilisation after conversion
+      // T -> S
+      const stabilisation = this.stabilisationOffset
+            * (this.stabilisationClientTimeEnd - t)
+            / (this.stabilisationClientTimeEnd - this.stabilisationClientTimeStart);
+
+      T += stabilisation;
+    }
+
+    return T;
   }
+
+  /**
+   * Process to send ping messages.
+   *
+   * @private
+   * @function SyncClient~_syncLoop
+   * @param {SyncClient~sendFunction} sendFunction
+   * @param {SyncClient~reportFunction} reportFunction
+   */
+  _syncLoop(sendFunction, reportFunction) {
+    clearTimeout(this.timeoutId);
+    ++this.pingId;
+    sendFunction(this.pingId, this.getLocalTime());
+
+    this.timeoutId = setTimeout(() => {
+      // increase timeout duration on timeout, to avoid overflow
+      this.pingTimeoutDelay.current = Math.min(this.pingTimeoutDelay.current * 2,
+                                               this.pingTimeoutDelay.max);
+      log('sync:ping timeout > %s', this.pingTimeoutDelay.current);
+      this.setConnectionStatus('offline');
+      this.reportStatus(reportFunction);
+      // retry (yes, always increment pingId)
+      this._syncLoop(sendFunction, reportFunction);
+    }, Math.ceil(1000 * this.pingTimeoutDelay.current));
+  }
+
+
+  _stabilisationReset() {
+    // To stabilise the estimation of synchronised time, compensate the
+    // difference of the last estimation of the server time to the current
+    // one. The compensation is full at the start time (and before), and 0 at
+    // the end time (and after).
+    this.stabilisationOffset = 0; // So, full compensation
+
+    // S(t) = T(t) + So * (tse - t) / (tse - tss) , with t in ]tss, tse[
+    // S(t) = T(t) + So, with t <= tss
+    // S(t) = T(t), with t >= tse
+    this.stabilisationClientTimeStart = -Infinity; // tss
+    this.stabilisationClientTimeEnd = -Infinity; // tse
+
+    // t(T) = t(S - So * (Sse - S) / (Sse - Sss)), with S in ]Sss, Sse[
+    // t(T) = t(S - So), with S <= Sss
+    // t(T) = t(S)
+
+    // stabilised times, not direct server times
+    this.stabilisationServerTimeStart = -Infinity; // Sss
+    this.stabilisationServerTimeEnd = -Infinity; // Sse
+  }
+
+  /**
+   * This function must be called after synchronisation parameters updated, to
+   * update stabilisation parameters.
+   *
+   * @private
+   * @function SyncClient~_stabilisationUpdate
+   * @param {Number} updateClientTime local time when synchronisation updated
+   * @param {Number} updateServerTimeBefore estimated server time just before
+   *   synchronisation update (with old parameters)
+   */
+  _stabilisationUpdate(updateClientTime, updateServerTimeBefore) {
+    if(!this.estimationMonotonicity || this.status === 'startup') {
+      // no stabilisation on startup
+      return;
+    }
+
+    // estimated server time just after synchronisation update
+    // with new parameters and without stabilisation (yet)
+    this._stabilisationReset();
+    const updateServerTimeAfter = this.getSyncTime(updateClientTime);
+
+    // So is a compensation added to syncTime
+    this.stabilisationOffset = updateServerTimeBefore - updateServerTimeAfter;
+
+    // tss
+    this.stabilisationClientTimeStart = updateClientTime;
+
+    // tse
+    this.stabilisationClientTimeEnd
+      = Math.abs(updateServerTimeBefore - updateServerTimeAfter)
+      / this.estimationStability
+      + this.stabilisationClientTimeStart;
+
+    // Full compensation at Sss, to match new server time wit new one
+    // Sss = Tss + So
+    this.stabilisationServerTimeStart = updateServerTimeBefore;
+
+    // Sse
+    // No compensation for S >= Sse
+    // As getSyncTime does _not_ use stabilisation server times,
+    // the next call is possible to bootstrap getLocalTime
+    this.stabilisationServerTimeEnd
+      = this.getSyncTime(this.stabilisationClientTimeEnd);
+
+    log('stabilisation updated',
+        'So = ', this.stabilisationOffset,
+        ',', 'tss = ', this.stabilisationClientTimeStart,
+        ',', 'tse = ', this.stabilisationClientTimeEnd,
+        ',', 'Sss = ', this.stabilisationServerTimeStart,
+        ',', 'Sse = ', this.stabilisationServerTimeEnd,
+        ',', 'Tbefore = ', updateServerTimeBefore,
+        ',', 'Tafter = ', updateServerTimeAfter);
+  }
+
 }
 
 export default SyncClient;
