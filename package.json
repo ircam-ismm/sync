@@ -26,6 +26,7 @@
     "watch": "node ./bin/runner --watch"
   },
   "dependencies": {
+    "babel-runtime": "^6.26.0",
     "debug": "3.2.6"
   },
   "devDependencies": {
