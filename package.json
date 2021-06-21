@@ -26,6 +26,9 @@
     "toc": "markdown-toc -i README.md",
     "api": "node bin/insert-api.js"
   },
+  "dependencies": {
+    "debug": "3.2.6"
+  },
   "dependencies": {},
   "devDependencies": {
     "@babel/cli": "^7.4.4",
