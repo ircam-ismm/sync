@@ -1,6 +1,3 @@
-import debug from 'debug';
-const log = debug('sync');
-
 ////// helpers
 
 /**
@@ -269,7 +266,7 @@ class SyncClient {
       // increase timeout duration on timeout, to avoid overflow
       this.pingTimeoutDelay.current = Math.min(this.pingTimeoutDelay.current * 2,
                                                this.pingTimeoutDelay.max);
-      log('sync:ping timeout > %s', this.pingTimeoutDelay.current);
+      // log('sync:ping timeout > %s', this.pingTimeoutDelay.current);
       this.setConnectionStatus('offline');
       this.reportStatus(reportFunction);
       // retry (yes, always increment pingId)
@@ -371,10 +368,10 @@ class SyncClient {
             this.clientTimeReference = 0;
             this.frequencyRatio = 1;
             this.setStatus('training');
-            log('T = %s + %s * (%s - %s) = %s',
-                  this.serverTimeReference, this.frequencyRatio,
-                  seriesClientTime, this.clientTimeReference,
-                  this.getSyncTime(seriesClientTime));
+            // log('T = %s + %s * (%s - %s) = %s',
+            //       this.serverTimeReference, this.frequencyRatio,
+            //       seriesClientTime, this.clientTimeReference,
+            //       this.getSyncTime(seriesClientTime));
           }
 
           if((this.status === 'training'
@@ -398,8 +395,8 @@ class SyncClient {
               if(this.frequencyRatio > 0.9995 && this.frequencyRatio < 1.0005) {
                 this.setStatus('sync');
               } else {
-                log('clock frequency ratio out of sync: %s, training again',
-                      this.frequencyRatio);
+                // log('clock frequency ratio out of sync: %s, training again',
+                //       this.frequencyRatio);
                 // start the training again from the last series
                 this.serverTimeReference = this.timeOffset; // offset only
                 this.clientTimeReference = 0;
@@ -414,10 +411,10 @@ class SyncClient {
               }
             }
 
-            log('T = %s + %s * (%s - %s) = %s',
-                  this.serverTimeReference, this.frequencyRatio,
-                  seriesClientTime, this.clientTimeReference,
-                  this.getSyncTime(seriesClientTime) );
+            // log('T = %s + %s * (%s - %s) = %s',
+            //       this.serverTimeReference, this.frequencyRatio,
+            //       seriesClientTime, this.clientTimeReference,
+            //       this.getSyncTime(seriesClientTime) );
           }
 
           this.travelDuration = mean(sorted, 0);

@@ -1,5 +1,6 @@
 {
-  "sourceMap": "inline",
-  "presets": ["env"],
-  "plugins": ["transform-runtime", "transform-es2015-modules-commonjs"]
+  "plugins": [
+    "@babel/plugin-transform-modules-commonjs",
+    "@babel/plugin-proposal-export-default-from"
+  ]
 }
