@@ -176,8 +176,8 @@ process.
     * [new SyncClient(getTimeFunction, [options])](#new_SyncClient_new)
     * _instance_
         * [.start(sendFunction, receiveFunction, reportFunction)](#SyncClient+start)
-        * [.getLocalTime(syncTime)](#SyncClient+getLocalTime) ⇒ <code>Number</code>
-        * [.getSyncTime(localTime)](#SyncClient+getSyncTime) ⇒ <code>Number</code>
+        * [.getLocalTime([syncTime])](#SyncClient+getLocalTime) ⇒ <code>Number</code>
+        * [.getSyncTime([localTime])](#SyncClient+getSyncTime) ⇒ <code>Number</code>
     * _static_
         * [.minimumStability](#SyncClient.minimumStability) : <code>Number</code>
     * _inner_
@@ -225,27 +225,27 @@ to the server, using the send function passed as first parameter.
 
 <a name="SyncClient+getLocalTime"></a>
 
-#### syncClient.getLocalTime(syncTime) ⇒ <code>Number</code>
+#### syncClient.getLocalTime([syncTime]) ⇒ <code>Number</code>
 Get local time, or convert a synchronised time to a local time.
 
 **Kind**: instance method of [<code>SyncClient</code>](#SyncClient)  
-**Returns**: <code>Number</code> - local time, in seconds  
+**Returns**: <code>Number</code> - - local time, in seconds  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| syncTime | <code>Number</code> | undefined to get local time |
+| [syncTime] | <code>Number</code> | Get local time according to given  given `syncTime`, if `syncTime` is not defined returns current local time. |
 
 <a name="SyncClient+getSyncTime"></a>
 
-#### syncClient.getSyncTime(localTime) ⇒ <code>Number</code>
+#### syncClient.getSyncTime([localTime]) ⇒ <code>Number</code>
 Get synchronised time, or convert a local time to a synchronised time.
 
 **Kind**: instance method of [<code>SyncClient</code>](#SyncClient)  
-**Returns**: <code>Number</code> - synchronised time, in seconds.  
+**Returns**: <code>Number</code> - - synchronised time, in seconds.  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| localTime | <code>Number</code> | undefined to get synchronised time |
+| [localTime] | <code>Number</code> | Get local time according to given  given `syncTime`, if `localTime` is not defined returns current sync time. |
 
 <a name="SyncClient.minimumStability"></a>
 
@@ -338,8 +338,8 @@ actually start a synchronisation process.
     * [new SyncServer(function)](#new_SyncServer_new)
     * _instance_
         * [.start(sendFunction, receiveFunction)](#SyncServer+start)
-        * [.getLocalTime(syncTime)](#SyncServer+getLocalTime) ⇒ <code>Number</code>
-        * [.getSyncTime(localTime)](#SyncServer+getSyncTime) ⇒ <code>Number</code>
+        * [.getLocalTime([syncTime])](#SyncServer+getLocalTime) ⇒ <code>Number</code>
+        * [.getSyncTime([localTime])](#SyncServer+getSyncTime) ⇒ <code>Number</code>
     * _inner_
         * [~getTimeFunction](#SyncServer..getTimeFunction) ⇒ <code>Number</code>
         * [~sendFunction](#SyncServer..sendFunction) : <code>function</code>
@@ -370,27 +370,29 @@ send a reply using the function passed as first parameter.
 
 <a name="SyncServer+getLocalTime"></a>
 
-#### syncServer.getLocalTime(syncTime) ⇒ <code>Number</code>
+#### syncServer.getLocalTime([syncTime]) ⇒ <code>Number</code>
 Get local time, or convert a synchronised time to a local time.
 
 **Kind**: instance method of [<code>SyncServer</code>](#SyncServer)  
-**Returns**: <code>Number</code> - local time, in seconds  
+**Returns**: <code>Number</code> - - local time, in seconds  
+**Note**: - `getLocalTime` and `getSyncTime` are basically aliases on the server.  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| syncTime | <code>Number</code> | undefined to get local time |
+| [syncTime] | <code>Number</code> | Get local time according to given  given `syncTime`, if `syncTime` is not defined returns current local time. |
 
 <a name="SyncServer+getSyncTime"></a>
 
-#### syncServer.getSyncTime(localTime) ⇒ <code>Number</code>
+#### syncServer.getSyncTime([localTime]) ⇒ <code>Number</code>
 Get synchronised time, or convert a local time to a synchronised time.
 
 **Kind**: instance method of [<code>SyncServer</code>](#SyncServer)  
-**Returns**: <code>Number</code> - synchronised time, in seconds.  
+**Returns**: <code>Number</code> - - synchronised time, in seconds.  
+**Note**: - `getLocalTime` and `getSyncTime` are basically aliases on the server.  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| localTime | <code>Number</code> | undefined to get synchronised time |
+| [localTime] | <code>Number</code> | Get local time according to given  given `syncTime`, if `localTime` is not defined returns current sync time. |
 
 <a name="SyncServer..getTimeFunction"></a>
 

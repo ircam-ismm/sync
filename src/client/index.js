@@ -523,8 +523,9 @@ class SyncClient {
   /**
    * Get local time, or convert a synchronised time to a local time.
    *
-   * @param {Number} syncTime undefined to get local time
-   * @returns {Number} local time, in seconds
+   * @param {Number} [syncTime=undefined] - Get local time according to given
+   *  given `syncTime`, if `syncTime` is not defined returns current local time.
+   * @returns {Number} - local time, in seconds
    */
   getLocalTime(syncTime) {
     if (typeof syncTime === 'undefined') {
@@ -557,8 +558,9 @@ class SyncClient {
   /**
    * Get synchronised time, or convert a local time to a synchronised time.
    *
-   * @param {Number} localTime undefined to get synchronised time
-   * @returns {Number} synchronised time, in seconds.
+   * @param {Number} [localTime=undefined]-  Get local time according to given
+   *  given `syncTime`, if `localTime` is not defined returns current sync time.
+   * @returns {Number} - synchronised time, in seconds.
    */
   getSyncTime(localTime = this.getLocalTime()) {
     // always convert: T(t) = T0 + R * (t - t0)
