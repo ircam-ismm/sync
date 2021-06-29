@@ -126,7 +126,9 @@ socket.addEventListener('open', () => {
     });
   }
 
-  // check synchronization status
+  // check the synchronization status, when this function is called for the 
+  // first time, you can consider the synchronization process properly 
+  // initiated.
   const statusFunction = status => console.log(status);
   // start synchronization process
   syncClient.start(sendFunction, receiveFunction, statusFunction);
