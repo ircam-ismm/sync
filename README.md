@@ -229,7 +229,7 @@ to the server, using the send function passed as first parameter.
 Get local time, or convert a synchronised time to a local time.
 
 **Kind**: instance method of [<code>SyncClient</code>](#SyncClient)  
-**Returns**: <code>Number</code> - - local time, in seconds  
+**Returns**: <code>Number</code> - local time, in seconds  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -241,7 +241,7 @@ Get local time, or convert a synchronised time to a local time.
 Get synchronised time, or convert a local time to a synchronised time.
 
 **Kind**: instance method of [<code>SyncClient</code>](#SyncClient)  
-**Returns**: <code>Number</code> - - synchronised time, in seconds.  
+**Returns**: <code>Number</code> - synchronised time, in seconds.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -374,7 +374,7 @@ send a reply using the function passed as first parameter.
 Get local time, or convert a synchronised time to a local time.
 
 **Kind**: instance method of [<code>SyncServer</code>](#SyncServer)  
-**Returns**: <code>Number</code> - - local time, in seconds  
+**Returns**: <code>Number</code> - local time, in seconds  
 **Note**: - `getLocalTime` and `getSyncTime` are basically aliases on the server.  
 
 | Param | Type | Description |
@@ -387,7 +387,7 @@ Get local time, or convert a synchronised time to a local time.
 Get synchronised time, or convert a local time to a synchronised time.
 
 **Kind**: instance method of [<code>SyncServer</code>](#SyncServer)  
-**Returns**: <code>Number</code> - - synchronised time, in seconds.  
+**Returns**: <code>Number</code> - synchronised time, in seconds.  
 **Note**: - `getLocalTime` and `getSyncTime` are basically aliases on the server.  
 
 | Param | Type | Description |

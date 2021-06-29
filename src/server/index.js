@@ -85,7 +85,7 @@ class SyncServer {
    *
    * @param {Number} [syncTime=undefined] - Get local time according to given
    *  given `syncTime`, if `syncTime` is not defined returns current local time.
-   * @returns {Number} - local time, in seconds
+   * @returns {Number} local time, in seconds
    */
   getLocalTime(syncTime) {
     if (typeof syncTime !== 'undefined') {
@@ -100,9 +100,9 @@ class SyncServer {
    *
    * @note - `getLocalTime` and `getSyncTime` are basically aliases on the server.
    *
-   * @param {Number} [localTime=undefined]-  Get local time according to given
+   * @param {Number} [localTime=undefined] - Get local time according to given
    *  given `syncTime`, if `localTime` is not defined returns current sync time.
-   * @returns {Number} - synchronised time, in seconds.
+   * @returns {Number} synchronised time, in seconds.
    */
   getSyncTime(localTime) {
     return this.getLocalTime(localTime); // sync time is local, here
