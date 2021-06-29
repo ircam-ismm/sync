@@ -1,4 +1,4 @@
-# sync
+# `@ircam/sync`
 
 > Module that synchronises all clients to a server master clock. 
 
