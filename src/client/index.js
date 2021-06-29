@@ -558,8 +558,8 @@ class SyncClient {
   /**
    * Get synchronised time, or convert a local time to a synchronised time.
    *
-   * @param {Number} [localTime=undefined] - Get local time according to given
-   *  given `syncTime`, if `localTime` is not defined returns current sync time.
+   * @param {Number} [localTime=undefined] - Get sync time according to given
+   *  given `localTime`, if `localTime` is not defined returns current sync time.
    * @returns {Number} synchronised time, in seconds.
    */
   getSyncTime(localTime = this.getLocalTime()) {
