@@ -245,7 +245,7 @@ Get synchronised time, or convert a local time to a synchronised time.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| [localTime] | <code>Number</code> | Get local time according to given  given `syncTime`, if `localTime` is not defined returns current sync time. |
+| [localTime] | <code>Number</code> | Get sync time according to given  given `localTime`, if `localTime` is not defined returns current sync time. |
 
 <a name="SyncClient.minimumStability"></a>
 
@@ -392,7 +392,7 @@ Get synchronised time, or convert a local time to a synchronised time.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| [localTime] | <code>Number</code> | Get local time according to given  given `syncTime`, if `localTime` is not defined returns current sync time. |
+| [localTime] | <code>Number</code> | Get sync time according to given  given `localTime`, if `localTime` is not defined returns current sync time. |
 
 <a name="SyncServer..getTimeFunction"></a>
 
