@@ -21,7 +21,7 @@ class SyncServer {
 
   /**
    * @callback SyncServer~sendFunction
-   * @see {@linkcode SyncClient~receiveFunction}
+   * @see {@link SyncClient~receiveFunction}
    * @param {Number} pingId unique identifier
    * @param {Number} clientPingTime time-stamp of ping emission
    * @param {Number} serverPingTime time-stamp of ping reception
@@ -30,7 +30,7 @@ class SyncServer {
 
   /**
    * @callback SyncServer~receiveFunction
-   * @see {@linkcode SyncClient~sendFunction}
+   * @see {@link SyncClient~sendFunction}
    * @param {SyncServer~receiveCallback} receiveCallback called on
    * each message matching messageType.
    **/
@@ -42,7 +42,7 @@ class SyncServer {
    **/
 
   /**
-   * This is the constructor. See {@linkcode SyncServer~start} method to
+   * This is the constructor. See {@link SyncServer~start} method to
    * actually start a synchronisation process.
    *
    * @constructs SyncServer

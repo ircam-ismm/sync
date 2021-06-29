@@ -65,14 +65,14 @@ class SyncClient {
 
   /**
    * @callback SyncClient~sendFunction
-   * @see {@linkcode SyncServer~receiveFunction}
+   * @see {@link SyncServer~receiveFunction}
    * @param {Number} pingId unique identifier
    * @param {Number} clientPingTime time-stamp of ping emission
    **/
 
   /**
    * @callback SyncClient~receiveFunction
-   * @see {@linkcode SyncServer~sendFunction}
+   * @see {@link SyncServer~sendFunction}
    * @param {SyncClient~receiveCallback} receiveCallback called on each message
    *   matching messageType.
    **/
@@ -110,7 +110,7 @@ class SyncClient {
    **/
 
   /**
-   * This is the constructor. See {@linkcode SyncClient~start} method to
+   * This is the constructor. See {@link SyncClient~start} method to
    * actually start a synchronisation process.
    *
    * @constructs SyncClient
@@ -241,8 +241,8 @@ class SyncClient {
 
   /**
    * Set status, and set this.statusChangedTime, to later
-   * use see {@linkcode SyncClient~getStatusDuration}
-   * and {@linkcode SyncClient~reportStatus}.
+   * use see {@link SyncClient~getStatusDuration}
+   * and {@link SyncClient~reportStatus}.
    *
    * @function SyncClient~setStatus
    * @param {String} status
@@ -257,7 +257,7 @@ class SyncClient {
   }
 
   /**
-   * Get time since last status change. See {@linkcode SyncClient~setStatus}
+   * Get time since last status change. See {@link SyncClient~setStatus}
    *
    * @function SyncClient~getStatusDuration
    * @returns {Number} time, in seconds, since last status change.
@@ -268,8 +268,8 @@ class SyncClient {
 
   /**
    * Set connectionStatus, and set this.connectionStatusChangedTime, to later
-   * use {@linkcode SyncClient~getConnectionStatusDuration} and {@linkcode
-   * SyncClient~reportStatus}.
+   * use {@link SyncClient~getConnectionStatusDuration} and
+   * {@link SyncClient~reportStatus}.
    *
    * @function SyncClient~setConnectionStatus
    * @param {String} connectionStatus
@@ -285,7 +285,7 @@ class SyncClient {
 
   /**
    * Get time since last connectionStatus change.
-   * See {@linkcode SyncClient~setConnectionStatus}
+   * See {@link SyncClient~setConnectionStatus}
    *
    * @function SyncClient~getConnectionStatusDuration
    * @returns {Number} time, in seconds, since last connectionStatus change.
