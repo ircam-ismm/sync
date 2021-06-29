@@ -167,12 +167,12 @@ class SyncClient {
      * monotonic.
      * 4. Given 3., the conversion from server time to local time is unique.
      *
+     * @private
      * @constant {Number}
-     * @value 500 PPM, like an old mechanical clock
+     * @value 500e-6 is 500 PPM, like an old mechanical clock
      * @static
      */
     SyncClient.minimumStability = 500e-6;
-    // 500 PPM, like an old mechanical clock
 
     this.estimationMonotonicity =
       (typeof options.estimationMonotonicity !== 'undefined'
@@ -297,8 +297,9 @@ class SyncClient {
   }
 
   /**
-   * Report the status of the synchronisation process, if
-   * reportFunction is defined.
+   * Report the status of the synchronisation process, if reportFunction is
+   * defined. It is called each time the estimation of the synchronised time
+   * updates.
    *
    * @private
    * @param {SyncClient~reportFunction} reportFunction
@@ -352,7 +353,8 @@ class SyncClient {
    * @param {SyncClient~sendFunction} sendFunction
    * @param {SyncClient~receiveFunction} receiveFunction to register
    * @param {SyncClient~reportFunction} reportFunction if defined, is called to
-   *   report the status, on each status change
+   *   report the status, on each status change, and each time the estimation of
+   *   the synchronised time updates.
    */
   start(sendFunction, receiveFunction, reportFunction) {
     this.setStatus('startup');
