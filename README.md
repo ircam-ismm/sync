@@ -375,7 +375,7 @@ Get local time, or convert a synchronised time to a local time.
 
 **Kind**: instance method of [<code>SyncServer</code>](#SyncServer)  
 **Returns**: <code>Number</code> - local time, in seconds  
-**Note**: - `getLocalTime` and `getSyncTime` are basically aliases on the server.  
+**Note**: `getLocalTime` and `getSyncTime` are basically aliases on the server.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -388,7 +388,7 @@ Get synchronised time, or convert a local time to a synchronised time.
 
 **Kind**: instance method of [<code>SyncServer</code>](#SyncServer)  
 **Returns**: <code>Number</code> - synchronised time, in seconds.  
-**Note**: - `getLocalTime` and `getSyncTime` are basically aliases on the server.  
+**Note**: `getLocalTime` and `getSyncTime` are basically aliases on the server.  
 
 | Param | Type | Description |
 | --- | --- | --- |

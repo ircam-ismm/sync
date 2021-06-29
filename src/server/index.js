@@ -81,7 +81,7 @@ class SyncServer {
   /**
    * Get local time, or convert a synchronised time to a local time.
    *
-   * @note - `getLocalTime` and `getSyncTime` are basically aliases on the server.
+   * @note `getLocalTime` and `getSyncTime` are basically aliases on the server.
    *
    * @param {Number} [syncTime=undefined] - Get local time according to given
    *  given `syncTime`, if `syncTime` is not defined returns current local time.
@@ -98,7 +98,7 @@ class SyncServer {
   /**
    * Get synchronised time, or convert a local time to a synchronised time.
    *
-   * @note - `getLocalTime` and `getSyncTime` are basically aliases on the server.
+   * @note `getLocalTime` and `getSyncTime` are basically aliases on the server.
    *
    * @param {Number} [localTime=undefined] - Get local time according to given
    *  given `syncTime`, if `localTime` is not defined returns current sync time.
