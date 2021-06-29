@@ -13,15 +13,15 @@ time at the last moment to trigger events, in order to avoid drift.
 <!-- toc -->
 
 - [Install](#install)
-- [Documentation](#documentation)
-  * [Server Import](#server-import)
-  * [Client Import](#client-import)
+- [Example use](#example-use)
+  * [Server-side](#server-side)
+  * [Client-side](#client-side)
+- [API](#api)
   * [Classes](#classes)
   * [SyncClient](#syncclient)
   * [SyncServer](#syncserver)
-- [Publication](#publication)
-- [Example Uses](#example-uses)
 - [Caveats](#caveats)
+- [Publication](#publication)
 - [License](#license)
 
 <!-- tocstop -->
@@ -32,19 +32,114 @@ time at the last moment to trigger events, in order to avoid drift.
 npm install [--save] @ircam/sync
 ```
 
-## Documentation
+## Example use
 
-### Server Import
+This example show the usage of the library through a simple websocket transport with a naive _ad-hoc_ ping / pong protocol.
+
+### Server-side
 
 ```js
 import { SyncServer } from '@ircam/sync';
+
+const startTime = process.hrtime();
+const getTimeFunction = () => {
+  const now = process.hrtime(startTime);
+  return now[0] + now[1] * 1e-9;
+}
+
+// 
+const syncServer = new SyncServer(getTimeFunction);
+
+const wss = new ws.Server({ server: httpServer });
+wss.on('connection', (socket) => {
+  // the `receiveFunction` and `sendFunction` functions aim at abstracting 
+  // the transport layer between the SyncServer and the SyncClient
+  const receiveFunction = callback => {
+    socket.on('message', request => {
+      request = JSON.parse(request);
+
+      if (request[0] === 0) { // this is a ping
+        // parse request
+        const pingId = request[1];
+        const clientPingTime = request[2];
+        // notify the SyncServer
+        callback(pingId, clientPingTime);
+      }
+    });
+  };
+
+  const sendFunction = (pingId, clientPingTime, serverPingTime, serverPongTime) => {
+      // create response object
+      const response = [
+        1, // this is a pong
+        pingId,
+        clientPingTime,
+        serverPingTime,
+        serverPongTime,
+      ];
+      // send formatted response to the client
+      socket.send(JSON.stringify(response));
+  };
+
+  syncServer.start(sendFunction, receiveFunction);
+});
 ```
 
-### Client Import
+### Client-side
 
 ```js
 import { SyncClient } from '@ircam/sync';
+
+// return the local time in second
+const getTimeFunction = () => {
+  return performance.now() / 1000;
+}
+
+// init sync client
+const syncClient = new SyncClient(getTimeFunction);
+// init socket client
+const socket = new WebSocket(url);
+
+socket.addEventListener('open', () => {
+  const sendFunction = (pingId, clientPingTime) => {
+    const request = [
+      0, // this is a ping
+      pingId,
+      clientPingTime,
+    ];
+
+    socket.send(JSON.stringify(request));
+  };
+
+  const receiveFunction = callback => {
+    socket.addEventListener('message', e => {
+      const response = JSON.parse(e.data);
+
+      if (response[0] === 1) { // this is a pong
+        const pingId = response[1];
+        const clientPingTime = response[2];
+        const serverPingTime = response[3];
+        const serverPongTime = response[4];
+
+        callback(pingId, clientPingTime, serverPingTime, serverPongTime);
+      }
+    });
+  }
+
+  // check synchronization status
+  const statusFunction = status => console.log(status);
+  // start synchronization process
+  syncClient.start(sendFunction, receiveFunction, statusFunction);
+});
+
+// monitor the synchronized clock
+setInterval(() => {
+  const syncTime = syncClient.getSyncTime();
+  console.log(syncTime);
+}, 100);
 ```
+
+## API
 
 <!-- api -->
 
@@ -52,29 +147,38 @@ import { SyncClient } from '@ircam/sync';
 
 <dl>
 <dt><a href="#SyncClient">SyncClient</a></dt>
-<dd></dd>
+<dd><p><code>SyncClient</code> instances synchronize to the clock provided
+by the <a href="#SyncServer">SyncServer</a> instance. The default estimation behavior is
+strictly monotonic and guarantee a unique conversation from server time
+to local time.</p>
+</dd>
 <dt><a href="#SyncServer">SyncServer</a></dt>
-<dd></dd>
+<dd><p>The <code>SyncServer</code> instance provides a clock on which <a href="#SyncClient">SyncClient</a>
+instances synchronize.</p>
+</dd>
 </dl>
 
 <a name="SyncClient"></a>
 
 ### SyncClient
+`SyncClient` instances synchronize to the clock provided
+by the [SyncServer](#SyncServer) instance. The default estimation behavior is
+strictly monotonic and guarantee a unique conversation from server time
+to local time.
+
 **Kind**: global class  
+**See**: [SyncClient~start](SyncClient~start) method to actually start a synchronisation
+process.  
 
 * [SyncClient](#SyncClient)
     * [new SyncClient(getTimeFunction, [options])](#new_SyncClient_new)
+    * _instance_
+        * [.start(sendFunction, receiveFunction, reportFunction)](#SyncClient+start)
+        * [.getLocalTime(syncTime)](#SyncClient+getLocalTime) ⇒ <code>Number</code>
+        * [.getSyncTime(localTime)](#SyncClient+getSyncTime) ⇒ <code>Number</code>
     * _static_
         * [.minimumStability](#SyncClient.minimumStability) : <code>Number</code>
     * _inner_
-        * [~setStatus(status)](#SyncClient..setStatus) ⇒ <code>Object</code>
-        * [~getStatusDuration()](#SyncClient..getStatusDuration) ⇒ <code>Number</code>
-        * [~setConnectionStatus(connectionStatus)](#SyncClient..setConnectionStatus) ⇒ <code>Object</code>
-        * [~getConnectionStatusDuration()](#SyncClient..getConnectionStatusDuration) ⇒ <code>Number</code>
-        * [~reportStatus(reportFunction)](#SyncClient..reportStatus)
-        * [~start(sendFunction, receiveFunction, reportFunction)](#SyncClient..start)
-        * [~getLocalTime(syncTime)](#SyncClient..getLocalTime) ⇒ <code>Number</code>
-        * [~getSyncTime(localTime)](#SyncClient..getSyncTime) ⇒ <code>Number</code>
         * [~getTimeFunction](#SyncClient..getTimeFunction) ⇒ <code>Number</code>
         * [~sendFunction](#SyncClient..sendFunction) : <code>function</code>
         * [~receiveFunction](#SyncClient..receiveFunction) : <code>function</code>
@@ -84,16 +188,11 @@ import { SyncClient } from '@ircam/sync';
 <a name="new_SyncClient_new"></a>
 
 #### new SyncClient(getTimeFunction, [options])
-This is the constructor. See [start](#SyncClient..start) method to
-actually start a synchronisation process.
-
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | getTimeFunction | [<code>getTimeFunction</code>](#SyncClient..getTimeFunction) |  |  |
 | [options] | <code>Object</code> |  |  |
-| [options.estimationMonotonicity] | <code>Boolean</code> | <code>true</code> | When `true`, the   estimation of the server time is strictly monotonic, and the maximum   instability of the estimated server time is then limited to   `options.estimationStability`. |
-| [options.estimationStability] | <code>Number</code> | <code>160e-6</code> | This option applies   only when `options.estimationMonotonicity` is true. The adaptation to the   estimated server time is then limited by this positive value. 80e-6 (80   parts per million, PPM) is quite stable, and corresponds to the stability   of a conventional clock. 160e-6 is moderately adaptive, and corresponds   to the relative stability of 2 clocks; 500e-6 is quite adaptive, it   compensates 5 milliseconds in 1 second. It is the maximum value   (estimationStability must be lower than 500e-6). |
 | [options.pingTimeOutDelay] | <code>Object</code> |  | range of duration (in seconds)   to consider a ping was not ponged back |
 | [options.pingTimeOutDelay.min] | <code>Number</code> | <code>1</code> | min and max must be set   together |
 | [options.pingTimeOutDelay.max] | <code>Number</code> | <code>30</code> | min and max must be set   together |
@@ -104,6 +203,47 @@ actually start a synchronisation process.
 | [options.pingSeriesDelay.max] | <code>Number</code> | <code>20</code> | min and max must be set   together |
 | [options.longTermDataTrainingDuration] | <code>Number</code> | <code>120</code> | duration of   training, in seconds, approximately, before using the estimate of clock   frequency |
 | [options.longTermDataDuration] | <code>Number</code> | <code>900</code> | estimate synchronisation over   this duration, in seconds, approximately |
+| [options.estimationMonotonicity] | <code>Boolean</code> | <code>true</code> | When `true`, the   estimation of the server time is strictly monotonic, and the maximum   instability of the estimated server time is then limited to   `options.estimationStability`. |
+| [options.estimationStability] | <code>Number</code> | <code>160e-6</code> | This option applies   only when `options.estimationMonotonicity` is true. The adaptation to the   estimated server time is then limited by this positive value. 80e-6 (80   parts per million, PPM) is quite stable, and corresponds to the stability   of a conventional clock. 160e-6 is moderately adaptive, and corresponds   to the relative stability of 2 clocks; 500e-6 is quite adaptive, it   compensates 5 milliseconds in 1 second. It is the maximum value   (estimationStability must be lower than 500e-6). |
+
+<a name="SyncClient+start"></a>
+
+#### syncClient.start(sendFunction, receiveFunction, reportFunction)
+Start a synchronisation process by registering the receive
+function passed as second parameter. Then, send regular messages
+to the server, using the send function passed as first parameter.
+
+**Kind**: instance method of [<code>SyncClient</code>](#SyncClient)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| sendFunction | [<code>sendFunction</code>](#SyncClient..sendFunction) |  |
+| receiveFunction | [<code>receiveFunction</code>](#SyncClient..receiveFunction) | to register |
+| reportFunction | [<code>reportFunction</code>](#SyncClient..reportFunction) | if defined, is called to   report the status, on each status change |
+
+<a name="SyncClient+getLocalTime"></a>
+
+#### syncClient.getLocalTime(syncTime) ⇒ <code>Number</code>
+Get local time, or convert a synchronised time to a local time.
+
+**Kind**: instance method of [<code>SyncClient</code>](#SyncClient)  
+**Returns**: <code>Number</code> - local time, in seconds  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| syncTime | <code>Number</code> | undefined to get local time |
+
+<a name="SyncClient+getSyncTime"></a>
+
+#### syncClient.getSyncTime(localTime) ⇒ <code>Number</code>
+Get synchronised time, or convert a local time to a synchronised time.
+
+**Kind**: instance method of [<code>SyncClient</code>](#SyncClient)  
+**Returns**: <code>Number</code> - synchronised time, in seconds.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| localTime | <code>Number</code> | undefined to get synchronised time |
 
 <a name="SyncClient.minimumStability"></a>
 
@@ -112,110 +252,14 @@ The minimum stability serves several purposes:
 
 1. The estimation process will restart if the estimated server time
 reaches or exceeds this value.
-
 2. The adaptation of a new estimation (after a ping-pong series) is also
 limited to this value.
-
 3. Given 1. and 2., this ensures that the estimation is strictly
 monotonic.
-
 4. Given 3., the conversion from server time to local time is unique.
 
 **Kind**: static constant of [<code>SyncClient</code>](#SyncClient)  
-<a name="SyncClient..setStatus"></a>
-
-#### SyncClient~setStatus(status) ⇒ <code>Object</code>
-Set status, and set this.statusChangedTime, to later
-use see [getStatusDuration](#SyncClient..getStatusDuration)
-and [reportStatus](#SyncClient..reportStatus).
-
-**Kind**: inner method of [<code>SyncClient</code>](#SyncClient)  
-**Returns**: <code>Object</code> - this  
-
-| Param | Type |
-| --- | --- |
-| status | <code>String</code> | 
-
-<a name="SyncClient..getStatusDuration"></a>
-
-#### SyncClient~getStatusDuration() ⇒ <code>Number</code>
-Get time since last status change. See [setStatus](#SyncClient..setStatus)
-
-**Kind**: inner method of [<code>SyncClient</code>](#SyncClient)  
-**Returns**: <code>Number</code> - time, in seconds, since last status change.  
-<a name="SyncClient..setConnectionStatus"></a>
-
-#### SyncClient~setConnectionStatus(connectionStatus) ⇒ <code>Object</code>
-Set connectionStatus, and set this.connectionStatusChangedTime, to later
-use [getConnectionStatusDuration](#SyncClient..getConnectionStatusDuration) and
-[reportStatus](#SyncClient..reportStatus).
-
-**Kind**: inner method of [<code>SyncClient</code>](#SyncClient)  
-**Returns**: <code>Object</code> - this  
-
-| Param | Type |
-| --- | --- |
-| connectionStatus | <code>String</code> | 
-
-<a name="SyncClient..getConnectionStatusDuration"></a>
-
-#### SyncClient~getConnectionStatusDuration() ⇒ <code>Number</code>
-Get time since last connectionStatus change.
-See [setConnectionStatus](#SyncClient..setConnectionStatus)
-
-**Kind**: inner method of [<code>SyncClient</code>](#SyncClient)  
-**Returns**: <code>Number</code> - time, in seconds, since last connectionStatus change.  
-<a name="SyncClient..reportStatus"></a>
-
-#### SyncClient~reportStatus(reportFunction)
-Report the status of the synchronisation process, if
-reportFunction is defined.
-
-**Kind**: inner method of [<code>SyncClient</code>](#SyncClient)  
-
-| Param | Type |
-| --- | --- |
-| reportFunction | [<code>reportFunction</code>](#SyncClient..reportFunction) | 
-
-<a name="SyncClient..start"></a>
-
-#### SyncClient~start(sendFunction, receiveFunction, reportFunction)
-Start a synchronisation process by registering the receive
-function passed as second parameter. Then, send regular messages
-to the server, using the send function passed as first parameter.
-
-**Kind**: inner method of [<code>SyncClient</code>](#SyncClient)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| sendFunction | [<code>sendFunction</code>](#SyncClient..sendFunction) |  |
-| receiveFunction | [<code>receiveFunction</code>](#SyncClient..receiveFunction) | to register |
-| reportFunction | [<code>reportFunction</code>](#SyncClient..reportFunction) | if defined, is called to   report the status, on each status change |
-
-<a name="SyncClient..getLocalTime"></a>
-
-#### SyncClient~getLocalTime(syncTime) ⇒ <code>Number</code>
-Get local time, or convert a synchronised time to a local time.
-
-**Kind**: inner method of [<code>SyncClient</code>](#SyncClient)  
-**Returns**: <code>Number</code> - local time, in seconds  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| syncTime | <code>Number</code> | undefined to get local time |
-
-<a name="SyncClient..getSyncTime"></a>
-
-#### SyncClient~getSyncTime(localTime) ⇒ <code>Number</code>
-Get synchronised time, or convert a local time to a synchronised time.
-
-**Kind**: inner method of [<code>SyncClient</code>](#SyncClient)  
-**Returns**: <code>Number</code> - synchronised time, in seconds.  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| localTime | <code>Number</code> | undefined to get synchronised time |
-
+**Value**: 500 PPM, like an old mechanical clock  
 <a name="SyncClient..getTimeFunction"></a>
 
 #### SyncClient~getTimeFunction ⇒ <code>Number</code>
@@ -281,61 +325,65 @@ Get synchronised time, or convert a local time to a synchronised time.
 <a name="SyncServer"></a>
 
 ### SyncServer
+The `SyncServer` instance provides a clock on which [SyncClient](#SyncClient)
+instances synchronize.
+
 **Kind**: global class  
+**See**: [SyncServer~start](SyncServer~start) method to
+actually start a synchronisation process.  
 
 * [SyncServer](#SyncServer)
-    * [new SyncServer(getTimeFunction)](#new_SyncServer_new)
-    * [~start(sendFunction, receiveFunction)](#SyncServer..start)
-    * [~getLocalTime(syncTime)](#SyncServer..getLocalTime) ⇒ <code>Number</code>
-    * [~getSyncTime(localTime)](#SyncServer..getSyncTime) ⇒ <code>Number</code>
-    * [~getTimeFunction](#SyncServer..getTimeFunction) ⇒ <code>Number</code>
-    * [~sendFunction](#SyncServer..sendFunction) : <code>function</code>
-    * [~receiveFunction](#SyncServer..receiveFunction) : <code>function</code>
-    * [~receiveCallback](#SyncServer..receiveCallback) : <code>function</code>
+    * [new SyncServer(function)](#new_SyncServer_new)
+    * _instance_
+        * [.start(sendFunction, receiveFunction)](#SyncServer+start)
+        * [.getLocalTime(syncTime)](#SyncServer+getLocalTime) ⇒ <code>Number</code>
+        * [.getSyncTime(localTime)](#SyncServer+getSyncTime) ⇒ <code>Number</code>
+    * _inner_
+        * [~getTimeFunction](#SyncServer..getTimeFunction) ⇒ <code>Number</code>
+        * [~sendFunction](#SyncServer..sendFunction) : <code>function</code>
+        * [~receiveFunction](#SyncServer..receiveFunction) : <code>function</code>
+        * [~receiveCallback](#SyncServer..receiveCallback) : <code>function</code>
 
 <a name="new_SyncServer_new"></a>
 
-#### new SyncServer(getTimeFunction)
-This is the constructor. See [start](#SyncServer..start) method to
-actually start a synchronisation process.
-
+#### new SyncServer(function)
 
 | Param | Type | Description |
 | --- | --- | --- |
-| getTimeFunction | [<code>getTimeFunction</code>](#SyncServer..getTimeFunction) | called to get the local time. It must return a time in seconds, monotonic, ever increasing. |
+| function | [<code>getTimeFunction</code>](#SyncServer..getTimeFunction) | called to get the local time. It must return a time in seconds, monotonic, ever increasing. |
 
-<a name="SyncServer..start"></a>
+<a name="SyncServer+start"></a>
 
-#### SyncServer~start(sendFunction, receiveFunction)
-Start a synchronisation process by registering the receive
-function passed as second parameter. On each received message,
+#### syncServer.start(sendFunction, receiveFunction)
+Start a synchronisation process with a `SyncClient` by registering the
+receive function passed as second parameter. On each received message,
 send a reply using the function passed as first parameter.
 
-**Kind**: inner method of [<code>SyncServer</code>](#SyncServer)  
+**Kind**: instance method of [<code>SyncServer</code>](#SyncServer)  
 
 | Param | Type |
 | --- | --- |
 | sendFunction | [<code>sendFunction</code>](#SyncServer..sendFunction) | 
 | receiveFunction | [<code>receiveFunction</code>](#SyncServer..receiveFunction) | 
 
-<a name="SyncServer..getLocalTime"></a>
+<a name="SyncServer+getLocalTime"></a>
 
-#### SyncServer~getLocalTime(syncTime) ⇒ <code>Number</code>
+#### syncServer.getLocalTime(syncTime) ⇒ <code>Number</code>
 Get local time, or convert a synchronised time to a local time.
 
-**Kind**: inner method of [<code>SyncServer</code>](#SyncServer)  
+**Kind**: instance method of [<code>SyncServer</code>](#SyncServer)  
 **Returns**: <code>Number</code> - local time, in seconds  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | syncTime | <code>Number</code> | undefined to get local time |
 
-<a name="SyncServer..getSyncTime"></a>
+<a name="SyncServer+getSyncTime"></a>
 
-#### SyncServer~getSyncTime(localTime) ⇒ <code>Number</code>
+#### syncServer.getSyncTime(localTime) ⇒ <code>Number</code>
 Get synchronised time, or convert a local time to a synchronised time.
 
-**Kind**: inner method of [<code>SyncServer</code>](#SyncServer)  
+**Kind**: instance method of [<code>SyncServer</code>](#SyncServer)  
 **Returns**: <code>Number</code> - synchronised time, in seconds.  
 
 | Param | Type | Description |
@@ -396,17 +444,6 @@ const getTimeFunction = () => {
 
 <!-- apistop -->
 
-## Publication
-
-For more information, you can also read this [article] presented at the [Web Audio Conference 2016]:
-> Jean-Philippe Lambert, Sébastien Robaszkiewicz, Norbert Schnell. Synchronisation for Distributed Audio Rendering over Heterogeneous Devices, in HTML5. 2nd Web Audio Conference, Apr 2016, Atlanta, GA, United States. ⟨hal-01304889⟩ - [https://hal.archives-ouvertes.fr/hal-01304889v1](https://hal.archives-ouvertes.fr/hal-01304889v1)
-
-The stabilisation of the estimated synchronous time was added after the publication of this article.
-
-## Example Uses
-
-see [`./examples`](./examples) folder
-
 ## Caveats
 
 The synchronisation process is continuous: after a call to the `start` method,
@@ -415,6 +452,13 @@ side and on the server side.
 
 In many cases, running the sync process in another thread is not an option as
 the local clock will be different accross threads or processes.
+
+## Publication
+
+For more information, you can read this [article] presented at the [Web Audio Conference 2016]:
+> Jean-Philippe Lambert, Sébastien Robaszkiewicz, Norbert Schnell. Synchronisation for Distributed Audio Rendering over Heterogeneous Devices, in HTML5. 2nd Web Audio Conference, Apr 2016, Atlanta, GA, United States. ⟨hal-01304889⟩ - [https://hal.archives-ouvertes.fr/hal-01304889v1](https://hal.archives-ouvertes.fr/hal-01304889v1)
+
+*Note: the stabilisation of the estimated synchronous time has been added after the publication of this article.*
 
 ## License
 

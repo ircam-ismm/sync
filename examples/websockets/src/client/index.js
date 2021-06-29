@@ -20,7 +20,6 @@ function init() {
   }, 100);
 
   socket.addEventListener('open', () => {
-
     const sendFunction = (pingId, clientPingTime) => {
       const request = [];
       request[0] = 0; // this is a ping
