@@ -18,29 +18,7 @@ time at the last moment to trigger events, in order to avoid drift.
   * [Client Import](#client-import)
   * [Classes](#classes)
   * [SyncClient](#syncclient)
-    + [new SyncClient(getTimeFunction, [options])](#new-syncclientgettimefunction-options)
-    + [SyncClient~setStatus(status) ⇒ Object](#syncclientsetstatusstatus-%E2%87%92-object)
-    + [SyncClient~getStatusDuration() ⇒ Number](#syncclientgetstatusduration-%E2%87%92-number)
-    + [SyncClient~setConnectionStatus(connectionStatus) ⇒ Object](#syncclientsetconnectionstatusconnectionstatus-%E2%87%92-object)
-    + [SyncClient~getConnectionStatusDuration() ⇒ Number](#syncclientgetconnectionstatusduration-%E2%87%92-number)
-    + [SyncClient~reportStatus(reportFunction)](#syncclientreportstatusreportfunction)
-    + [SyncClient~start(sendFunction, receiveFunction, reportFunction)](#syncclientstartsendfunction-receivefunction-reportfunction)
-    + [SyncClient~getLocalTime(syncTime) ⇒ Number](#syncclientgetlocaltimesynctime-%E2%87%92-number)
-    + [SyncClient~getSyncTime(localTime) ⇒ Number](#syncclientgetsynctimelocaltime-%E2%87%92-number)
-    + [SyncClient~getTimeFunction ⇒ Number](#syncclientgettimefunction-%E2%87%92-number)
-    + [SyncClient~sendFunction : function](#syncclientsendfunction--function)
-    + [SyncClient~receiveFunction : function](#syncclientreceivefunction--function)
-    + [SyncClient~receiveCallback : function](#syncclientreceivecallback--function)
-    + [SyncClient~reportFunction : function](#syncclientreportfunction--function)
   * [SyncServer](#syncserver)
-    + [new SyncServer(getTimeFunction)](#new-syncservergettimefunction)
-    + [SyncServer~start(sendFunction, receiveFunction)](#syncserverstartsendfunction-receivefunction)
-    + [SyncServer~getLocalTime(syncTime) ⇒ Number](#syncservergetlocaltimesynctime-%E2%87%92-number)
-    + [SyncServer~getSyncTime(localTime) ⇒ Number](#syncservergetsynctimelocaltime-%E2%87%92-number)
-    + [SyncServer~getTimeFunction ⇒ Number](#syncservergettimefunction-%E2%87%92-number)
-    + [SyncServer~sendFunction : function](#syncserversendfunction--function)
-    + [SyncServer~receiveFunction : function](#syncserverreceivefunction--function)
-    + [SyncServer~receiveCallback : function](#syncserverreceivecallback--function)
 - [Publication](#publication)
 - [Example Uses](#example-uses)
 - [Caveats](#caveats)
@@ -86,24 +64,27 @@ import { SyncClient } from '@ircam/sync';
 
 * [SyncClient](#SyncClient)
     * [new SyncClient(getTimeFunction, [options])](#new_SyncClient_new)
-    * [~setStatus(status)](#SyncClient..setStatus) ⇒ <code>Object</code>
-    * [~getStatusDuration()](#SyncClient..getStatusDuration) ⇒ <code>Number</code>
-    * [~setConnectionStatus(connectionStatus)](#SyncClient..setConnectionStatus) ⇒ <code>Object</code>
-    * [~getConnectionStatusDuration()](#SyncClient..getConnectionStatusDuration) ⇒ <code>Number</code>
-    * [~reportStatus(reportFunction)](#SyncClient..reportStatus)
-    * [~start(sendFunction, receiveFunction, reportFunction)](#SyncClient..start)
-    * [~getLocalTime(syncTime)](#SyncClient..getLocalTime) ⇒ <code>Number</code>
-    * [~getSyncTime(localTime)](#SyncClient..getSyncTime) ⇒ <code>Number</code>
-    * [~getTimeFunction](#SyncClient..getTimeFunction) ⇒ <code>Number</code>
-    * [~sendFunction](#SyncClient..sendFunction) : <code>function</code>
-    * [~receiveFunction](#SyncClient..receiveFunction) : <code>function</code>
-    * [~receiveCallback](#SyncClient..receiveCallback) : <code>function</code>
-    * [~reportFunction](#SyncClient..reportFunction) : <code>function</code>
+    * _static_
+        * [.minimumStability](#SyncClient.minimumStability) : <code>Number</code>
+    * _inner_
+        * [~setStatus(status)](#SyncClient..setStatus) ⇒ <code>Object</code>
+        * [~getStatusDuration()](#SyncClient..getStatusDuration) ⇒ <code>Number</code>
+        * [~setConnectionStatus(connectionStatus)](#SyncClient..setConnectionStatus) ⇒ <code>Object</code>
+        * [~getConnectionStatusDuration()](#SyncClient..getConnectionStatusDuration) ⇒ <code>Number</code>
+        * [~reportStatus(reportFunction)](#SyncClient..reportStatus)
+        * [~start(sendFunction, receiveFunction, reportFunction)](#SyncClient..start)
+        * [~getLocalTime(syncTime)](#SyncClient..getLocalTime) ⇒ <code>Number</code>
+        * [~getSyncTime(localTime)](#SyncClient..getSyncTime) ⇒ <code>Number</code>
+        * [~getTimeFunction](#SyncClient..getTimeFunction) ⇒ <code>Number</code>
+        * [~sendFunction](#SyncClient..sendFunction) : <code>function</code>
+        * [~receiveFunction](#SyncClient..receiveFunction) : <code>function</code>
+        * [~receiveCallback](#SyncClient..receiveCallback) : <code>function</code>
+        * [~reportFunction](#SyncClient..reportFunction) : <code>function</code>
 
 <a name="new_SyncClient_new"></a>
 
 #### new SyncClient(getTimeFunction, [options])
-This is the constructor. See {@linkcode SyncClient~start} method to
+This is the constructor. See [start](#SyncClient..start) method to
 actually start a synchronisation process.
 
 
@@ -111,23 +92,42 @@ actually start a synchronisation process.
 | --- | --- | --- | --- |
 | getTimeFunction | [<code>getTimeFunction</code>](#SyncClient..getTimeFunction) |  |  |
 | [options] | <code>Object</code> |  |  |
-| [options.pingTimeOutDelay] | <code>Object</code> |  | range of duration (in seconds) to consider a ping was not ponged back |
-| [options.pingTimeOutDelay.min] | <code>Number</code> | <code>1</code> | min and max must be set together |
-| [options.pingTimeOutDelay.max] | <code>Number</code> | <code>30</code> | min and max must be set together |
-| [options.pingSeriesIterations] | <code>Number</code> | <code>10</code> | number of ping-pongs in a series |
-| [options.pingSeriesPeriod] | <code>Number</code> | <code>0.250</code> | interval (in seconds) between pings in a series |
-| [options.pingSeriesDelay] | <code>Number</code> |  | range of interval (in seconds) between ping-pong series |
-| [options.pingSeriesDelay.min] | <code>Number</code> | <code>10</code> | min and max must be set together |
-| [options.pingSeriesDelay.max] | <code>Number</code> | <code>20</code> | min and max must be set together |
-| [options.longTermDataTrainingDuration] | <code>Number</code> | <code>120</code> | duration of training, in seconds, approximately, before using the estimate of clock frequency |
-| [options.longTermDataDuration] | <code>Number</code> | <code>900</code> | estimate synchronisation over  this duration, in seconds, approximately |
+| [options.estimationMonotonicity] | <code>Boolean</code> | <code>true</code> | When `true`, the   estimation of the server time is strictly monotonic, and the maximum   instability of the estimated server time is then limited to   `options.estimationStability`. |
+| [options.estimationStability] | <code>Number</code> | <code>160e-6</code> | This option applies   only when `options.estimationMonotonicity` is true. The adaptation to the   estimated server time is then limited by this positive value. 80e-6 (80   parts per million, PPM) is quite stable, and corresponds to the stability   of a conventional clock. 160e-6 is moderately adaptive, and corresponds   to the relative stability of 2 clocks; 500e-6 is quite adaptive, it   compensates 5 milliseconds in 1 second. It is the maximum value   (estimationStability must be lower than 500e-6). |
+| [options.pingTimeOutDelay] | <code>Object</code> |  | range of duration (in seconds)   to consider a ping was not ponged back |
+| [options.pingTimeOutDelay.min] | <code>Number</code> | <code>1</code> | min and max must be set   together |
+| [options.pingTimeOutDelay.max] | <code>Number</code> | <code>30</code> | min and max must be set   together |
+| [options.pingSeriesIterations] | <code>Number</code> | <code>10</code> | number of ping-pongs in a   series |
+| [options.pingSeriesPeriod] | <code>Number</code> | <code>0.250</code> | interval (in seconds)   between pings in a series |
+| [options.pingSeriesDelay] | <code>Number</code> |  | range of interval (in seconds)   between ping-pong series |
+| [options.pingSeriesDelay.min] | <code>Number</code> | <code>10</code> | min and max must be set   together |
+| [options.pingSeriesDelay.max] | <code>Number</code> | <code>20</code> | min and max must be set   together |
+| [options.longTermDataTrainingDuration] | <code>Number</code> | <code>120</code> | duration of   training, in seconds, approximately, before using the estimate of clock   frequency |
+| [options.longTermDataDuration] | <code>Number</code> | <code>900</code> | estimate synchronisation over   this duration, in seconds, approximately |
 
+<a name="SyncClient.minimumStability"></a>
+
+#### SyncClient.minimumStability : <code>Number</code>
+The minimum stability serves several purposes:
+
+1. The estimation process will restart if the estimated server time
+reaches or exceeds this value.
+
+2. The adaptation of a new estimation (after a ping-pong series) is also
+limited to this value.
+
+3. Given 1. and 2., this ensures that the estimation is strictly
+monotonic.
+
+4. Given 3., the conversion from server time to local time is unique.
+
+**Kind**: static constant of [<code>SyncClient</code>](#SyncClient)  
 <a name="SyncClient..setStatus"></a>
 
 #### SyncClient~setStatus(status) ⇒ <code>Object</code>
 Set status, and set this.statusChangedTime, to later
-use see {@linkcode SyncClient~getStatusDuration}
-and {@linkcode SyncClient~reportStatus}.
+use see [getStatusDuration](#SyncClient..getStatusDuration)
+and [reportStatus](#SyncClient..reportStatus).
 
 **Kind**: inner method of [<code>SyncClient</code>](#SyncClient)  
 **Returns**: <code>Object</code> - this  
@@ -139,16 +139,16 @@ and {@linkcode SyncClient~reportStatus}.
 <a name="SyncClient..getStatusDuration"></a>
 
 #### SyncClient~getStatusDuration() ⇒ <code>Number</code>
-Get time since last status change. See {@linkcode SyncClient~setStatus}
+Get time since last status change. See [setStatus](#SyncClient..setStatus)
 
 **Kind**: inner method of [<code>SyncClient</code>](#SyncClient)  
 **Returns**: <code>Number</code> - time, in seconds, since last status change.  
 <a name="SyncClient..setConnectionStatus"></a>
 
 #### SyncClient~setConnectionStatus(connectionStatus) ⇒ <code>Object</code>
-Set connectionStatus, and set this.connectionStatusChangedTime,
-to later use see {@linkcode SyncClient~getConnectionStatusDuration}
-and {@linkcode SyncClient~reportStatus}.
+Set connectionStatus, and set this.connectionStatusChangedTime, to later
+use [getConnectionStatusDuration](#SyncClient..getConnectionStatusDuration) and
+[reportStatus](#SyncClient..reportStatus).
 
 **Kind**: inner method of [<code>SyncClient</code>](#SyncClient)  
 **Returns**: <code>Object</code> - this  
@@ -161,11 +161,10 @@ and {@linkcode SyncClient~reportStatus}.
 
 #### SyncClient~getConnectionStatusDuration() ⇒ <code>Number</code>
 Get time since last connectionStatus change.
-See {@linkcode SyncClient~setConnectionStatus}
+See [setConnectionStatus](#SyncClient..setConnectionStatus)
 
 **Kind**: inner method of [<code>SyncClient</code>](#SyncClient)  
-**Returns**: <code>Number</code> - time, in seconds, since last connectionStatus
-change.  
+**Returns**: <code>Number</code> - time, in seconds, since last connectionStatus change.  
 <a name="SyncClient..reportStatus"></a>
 
 #### SyncClient~reportStatus(reportFunction)
@@ -191,7 +190,7 @@ to the server, using the send function passed as first parameter.
 | --- | --- | --- |
 | sendFunction | [<code>sendFunction</code>](#SyncClient..sendFunction) |  |
 | receiveFunction | [<code>receiveFunction</code>](#SyncClient..receiveFunction) | to register |
-| reportFunction | [<code>reportFunction</code>](#SyncClient..reportFunction) | if defined, is called to report the status, on each status change |
+| reportFunction | [<code>reportFunction</code>](#SyncClient..reportFunction) | if defined, is called to   report the status, on each status change |
 
 <a name="SyncClient..getLocalTime"></a>
 
@@ -221,16 +220,17 @@ Get synchronised time, or convert a local time to a synchronised time.
 
 #### SyncClient~getTimeFunction ⇒ <code>Number</code>
 **Kind**: inner typedef of [<code>SyncClient</code>](#SyncClient)  
-**Returns**: <code>Number</code> - monotonic, ever increasing, time in second. When possible
- the server code should define its own origin (i.e. `time=0`) in order to
- maximize the resolution of the clock for a long period of time. When
- `SyncServer~start` is called the clock should be running
- (cf. `audioContext.currentTime` that needs user interaction to start)  
+**Returns**: <code>Number</code> - strictly monotonic, ever increasing, time in second. When
+  possible the server code should define its own origin (i.e. `time=0`) in
+  order to maximize the resolution of the clock for a long period of
+  time. When `SyncServer~start` is called the clock should already be
+  running (cf. `audioContext.currentTime` that needs user interaction to
+  start)  
 <a name="SyncClient..sendFunction"></a>
 
 #### SyncClient~sendFunction : <code>function</code>
 **Kind**: inner typedef of [<code>SyncClient</code>](#SyncClient)  
-**See**: {@linkcode SyncServer~receiveFunction}  
+**See**: [receiveFunction](#SyncServer..receiveFunction)  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -241,11 +241,11 @@ Get synchronised time, or convert a local time to a synchronised time.
 
 #### SyncClient~receiveFunction : <code>function</code>
 **Kind**: inner typedef of [<code>SyncClient</code>](#SyncClient)  
-**See**: {@linkcode SyncServer~sendFunction}  
+**See**: [sendFunction](#SyncServer..sendFunction)  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| receiveCallback | [<code>receiveCallback</code>](#SyncClient..receiveCallback) | called on each message matching messageType. |
+| receiveCallback | [<code>receiveCallback</code>](#SyncClient..receiveCallback) | called on each message   matching messageType. |
 
 <a name="SyncClient..receiveCallback"></a>
 
@@ -267,16 +267,16 @@ Get synchronised time, or convert a local time to a synchronised time.
 | Param | Type | Description |
 | --- | --- | --- |
 | report | <code>Object</code> |  |
-| report.status | <code>String</code> | `new`, `startup`, `training` (offset adaptation), or `sync` (offset and ratio adaptation). |
-| report.statusDuration | <code>Number</code> | duration since last status change. |
-| report.timeOffset | <code>Number</code> | time difference between local time and sync time, in seconds. |
-| report.frequencyRatio | <code>Number</code> | time ratio between local time and sync time. |
+| report.status | <code>String</code> | `new`, `startup`, `training` (offset   adaptation), or `sync` (offset and speed adaptation). |
+| report.statusDuration | <code>Number</code> | duration since last status   change. |
+| report.timeOffset | <code>Number</code> | time difference between local time and   sync time, in seconds. |
+| report.frequencyRatio | <code>Number</code> | time ratio between local   time and sync time. |
 | report.connection | <code>String</code> | `offline` or `online` |
-| report.connectionDuration | <code>Number</code> | duration since last connection change. |
-| report.connectionTimeOut | <code>Number</code> | duration, in seconds, before a time-out occurs. |
-| report.travelDuration | <code>Number</code> | duration of a ping-pong round-trip, in seconds, mean over the the last ping-pong series. |
-| report.travelDurationMin | <code>Number</code> | duration of a ping-pong round-trip, in seconds, minimum over the the last ping-pong series. |
-| report.travelDurationMax | <code>Number</code> | duration of a ping-pong round-trip, in seconds, maximum over the the last ping-pong series. |
+| report.connectionDuration | <code>Number</code> | duration since last connection   change. |
+| report.connectionTimeOut | <code>Number</code> | duration, in seconds, before   a time-out occurs. |
+| report.travelDuration | <code>Number</code> | duration of a ping-pong round-trip,   in seconds, mean over the the last ping-pong series. |
+| report.travelDurationMin | <code>Number</code> | duration of a ping-pong   round-trip, in seconds, minimum over the the last ping-pong series. |
+| report.travelDurationMax | <code>Number</code> | duration of a ping-pong   round-trip, in seconds, maximum over the the last ping-pong series. |
 
 <a name="SyncServer"></a>
 
@@ -296,7 +296,7 @@ Get synchronised time, or convert a local time to a synchronised time.
 <a name="new_SyncServer_new"></a>
 
 #### new SyncServer(getTimeFunction)
-This is the constructor. See {@linkcode SyncServer~start} method to
+This is the constructor. See [start](#SyncServer..start) method to
 actually start a synchronisation process.
 
 
@@ -364,7 +364,7 @@ const getTimeFunction = () => {
 
 #### SyncServer~sendFunction : <code>function</code>
 **Kind**: inner typedef of [<code>SyncServer</code>](#SyncServer)  
-**See**: {@linkcode SyncClient~receiveFunction}  
+**See**: [receiveFunction](#SyncClient..receiveFunction)  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -377,7 +377,7 @@ const getTimeFunction = () => {
 
 #### SyncServer~receiveFunction : <code>function</code>
 **Kind**: inner typedef of [<code>SyncServer</code>](#SyncServer)  
-**See**: {@linkcode SyncClient~sendFunction}  
+**See**: [sendFunction](#SyncClient..sendFunction)  
 
 | Param | Type | Description |
 | --- | --- | --- |
