@@ -111,7 +111,7 @@ function dataCompare(a, b) {
 /**
  * `SyncClient` instances synchronize to the clock provided
  * by the {@link SyncServer} instance. The default estimation behavior is
- * strictly monotonic and guarantee a unique conversation from server time
+ * strictly monotonic and guarantee a unique convertion from server time
  * to local time.
  *
  * @see {@link SyncClient~start} method to actually start a synchronisation

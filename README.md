@@ -149,7 +149,7 @@ setInterval(() => {
 <dt><a href="#SyncClient">SyncClient</a></dt>
 <dd><p><code>SyncClient</code> instances synchronize to the clock provided
 by the <a href="#SyncServer">SyncServer</a> instance. The default estimation behavior is
-strictly monotonic and guarantee a unique conversation from server time
+strictly monotonic and guarantee a unique convertion from server time
 to local time.</p>
 </dd>
 <dt><a href="#SyncServer">SyncServer</a></dt>
@@ -163,7 +163,7 @@ instances synchronize.</p>
 ### SyncClient
 `SyncClient` instances synchronize to the clock provided
 by the [SyncServer](#SyncServer) instance. The default estimation behavior is
-strictly monotonic and guarantee a unique conversation from server time
+strictly monotonic and guarantee a unique convertion from server time
 to local time.
 
 **Kind**: global class  
