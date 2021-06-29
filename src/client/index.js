@@ -43,6 +43,7 @@ function mean(array, dimension = 0) {
  * Function used to sort long-term data, using first and second dimensions, in
  * that order.
  *
+ * @private
  * @param {Array.<Number>} a
  * @param {Number.<Number>} b
  * @returns {Number} negative if a < b, positive if a > b, or 0
@@ -318,7 +319,6 @@ class SyncClient {
   }
 
   /**
-<<<<<<< HEAD
    * Process to send ping messages.
    *
    * @private
@@ -344,8 +344,6 @@ class SyncClient {
   }
 
   /**
-=======
->>>>>>> 3c89d6469b97f048df3a6c9919c763bfdf856fe6
    * Start a synchronisation process by registering the receive
    * function passed as second parameter. Then, send regular messages
    * to the server, using the send function passed as first parameter.

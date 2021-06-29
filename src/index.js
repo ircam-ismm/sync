@@ -5,7 +5,7 @@ import _SyncServer from './server/index.js';
 // cf. https://ircam-ismm.github.io/javascript/javascript-guidelines.html#supported-syntaxes
 
 // @note:
-// the odd file structure aims at supporting imports in old applicationd :
+// the odd file structure aims at supporting imports in old applications :
 // ```
 // import SyncServer from '@ircam/sync/server';
 // ```
