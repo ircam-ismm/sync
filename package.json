@@ -26,7 +26,9 @@
     "prepublishOnly": "npm run build",
     "toc": "markdown-toc -i README.md  --maxdepth 3"
   },
-  "dependencies": {},
+  "dependencies": {
+    "debug": "^4.3.1"
+  },
   "devDependencies": {
     "@babel/cli": "^7.4.4",
     "@babel/core": "^7.4.5",
