@@ -1,6 +1,6 @@
 import 'source-map-support/register';
 import http from 'http';
-import uws from 'uws';
+import ws from 'ws';
 import connect from 'connect';
 import connectRoute from 'connect-route';
 import path from 'path';
@@ -10,7 +10,9 @@ import serveFavicon from 'serve-favicon';
 import template from 'ejs-template';
 // not very clean but works...
 import { getTranspiler } from '../../bin/runner';
-import SyncServer from '@ircam/sync/server';
+
+// import SyncServer from '@ircam/sync/server';
+import { SyncServer } from '@ircam/sync';
 
 /**
  * Configure and start the `websocket` and `sync` servers
@@ -27,13 +29,13 @@ function initWsSyncServer(httpServer) {
     return now[0] + now[1] * 1e-9;
   }
 
-  const wss = new uws.Server({ server: httpServer });
+  const wss = new ws.Server({ server: httpServer });
   const syncServer = new SyncServer(getTimeFunction);
 
   wss.on('connection', (socket) => {
     const receiveFunction = callback => {
-      socket.on('message', arrayBuffer => {
-        const request = new Float64Array(arrayBuffer);
+      socket.on('message', request => {
+        request = JSON.parse(request);
 
         if (request[0] === 0) { // this is a ping
           const pingId = request[1];
@@ -50,14 +52,14 @@ function initWsSyncServer(httpServer) {
       console.log(`[pong] - id: %s, clientPingTime: %s, serverPingTime: %s, serverPongTime: %s`,
         pingId, clientPingTime, serverPingTime, serverPongTime);
 
-        const response = new Float64Array(5);
+        const response = [];
         response[0] = 1; // this is a pong
         response[1] = pingId;
         response[2] = clientPingTime;
         response[3] = serverPingTime;
         response[4] = serverPongTime;
         // create a node Buffer without copy (shared memory)
-        socket.send(response.buffer);
+        socket.send(JSON.stringify(response));
     };
 
     syncServer.start(sendFunction, receiveFunction);

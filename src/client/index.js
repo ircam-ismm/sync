@@ -7,7 +7,6 @@
 
 import debug from 'debug';
 const log = debug('sync');
-
 ////// helpers
 
 /**
@@ -44,6 +43,7 @@ function mean(array, dimension = 0) {
  * Function used to sort long-term data, using first and second dimensions, in
  * that order.
  *
+ * @private
  * @param {Array.<Number>} a
  * @param {Number.<Number>} b
  * @returns {Number} negative if a < b, positive if a > b, or 0
@@ -52,104 +52,108 @@ function dataCompare(a, b) {
   return a[0] - b[0] || a[1] - b[1];
 }
 
+/**
+ * @callback SyncClient~getTimeFunction
+ * @return {Number} strictly monotonic, ever increasing, time in second. When
+ *   possible the server code should define its own origin (i.e. `time=0`) in
+ *   order to maximize the resolution of the clock for a long period of
+ *   time. When `SyncServer~start` is called the clock should already be
+ *   running (cf. `audioContext.currentTime` that needs user interaction to
+ *   start)
+ **/
+
+/**
+ * @callback SyncClient~sendFunction
+ * @see {@link SyncServer~receiveFunction}
+ * @param {Number} pingId unique identifier
+ * @param {Number} clientPingTime time-stamp of ping emission
+ **/
+
+/**
+ * @callback SyncClient~receiveFunction
+ * @see {@link SyncServer~sendFunction}
+ * @param {SyncClient~receiveCallback} receiveCallback called on each message
+ *   matching messageType.
+ **/
+
+/**
+ * @callback SyncClient~receiveCallback
+ * @param {Number} pingId unique identifier
+ * @param {Number} clientPingTime time-stamp of ping emission
+ * @param {Number} serverPingTime time-stamp of ping reception
+ * @param {Number} serverPongTime time-stamp of pong emission
+ **/
+
+/**
+ * @callback SyncClient~reportFunction
+ * @param {Object} report
+ * @param {String} report.status `new`, `startup`, `training` (offset
+ *   adaptation), or `sync` (offset and speed adaptation).
+ * @param {Number} report.statusDuration duration since last status
+ *   change.
+ * @param {Number} report.timeOffset time difference between local time and
+ *   sync time, in seconds.
+ * @param {Number} report.frequencyRatio time ratio between local
+ *   time and sync time.
+ * @param {String} report.connection `offline` or `online`
+ * @param {Number} report.connectionDuration duration since last connection
+ *   change.
+ * @param {Number} report.connectionTimeOut duration, in seconds, before
+ *   a time-out occurs.
+ * @param {Number} report.travelDuration duration of a ping-pong round-trip,
+ *   in seconds, mean over the the last ping-pong series.
+ * @param {Number} report.travelDurationMin duration of a ping-pong
+ *   round-trip, in seconds, minimum over the the last ping-pong series.
+ * @param {Number} report.travelDurationMax duration of a ping-pong
+ *   round-trip, in seconds, maximum over the the last ping-pong series.
+ **/
+
+/**
+ * `SyncClient` instances synchronize to the clock provided
+ * by the {@link SyncServer} instance. The default estimation behavior is
+ * strictly monotonic and guarantee a unique convertion from server time
+ * to local time.
+ *
+ * @see {@link SyncClient~start} method to actually start a synchronisation
+ * process.
+ *
+ * @param {SyncClient~getTimeFunction} getTimeFunction
+ * @param {Object} [options]
+ * @param {Object} [options.pingTimeOutDelay] range of duration (in seconds)
+ *   to consider a ping was not ponged back
+ * @param {Number} [options.pingTimeOutDelay.min=1] min and max must be set
+ *   together
+ * @param {Number} [options.pingTimeOutDelay.max=30] min and max must be set
+ *   together
+ * @param {Number} [options.pingSeriesIterations=10] number of ping-pongs in a
+ *   series
+ * @param {Number} [options.pingSeriesPeriod=0.250] interval (in seconds)
+ *   between pings in a series
+ * @param {Number} [options.pingSeriesDelay] range of interval (in seconds)
+ *   between ping-pong series
+ * @param {Number} [options.pingSeriesDelay.min=10] min and max must be set
+ *   together
+ * @param {Number} [options.pingSeriesDelay.max=20] min and max must be set
+ *   together
+ * @param {Number} [options.longTermDataTrainingDuration=120] duration of
+ *   training, in seconds, approximately, before using the estimate of clock
+ *   frequency
+ * @param {Number} [options.longTermDataDuration=900] estimate synchronisation over
+ *   this duration, in seconds, approximately
+ * @param {Boolean} [options.estimationMonotonicity=true] When `true`, the
+ *   estimation of the server time is strictly monotonic, and the maximum
+ *   instability of the estimated server time is then limited to
+ *   `options.estimationStability`.
+ * @param {Number} [options.estimationStability=160e-6] This option applies
+ *   only when `options.estimationMonotonicity` is true. The adaptation to the
+ *   estimated server time is then limited by this positive value. 80e-6 (80
+ *   parts per million, PPM) is quite stable, and corresponds to the stability
+ *   of a conventional clock. 160e-6 is moderately adaptive, and corresponds
+ *   to the relative stability of 2 clocks; 500e-6 is quite adaptive, it
+ *   compensates 5 milliseconds in 1 second. It is the maximum value
+ *   (estimationStability must be lower than 500e-6).
+ */
 class SyncClient {
-  /**
-   * @callback SyncClient~getTimeFunction
-   * @return {Number} strictly monotonic, ever increasing, time in second. When
-   *   possible the server code should define its own origin (i.e. `time=0`) in
-   *   order to maximize the resolution of the clock for a long period of
-   *   time. When `SyncServer~start` is called the clock should already be
-   *   running (cf. `audioContext.currentTime` that needs user interaction to
-   *   start)
-   **/
-
-  /**
-   * @callback SyncClient~sendFunction
-   * @see {@linkcode SyncServer~receiveFunction}
-   * @param {Number} pingId unique identifier
-   * @param {Number} clientPingTime time-stamp of ping emission
-   **/
-
-  /**
-   * @callback SyncClient~receiveFunction
-   * @see {@linkcode SyncServer~sendFunction}
-   * @param {SyncClient~receiveCallback} receiveCallback called on each message
-   *   matching messageType.
-   **/
-
-  /**
-   * @callback SyncClient~receiveCallback
-   * @param {Number} pingId unique identifier
-   * @param {Number} clientPingTime time-stamp of ping emission
-   * @param {Number} serverPingTime time-stamp of ping reception
-   * @param {Number} serverPongTime time-stamp of pong emission
-   **/
-
-  /**
-   * @callback SyncClient~reportFunction
-   * @param {Object} report
-   * @param {String} report.status `new`, `startup`, `training` (offset
-   *   adaptation), or `sync` (offset and speed adaptation).
-   * @param {Number} report.statusDuration duration since last status
-   *   change.
-   * @param {Number} report.timeOffset time difference between local time and
-   *   sync time, in seconds.
-   * @param {Number} report.frequencyRatio time ratio between local
-   *   time and sync time.
-   * @param {String} report.connection `offline` or `online`
-   * @param {Number} report.connectionDuration duration since last connection
-   *   change.
-   * @param {Number} report.connectionTimeOut duration, in seconds, before
-   *   a time-out occurs.
-   * @param {Number} report.travelDuration duration of a ping-pong round-trip,
-   *   in seconds, mean over the the last ping-pong series.
-   * @param {Number} report.travelDurationMin duration of a ping-pong
-   *   round-trip, in seconds, minimum over the the last ping-pong series.
-   * @param {Number} report.travelDurationMax duration of a ping-pong
-   *   round-trip, in seconds, maximum over the the last ping-pong series.
-   **/
-
-  /**
-   * This is the constructor. See {@linkcode SyncClient~start} method to
-   * actually start a synchronisation process.
-   *
-   * @constructs SyncClient
-   * @param {SyncClient~getTimeFunction} getTimeFunction
-   * @param {Object} [options]
-   * @param {Boolean} [options.estimationMonotonicity=true] When `true`, the
-   *   estimation of the server time is strictly monotonic, and the maximum
-   *   instability of the estimated server time is then limited to
-   *   `options.estimationStability`.
-   * @param {Number} [options.estimationStability=160e-6] This option applies
-   *   only when `options.estimationMonotonicity` is true. The adaptation to the
-   *   estimated server time is then limited by this positive value. 80e-6 (80
-   *   parts per million, PPM) is quite stable, and corresponds to the stability
-   *   of a conventional clock. 160e-6 is moderately adaptive, and corresponds
-   *   to the relative stability of 2 clocks; 500e-6 is quite adaptive, it
-   *   compensates 5 milliseconds in 1 second. It is the maximum value
-   *   (estimationStability must be lower than 500e-6).
-   * @param {Object} [options.pingTimeOutDelay] range of duration (in seconds)
-   *   to consider a ping was not ponged back
-   * @param {Number} [options.pingTimeOutDelay.min=1] min and max must be set
-   *   together
-   * @param {Number} [options.pingTimeOutDelay.max=30] min and max must be set
-   *   together
-   * @param {Number} [options.pingSeriesIterations=10] number of ping-pongs in a
-   *   series
-   * @param {Number} [options.pingSeriesPeriod=0.250] interval (in seconds)
-   *   between pings in a series
-   * @param {Number} [options.pingSeriesDelay] range of interval (in seconds)
-   *   between ping-pong series
-   * @param {Number} [options.pingSeriesDelay.min=10] min and max must be set
-   *   together
-   * @param {Number} [options.pingSeriesDelay.max=20] min and max must be set
-   *   together
-   * @param {Number} [options.longTermDataTrainingDuration=120] duration of
-   *   training, in seconds, approximately, before using the estimate of clock
-   *   frequency
-   * @param {Number} [options.longTermDataDuration=900] estimate synchronisation over
-   *   this duration, in seconds, approximately
-   */
   constructor(getTimeFunction, options = {}) {
 
     /**
@@ -157,20 +161,18 @@ class SyncClient {
      *
      * 1. The estimation process will restart if the estimated server time
      * reaches or exceeds this value.
-     *
      * 2. The adaptation of a new estimation (after a ping-pong series) is also
      * limited to this value.
-     *
      * 3. Given 1. and 2., this ensures that the estimation is strictly
      * monotonic.
-     *
      * 4. Given 3., the conversion from server time to local time is unique.
      *
+     * @private
      * @constant {Number}
+     * @value 500e-6 is 500 PPM, like an old mechanical clock
      * @static
      */
     SyncClient.minimumStability = 500e-6;
-    // 500 PPM, like an old mechanical clock
 
     this.estimationMonotonicity =
       (typeof options.estimationMonotonicity !== 'undefined'
@@ -241,10 +243,10 @@ class SyncClient {
 
   /**
    * Set status, and set this.statusChangedTime, to later
-   * use see {@linkcode SyncClient~getStatusDuration}
-   * and {@linkcode SyncClient~reportStatus}.
+   * use see {@link SyncClient~getStatusDuration}
+   * and {@link SyncClient~reportStatus}.
    *
-   * @function SyncClient~setStatus
+   * @private
    * @param {String} status
    * @returns {Object} this
    */
@@ -257,9 +259,9 @@ class SyncClient {
   }
 
   /**
-   * Get time since last status change. See {@linkcode SyncClient~setStatus}
+   * Get time since last status change. See {@link SyncClient~setStatus}
    *
-   * @function SyncClient~getStatusDuration
+   * @private
    * @returns {Number} time, in seconds, since last status change.
    */
   getStatusDuration() {
@@ -268,10 +270,10 @@ class SyncClient {
 
   /**
    * Set connectionStatus, and set this.connectionStatusChangedTime, to later
-   * use {@linkcode SyncClient~getConnectionStatusDuration} and {@linkcode
-   * SyncClient~reportStatus}.
+   * use {@link SyncClient~getConnectionStatusDuration} and
+   * {@link SyncClient~reportStatus}.
    *
-   * @function SyncClient~setConnectionStatus
+   * @private
    * @param {String} connectionStatus
    * @returns {Object} this
    */
@@ -285,9 +287,9 @@ class SyncClient {
 
   /**
    * Get time since last connectionStatus change.
-   * See {@linkcode SyncClient~setConnectionStatus}
+   * See {@link SyncClient~setConnectionStatus}
    *
-   * @function SyncClient~getConnectionStatusDuration
+   * @private
    * @returns {Number} time, in seconds, since last connectionStatus change.
    */
   getConnectionStatusDuration() {
@@ -295,10 +297,11 @@ class SyncClient {
   }
 
   /**
-   * Report the status of the synchronisation process, if
-   * reportFunction is defined.
+   * Report the status of the synchronisation process, if reportFunction is
+   * defined. It is called each time the estimation of the synchronised time
+   * updates.
    *
-   * @function SyncClient~reportStatus
+   * @private
    * @param {SyncClient~reportFunction} reportFunction
    */
   reportStatus(reportFunction) {
@@ -319,15 +322,39 @@ class SyncClient {
   }
 
   /**
+   * Process to send ping messages.
+   *
+   * @private
+   * @param {SyncClient~sendFunction} sendFunction
+   * @param {SyncClient~reportFunction} reportFunction
+   */
+  __syncLoop(sendFunction, reportFunction) {
+    clearTimeout(this.timeoutId);
+    ++this.pingId;
+    sendFunction(this.pingId, this.getLocalTime());
+
+    this.timeoutId = setTimeout(() => {
+      // increase timeout duration on timeout, to avoid overflow
+      this.pingTimeoutDelay.current = Math.min(this.pingTimeoutDelay.current * 2,
+                                               this.pingTimeoutDelay.max);
+      // log('sync:ping timeout > %s', this.pingTimeoutDelay.current);
+      this.setConnectionStatus('offline');
+      this.reportStatus(reportFunction);
+      // retry (yes, always increment pingId)
+      this.__syncLoop(sendFunction, reportFunction);
+    }, Math.ceil(1000 * this.pingTimeoutDelay.current));
+  }
+
+  /**
    * Start a synchronisation process by registering the receive
    * function passed as second parameter. Then, send regular messages
    * to the server, using the send function passed as first parameter.
    *
-   * @function SyncClient~start
    * @param {SyncClient~sendFunction} sendFunction
    * @param {SyncClient~receiveFunction} receiveFunction to register
    * @param {SyncClient~reportFunction} reportFunction if defined, is called to
-   *   report the status, on each status change
+   *   report the status, on each status change, and each time the estimation of
+   *   the synchronised time updates.
    */
   start(sendFunction, receiveFunction, reportFunction) {
     this.setStatus('startup');
@@ -421,6 +448,7 @@ class SyncClient {
             }
 
             this.setStatus('training');
+
             log('T = %s + %s * (%s - %s) = %s',
                 this.serverTimeReference, this.frequencyRatio,
                 seriesClientTime, this.clientTimeReference,
@@ -450,8 +478,10 @@ class SyncClient {
                 this.setStatus('sync');
                 this._stabilisationUpdate(updateClientTime, updateServerTimeBefore);
               } else {
+
                 log('clock frequency ratio out of sync: %s, training again',
                     this.frequencyRatio);
+
                 // start the training again from the last series
                 this.serverTimeReference = this.timeOffset; // offset only
                 this.clientTimeReference = 0;
@@ -495,8 +525,8 @@ class SyncClient {
   /**
    * Get local time, or convert a synchronised time to a local time.
    *
-   * @function SyncClient~getLocalTime
-   * @param {Number} syncTime undefined to get local time
+   * @param {Number} [syncTime=undefined] - Get local time according to given
+   *  given `syncTime`, if `syncTime` is not defined returns current local time.
    * @returns {Number} local time, in seconds
    */
   getLocalTime(syncTime) {
@@ -530,8 +560,8 @@ class SyncClient {
   /**
    * Get synchronised time, or convert a local time to a synchronised time.
    *
-   * @function SyncClient~getSyncTime
-   * @param {Number} localTime undefined to get synchronised time
+   * @param {Number} [localTime=undefined] - Get sync time according to given
+   *  given `localTime`, if `localTime` is not defined returns current sync time.
    * @returns {Number} synchronised time, in seconds.
    */
   getSyncTime(localTime = this.getLocalTime()) {
@@ -559,7 +589,6 @@ class SyncClient {
    * Process to send ping messages.
    *
    * @private
-   * @function SyncClient~_syncLoop
    * @param {SyncClient~sendFunction} sendFunction
    * @param {SyncClient~reportFunction} reportFunction
    */
@@ -580,7 +609,9 @@ class SyncClient {
     }, Math.ceil(1000 * this.pingTimeoutDelay.current));
   }
 
-
+  /**
+   * @private
+   */
   _stabilisationReset() {
     // To stabilise the estimation of synchronised time, compensate the
     // difference of the last estimation of the server time to the current
@@ -608,7 +639,6 @@ class SyncClient {
    * update stabilisation parameters.
    *
    * @private
-   * @function SyncClient~_stabilisationUpdate
    * @param {Number} updateClientTime local time when synchronisation updated
    * @param {Number} updateServerTimeBefore estimated server time just before
    *   synchronisation update (with old parameters)

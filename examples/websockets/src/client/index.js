@@ -1,4 +1,5 @@
-import SyncClient from '@ircam/sync/client';
+// import SyncClient from '@ircam/sync/client';
+import { SyncClient } from '@ircam/sync';
 
 const getTimeFunction = () => {
   return performance.now() / 1000;
@@ -9,7 +10,6 @@ function init() {
 
   // init socket client
   const socket = new WebSocket(url);
-  socket.binaryType = 'arraybuffer';
   // init sync client
   const syncClient = new SyncClient(getTimeFunction);
 
@@ -20,21 +20,21 @@ function init() {
   }, 100);
 
   socket.addEventListener('open', () => {
-
     const sendFunction = (pingId, clientPingTime) => {
-      const request = new Float64Array(3);
+      const request = [];
       request[0] = 0; // this is a ping
       request[1] = pingId;
       request[2] = clientPingTime;
 
       console.log(`[ping] - id: %s, pingTime: %s`, request[1], request[2]);
 
-      socket.send(request.buffer);
+      socket.send(JSON.stringify(request));
     };
 
     const receiveFunction = callback => {
       socket.addEventListener('message', e => {
-        const response = new Float64Array(e.data);
+        const response = JSON.parse(e.data);
+        console.log(response);
 
         if (response[0] === 1) { // this is a pong
           const pingId = response[1];

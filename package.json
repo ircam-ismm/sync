@@ -2,6 +2,7 @@
   "name": "@ircam/sync",
   "version": "2.0.1",
   "description": "Client / Server time synchronization component",
+  "main": "dist/index.js",
   "authors": [
     "Jean-Philippe.Lambert@ircam.fr",
     "Sebastien.Robaszkiewicz@ircam.fr",
@@ -9,7 +10,6 @@
     "Benjamin.Matuszewski@ircam.fr"
   ],
   "license": "BSD-3-Clause",
-  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/collective-soundworks/sync"
@@ -18,31 +18,24 @@
     "access": "public"
   },
   "scripts": {
-    "deploy": "np --yolo",
-    "doc": "jsdoc -c jsdoc.json",
-    "transpile": "node ./bin/runner --transpile",
-    "prewatch": "npm run transpile",
-    "version": "npm run transpile && npm run doc && git add docs",
-    "watch": "node ./bin/runner --watch"
+    "api": "node bin/insert-api.js",
+    "build": "npm run clean && babel src --out-dir .",
+    "clean": "rm -Rf client server && rm -f index.js",
+    "dev": "npm run build && chokidar src -c \"npm run build\"",
+    "doc": "npm run api && npm run toc",
+    "prepublishOnly": "npm run build",
+    "toc": "markdown-toc -i README.md  --maxdepth 3"
   },
   "dependencies": {
-    "babel-runtime": "^6.26.0",
-    "debug": "3.2.6"
+    "debug": "^4.3.1"
   },
   "devDependencies": {
-    "@ircam/jsdoc-template": "^1.0.2",
-    "babel-core": "^6.26.0",
-    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
-    "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-preset-env": "^1.6.1",
-    "browserify": "^15.2.0",
-    "chalk": "^2.3.0",
-    "fs-extra": "^4.0.3",
-    "jsdoc": "^3.5.5",
-    "klaw": "^2.1.1",
-    "np": "^2.20.1",
-    "tape": "^4.8.0",
-    "uglify-js": "^3.3.9",
-    "watch": "^1.0.2"
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.5",
+    "@babel/preset-env": "^7.14.7",
+    "chokidar": "^3.0.1",
+    "chokidar-cli": "^2.1.0",
+    "jsdoc-to-markdown": "^7.0.1",
+    "markdown-toc": "^1.2.0"
   }
 }
