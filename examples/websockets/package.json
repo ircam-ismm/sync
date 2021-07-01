@@ -5,11 +5,11 @@
     "bundle": "./bin/runner --bundle",
     "transpile": "./bin/runner --transpile",
     "prewatch": "npm run bundle",
-    "watch": "./bin/runner --watch",
+    "dev": "./bin/runner --watch",
     "postinstall": "npm run bundle"
   },
   "dependencies": {
-    "@ircam/sync": "^1.0.1",
+    "@ircam/sync": "^2.0.2",
     "babel-runtime": "^6.23.0",
     "connect-route": "^0.1.5",
     "ejs-template": "^0.1.0",

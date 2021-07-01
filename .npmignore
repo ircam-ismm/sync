@@ -1,6 +1,5 @@
 .babelrc
-jsdoc.conf
-rollup.config.js
+.eslintrc
 
 bin
 docs
