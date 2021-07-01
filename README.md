@@ -6,7 +6,7 @@ Each client has access to a logical clock that synchronizes to the server
 clock. The module also provides helper functions that allows to convert the
 master clock, to and from, the local clock. Everybody can use the common master
 clock to schedule synchronized events. A good practice is to convert to local
-time at the last moment to trigger events, in order to avoid drift.
+time at the last moment to trigger events, in order to minimize drift.
 
 ## Table of Contents
 
@@ -178,8 +178,6 @@ process.
         * [.start(sendFunction, receiveFunction, reportFunction)](#SyncClient+start)
         * [.getLocalTime([syncTime])](#SyncClient+getLocalTime) ⇒ <code>Number</code>
         * [.getSyncTime([localTime])](#SyncClient+getSyncTime) ⇒ <code>Number</code>
-    * _static_
-        * [.minimumStability](#SyncClient.minimumStability) : <code>Number</code>
     * _inner_
         * [~getTimeFunction](#SyncClient..getTimeFunction) ⇒ <code>Number</code>
         * [~sendFunction](#SyncClient..sendFunction) : <code>function</code>
@@ -221,7 +219,7 @@ to the server, using the send function passed as first parameter.
 | --- | --- | --- |
 | sendFunction | [<code>sendFunction</code>](#SyncClient..sendFunction) |  |
 | receiveFunction | [<code>receiveFunction</code>](#SyncClient..receiveFunction) | to register |
-| reportFunction | [<code>reportFunction</code>](#SyncClient..reportFunction) | if defined, is called to   report the status, on each status change |
+| reportFunction | [<code>reportFunction</code>](#SyncClient..reportFunction) | if defined, is called to   report the status, on each status change, and each time the estimation of   the synchronised time updates. |
 
 <a name="SyncClient+getLocalTime"></a>
 
@@ -247,21 +245,6 @@ Get synchronised time, or convert a local time to a synchronised time.
 | --- | --- | --- |
 | [localTime] | <code>Number</code> | Get sync time according to given  given `localTime`, if `localTime` is not defined returns current sync time. |
 
-<a name="SyncClient.minimumStability"></a>
-
-#### SyncClient.minimumStability : <code>Number</code>
-The minimum stability serves several purposes:
-
-1. The estimation process will restart if the estimated server time
-reaches or exceeds this value.
-2. The adaptation of a new estimation (after a ping-pong series) is also
-limited to this value.
-3. Given 1. and 2., this ensures that the estimation is strictly
-monotonic.
-4. Given 3., the conversion from server time to local time is unique.
-
-**Kind**: static constant of [<code>SyncClient</code>](#SyncClient)  
-**Value**: 500 PPM, like an old mechanical clock  
 <a name="SyncClient..getTimeFunction"></a>
 
 #### SyncClient~getTimeFunction ⇒ <code>Number</code>
