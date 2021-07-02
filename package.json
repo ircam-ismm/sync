@@ -18,7 +18,7 @@
     "access": "public"
   },
   "scripts": {
-    "api": "node bin/insert-api.js",
+    "api": "jsdoc-to-readme --src src/client/index.js src/server/index.js",
     "build": "npm run clean && babel src --out-dir .",
     "clean": "rm -Rf client server && rm -f index.js",
     "dev": "npm run build && chokidar src -c \"npm run build\"",
@@ -35,7 +35,7 @@
     "@babel/preset-env": "^7.14.7",
     "chokidar": "^3.0.1",
     "chokidar-cli": "^2.1.0",
-    "jsdoc-to-markdown": "^7.0.1",
+    "jsdoc-to-readme": "^1.0.2",
     "markdown-toc": "^1.2.0"
   }
 }
