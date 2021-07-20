@@ -12,7 +12,7 @@
   "license": "BSD-3-Clause",
   "repository": {
     "type": "git",
-    "url": "https://github.com/collective-soundworks/sync"
+    "url": "https://github.com/ircam-ismm/sync"
   },
   "publishConfig": {
     "access": "public"
