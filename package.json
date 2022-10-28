@@ -1,6 +1,6 @@
 {
   "name": "@ircam/sync",
-  "version": "2.0.3",
+  "version": "2.1.0",
   "description": "Client / Server time synchronization component",
   "main": "index.js",
   "authors": [
