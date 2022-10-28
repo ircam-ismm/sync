@@ -523,6 +523,13 @@ class SyncClient {
   }
 
   /**
+   * Stop the synchronization process
+   */
+  stop() {
+    clearTimeout(this.timeoutId);
+  }
+
+  /**
    * Get local time, or convert a synchronised time to a local time.
    *
    * @param {Number} [syncTime=undefined] - Get local time according to given

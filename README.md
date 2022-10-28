@@ -176,6 +176,7 @@ process.
     * [new SyncClient(getTimeFunction, [options])](#new_SyncClient_new)
     * _instance_
         * [.start(sendFunction, receiveFunction, reportFunction)](#SyncClient+start)
+        * [.stop()](#SyncClient+stop)
         * [.getLocalTime([syncTime])](#SyncClient+getLocalTime) ⇒ <code>Number</code>
         * [.getSyncTime([localTime])](#SyncClient+getSyncTime) ⇒ <code>Number</code>
     * _inner_
@@ -221,6 +222,12 @@ to the server, using the send function passed as first parameter.
 | receiveFunction | [<code>receiveFunction</code>](#SyncClient..receiveFunction) | to register |
 | reportFunction | [<code>reportFunction</code>](#SyncClient..reportFunction) | if defined, is called to   report the status, on each status change, and each time the estimation of   the synchronised time updates. |
 
+<a name="SyncClient+stop"></a>
+
+#### syncClient.stop()
+Stop the synchronization process
+
+**Kind**: instance method of [<code>SyncClient</code>](#SyncClient)  
 <a name="SyncClient+getLocalTime"></a>
 
 #### syncClient.getLocalTime([syncTime]) ⇒ <code>Number</code>

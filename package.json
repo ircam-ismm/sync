@@ -23,7 +23,7 @@
     "clean": "rm -Rf client server && rm -f index.js",
     "dev": "npm run build && chokidar src -c \"npm run build\"",
     "doc": "npm run api && npm run toc",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "npm run build && npm run doc",
     "toc": "markdown-toc -i README.md  --maxdepth 3"
   },
   "dependencies": {
